@@ -1,5 +1,3 @@
-// File: lib/presentation/pages/scribble_page.dart
-
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
@@ -50,7 +48,21 @@ class _ScribblePageState extends State<ScribblePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scribble to AI Image')),
+      appBar: AppBar(
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Scribble to AI Image'),
+            if (!isLoading)
+              ElevatedButton.icon(
+                onPressed: isLoading ? null : _handleGenerate,
+                icon: const Icon(Icons.auto_fix_high),
+                label: const Text("Generate"),
+              ),
+            if (isLoading) const CircularProgressIndicator(),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -69,24 +81,55 @@ class _ScribblePageState extends State<ScribblePage> {
                 icon: const Icon(Icons.clear),
                 label: const Text("Clear"),
               ),
-              ElevatedButton.icon(
-                onPressed: _notifier.canUndo ? _notifier.undo : null,
-                icon: const Icon(Icons.undo),
-                label: const Text("Undo"),
+              Tooltip(
+                message: "Undo",
+                waitDuration: const Duration(milliseconds: 500),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _notifier.canUndo ? _notifier.undo : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Icon(
+                        Icons.undo,
+                        color:
+                            _notifier.canUndo
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              ElevatedButton.icon(
-                onPressed: _notifier.canRedo ? _notifier.redo : null,
-                icon: const Icon(Icons.redo),
-                label: const Text("Redo"),
-              ),
-              ElevatedButton.icon(
-                onPressed: isLoading ? null : _handleGenerate,
-                icon: const Icon(Icons.auto_fix_high),
-                label: const Text("Generate AI Image"),
+              Tooltip(
+                message: "Redo",
+                waitDuration: const Duration(milliseconds: 500),
+                child: Material(
+                  color: Colors.transparent,
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: _notifier.canRedo ? _notifier.redo : null,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Icon(
+                        Icons.redo,
+                        color:
+                            _notifier.canRedo
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey,
+                        size: 28,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
-          if (isLoading) const CircularProgressIndicator(),
+
           if (generatedImage != null)
             Expanded(flex: 2, child: Image.memory(generatedImage!)),
         ],
@@ -95,7 +138,6 @@ class _ScribblePageState extends State<ScribblePage> {
   }
 }
 
-// --- Updated Scribble widget that uses the notifier ---
 class Scribble extends StatefulWidget {
   final ScribbleNotifier notifier;
   const Scribble({super.key, required this.notifier});
