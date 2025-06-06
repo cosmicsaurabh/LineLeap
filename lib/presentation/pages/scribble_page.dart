@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
+import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
 import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
 import 'package:http/http.dart' as http;
@@ -27,9 +28,10 @@ class _ScribblePageState extends State<ScribblePage> {
 
     setState(() => isLoading = true);
     final api = AIHordeAPI();
-    final imageUrl = await GenerateImageUseCase(
-      api,
-    ).generateImageFromSketch(bytes, "a cute cat in watercolor style");
+    final repository = ImageGenerationRepositoryImpl(api);
+    final useCase = GenerateImageUseCase(repository);
+
+    final imageUrl = await useCase(bytes, "a cute cat in watercolor style");
 
     Uint8List? finalImageBytes;
     if (imageUrl != null) {
