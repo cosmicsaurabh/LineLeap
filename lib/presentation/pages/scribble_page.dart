@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/replicate_api.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
-import 'package:flutter_scribble/presentation/widgets/color_picker.dart';
 import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
 
 class ScribblePage extends StatefulWidget {
@@ -72,7 +72,10 @@ class _ScribblePageState extends State<ScribblePage> {
               child: Scribble(notifier: _notifier),
             ),
           ),
-          ColorPicker(onColorSelected: _notifier.setColor),
+          ColorPicker(
+            pickerColor: _notifier.currentColor,
+            onColorChanged: _notifier.setColor,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
