@@ -1,22 +1,13 @@
-// File: lib/domain/usecases/generate_image_usecase.dart
-
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
+
+import 'package:flutter_scribble/domain/repositories/image_generation_repo.dart';
 
 class GenerateImageUseCase {
-  final AIHordeAPI api;
+  final ImageGenerationRepository repository;
 
-  GenerateImageUseCase(this.api);
+  GenerateImageUseCase(this.repository);
 
-  Future<String?> generateImageFromSketch(
-    Uint8List sketchBytes,
-    String prompt,
-  ) async {
-    final base64Image = base64Encode(sketchBytes);
-    final jobId = await api.submitSketchJob(base64Image, prompt);
-    if (jobId == null) return null;
-
-    return await api.pollForResult(jobId);
+  Future<String?> call(Uint8List sketchBytes, String prompt) {
+    return repository.generateImageFromSketch(sketchBytes, prompt);
   }
 }
