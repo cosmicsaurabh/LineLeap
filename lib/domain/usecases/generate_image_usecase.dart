@@ -1,19 +1,22 @@
 // File: lib/domain/usecases/generate_image_usecase.dart
 
+import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter_scribble/data/remote/replicate_api.dart';
+import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
 
 class GenerateImageUseCase {
-  final ReplicateAPI api;
+  final AIHordeAPI api;
 
   GenerateImageUseCase(this.api);
 
-  Future<Uint8List?> generateFromSketch(Uint8List sketch, String prompt) async {
-    final getUrl = await api.generateImageFromSketch(sketch, prompt);
-    if (getUrl == null) return null;
+  Future<String?> generateImageFromSketch(
+    Uint8List sketchBytes,
+    String prompt,
+  ) async {
+    final base64Image = base64Encode(sketchBytes);
+    final jobId = await api.submitSketchJob(base64Image, prompt);
+    if (jobId == null) return null;
 
-    // Simple polling/waiting could be added here if needed
-    await Future.delayed(const Duration(seconds: 10));
-    return await api.fetchResultImage(getUrl);
+    return await api.pollForResult(jobId);
   }
 }

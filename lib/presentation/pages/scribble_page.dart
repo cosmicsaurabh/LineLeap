@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
-import 'package:flutter_scribble/data/remote/replicate_api.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
 import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
 import 'package:http/http.dart' as http;
@@ -22,36 +21,15 @@ class _ScribblePageState extends State<ScribblePage> {
   Uint8List? generatedImage;
   bool isLoading = false;
 
-  // Future<void> _handleGenerate() async {
-  //   final bytes = await ImageUtils.capturePng(_paintKey);
-  //   if (bytes == null) return;
-
-  //   setState(() => isLoading = true);
-
-  //   final api = ReplicateAPI();
-  //   final useCase = GenerateImageUseCase(api);
-  //   final result = await useCase.generateFromSketch(
-  //     bytes,
-  //     "a cute cat in watercolor style",
-  //   );
-
-  //   setState(() {
-  //     generatedImage = result;
-  //     isLoading = false;
-  //   });
-  // }
-
   Future<void> _handleGenerate() async {
     final bytes = await ImageUtils.capturePng(_paintKey);
     if (bytes == null) return;
 
     setState(() => isLoading = true);
-
     final api = AIHordeAPI();
-    final imageUrl = await api.generateImageFromSketch(
-      bytes,
-      "a cute cat in watercolor style",
-    );
+    final imageUrl = await GenerateImageUseCase(
+      api,
+    ).generateImageFromSketch(bytes, "a cute cat in watercolor style");
 
     Uint8List? finalImageBytes;
     if (imageUrl != null) {
