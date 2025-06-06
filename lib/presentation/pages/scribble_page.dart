@@ -72,10 +72,7 @@ class _ScribblePageState extends State<ScribblePage> {
               child: Scribble(notifier: _notifier),
             ),
           ),
-          ColorPicker(
-            pickerColor: _notifier.currentColor,
-            onColorChanged: _notifier.setColor,
-          ),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -84,6 +81,44 @@ class _ScribblePageState extends State<ScribblePage> {
                 icon: const Icon(Icons.clear),
                 label: const Text("Clear"),
               ),
+              ElevatedButton.icon(
+                icon: Icon(Icons.color_lens, color: _notifier.currentColor),
+                label: const Text("Pick Color"),
+                onPressed: () async {
+                  Color pickedColor = _notifier.currentColor;
+                  await showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Select Color'),
+                          content: SingleChildScrollView(
+                            child: ColorPicker(
+                              pickerColor: _notifier.currentColor,
+                              onColorChanged: (color) {
+                                pickedColor = color;
+                              },
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                _notifier.setColor(pickedColor);
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Select'),
+                            ),
+                          ],
+                        ),
+                  );
+                },
+              ),
+
               Tooltip(
                 message: "Undo",
                 waitDuration: const Duration(milliseconds: 500),
