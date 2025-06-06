@@ -11,6 +11,7 @@ class ScribbleNotifier extends ChangeNotifier {
   final List<Stroke> _redoStack = [];
   Color _currentColor = Colors.black;
   Stroke? _currentStroke;
+  get currentColor => _currentColor;
 
   List<Stroke> get strokes => List.unmodifiable(_strokes);
 

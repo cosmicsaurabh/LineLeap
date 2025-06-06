@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/replicate_api.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
-import 'package:flutter_scribble/presentation/widgets/color_picker.dart';
 import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
 
 class ScribblePage extends StatefulWidget {
@@ -72,7 +72,7 @@ class _ScribblePageState extends State<ScribblePage> {
               child: Scribble(notifier: _notifier),
             ),
           ),
-          ColorPicker(onColorSelected: _notifier.setColor),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -81,6 +81,44 @@ class _ScribblePageState extends State<ScribblePage> {
                 icon: const Icon(Icons.clear),
                 label: const Text("Clear"),
               ),
+              ElevatedButton.icon(
+                icon: Icon(Icons.color_lens, color: _notifier.currentColor),
+                label: const Text("Pick Color"),
+                onPressed: () async {
+                  Color pickedColor = _notifier.currentColor;
+                  await showDialog(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Select Color'),
+                          content: SingleChildScrollView(
+                            child: ColorPicker(
+                              pickerColor: _notifier.currentColor,
+                              onColorChanged: (color) {
+                                pickedColor = color;
+                              },
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                _notifier.setColor(pickedColor);
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text('Select'),
+                            ),
+                          ],
+                        ),
+                  );
+                },
+              ),
+
               Tooltip(
                 message: "Undo",
                 waitDuration: const Duration(milliseconds: 500),
