@@ -70,35 +70,3 @@ class ScribbleNotifier extends ChangeNotifier {
   bool get canUndo => _strokes.isNotEmpty;
   bool get canRedo => _redoStack.isNotEmpty;
 }
-
-class Scribble extends StatelessWidget {
-  final ScribbleNotifier notifier;
-  final bool drawPen;
-
-  const Scribble({super.key, required this.notifier, this.drawPen = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: ScribblePainter(notifier, drawPen),
-      child: Container(),
-    );
-  }
-}
-
-class ScribblePainter extends CustomPainter {
-  final ScribbleNotifier notifier;
-  final bool drawPen;
-
-  ScribblePainter(this.notifier, this.drawPen) : super(repaint: notifier);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // TODO: Implement your drawing logic here
-  }
-
-  @override
-  bool shouldRepaint(covariant ScribblePainter oldDelegate) {
-    return oldDelegate.notifier != notifier || oldDelegate.drawPen != drawPen;
-  }
-}
