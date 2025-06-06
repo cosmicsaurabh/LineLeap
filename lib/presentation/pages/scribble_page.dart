@@ -2,9 +2,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
-import 'package:flutter_scribble/data/remote/replicate_api.dart';
+import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
 import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
+import 'package:http/http.dart' as http;
 
 class ScribblePage extends StatefulWidget {
   const ScribblePage({super.key});
@@ -25,16 +26,21 @@ class _ScribblePageState extends State<ScribblePage> {
     if (bytes == null) return;
 
     setState(() => isLoading = true);
+    final api = AIHordeAPI();
+    final imageUrl = await GenerateImageUseCase(
+      api,
+    ).generateImageFromSketch(bytes, "a cute cat in watercolor style");
 
-    final api = ReplicateAPI();
-    final useCase = GenerateImageUseCase(api);
-    final result = await useCase.generateFromSketch(
-      bytes,
-      "a cute cat in watercolor style",
-    );
+    Uint8List? finalImageBytes;
+    if (imageUrl != null) {
+      final res = await http.get(Uri.parse(imageUrl));
+      if (res.statusCode == 200) {
+        finalImageBytes = res.bodyBytes;
+      }
+    }
 
     setState(() {
-      generatedImage = result;
+      generatedImage = finalImageBytes;
       isLoading = false;
     });
   }
