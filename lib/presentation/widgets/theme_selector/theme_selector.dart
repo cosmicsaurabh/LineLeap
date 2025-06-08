@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/theme_notifier.dart';
+import '../providers/theme_notifier.dart';
+import 'theme_toggle.dart';
 
 class ThemeSelector extends StatelessWidget {
   const ThemeSelector({super.key});
@@ -18,63 +19,25 @@ class ThemeSelector extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildThemeOption(
-            context,
+          ThemeToggle(
             icon: Icons.wb_sunny,
             tooltip: "Light",
             isSelected: themeNotifier.themeMode == ThemeMode.light,
             onTap: () => themeNotifier.setThemeMode(ThemeMode.light),
           ),
-          _buildThemeOption(
-            context,
+          ThemeToggle(
             icon: Icons.phone_android,
             tooltip: "System",
             isSelected: themeNotifier.themeMode == ThemeMode.system,
             onTap: () => themeNotifier.setThemeMode(ThemeMode.system),
           ),
-          _buildThemeOption(
-            context,
+          ThemeToggle(
             icon: Icons.nightlight_round,
             tooltip: "Dark",
             isSelected: themeNotifier.themeMode == ThemeMode.dark,
             onTap: () => themeNotifier.setThemeMode(ThemeMode.dark),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildThemeOption(
-    BuildContext context, {
-    required IconData icon,
-    required String tooltip,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color:
-                isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.transparent,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            icon,
-            size: 20,
-            color:
-                isSelected
-                    ? Theme.of(context).colorScheme.onPrimary
-                    // ignore: deprecated_member_use
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
-        ),
       ),
     );
   }

@@ -1,13 +1,13 @@
 import 'dart:typed_data';
 import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
 import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
 import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/theme_selector.dart';
+import 'package:flutter_scribble/presentation/widgets/theme_selector/theme_selector.dart';
+import 'package:flutter_scribble/presentation/widgets/toolbar/scribble_toolbar.dart';
 import 'package:http/http.dart' as http;
 
 class ScribblePage extends StatefulWidget {
@@ -89,133 +89,53 @@ class _ScribblePageState extends State<ScribblePage> {
             ),
           ),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                onPressed: () async {
-                  promptHandling();
-                },
-                child: const Icon(Icons.text_fields, size: 28),
-              ),
-
-              ElevatedButton(
-                onPressed: _notifier.clear,
-                child: const Icon(Icons.clear, size: 28),
-              ),
-              ElevatedButton(
-                child: Icon(Icons.color_lens, color: _notifier.currentColor),
-
-                onPressed: () async {
-                  Color pickedColor = _notifier.currentColor;
-                  await showDialog(
-                    context: context,
-                    builder:
-                        (context) => AlertDialog(
-                          title: const Text('Select Color'),
-                          content: SingleChildScrollView(
-                            child: ColorPicker(
-                              pickerColor: _notifier.currentColor,
-                              onColorChanged: (color) {
-                                pickedColor = color;
-                              },
-                            ),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                _notifier.setColor(pickedColor);
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Select'),
-                            ),
-                          ],
-                        ),
-                  );
-                },
-              ),
-
-              Tooltip(
-                message: "Undo",
-                waitDuration: const Duration(milliseconds: 500),
-                child: Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      if (_notifier.canUndo) {
-                        _notifier.undo();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Nothing to undo"),
-                            duration: Duration(milliseconds: 150),
-                          ),
-                        );
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Icon(
-                        Icons.undo,
-                        color:
-                            _notifier.canUndo
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Tooltip(
-                message: "Redo",
-                waitDuration: const Duration(milliseconds: 500),
-                child: Material(
-                  color: Colors.transparent,
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () {
-                      if (_notifier.canRedo) {
-                        _notifier.redo();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Nothing to redo"),
-                            duration: Duration(milliseconds: 150),
-                          ),
-                        );
-                      }
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Icon(
-                        Icons.redo,
-                        color:
-                            _notifier.canRedo
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+          ScribbleToolbar(
+            notifier: _notifier,
+            onPrompt: promptHandling,
+            onClear: _notifier.clear,
           ),
-
-          if (generatedImage != null)
-            Expanded(flex: 2, child: Image.memory(generatedImage!)),
+          const SizedBox(height: 16),
         ],
       ),
+      floatingActionButton:
+          generatedImage != null
+              ? FloatingActionButton(
+                onPressed: () => _showGeneratedImagePopup(context),
+                child: const Icon(Icons.image),
+              )
+              : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  void _showGeneratedImagePopup(BuildContext context) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Generated Image',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Prompt: $prompt', style: const TextStyle(fontSize: 16)),
+
+                  const SizedBox(height: 16),
+                  Image.memory(generatedImage!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Close'),
+                  ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 
