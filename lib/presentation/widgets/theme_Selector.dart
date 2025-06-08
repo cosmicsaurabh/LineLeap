@@ -12,7 +12,7 @@ class ThemeSelector extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -71,6 +71,7 @@ class ThemeSelector extends StatelessWidget {
             color:
                 isSelected
                     ? Theme.of(context).colorScheme.onPrimary
+                    // ignore: deprecated_member_use
                     : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           ),
         ),
