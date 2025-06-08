@@ -135,7 +135,18 @@ class _ScribblePageState extends State<ScribblePage> {
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: _notifier.canUndo ? _notifier.undo : null,
+                    onTap: () {
+                      if (_notifier.canUndo) {
+                        _notifier.undo();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Nothing to undo"),
+                            duration: Duration(milliseconds: 150),
+                          ),
+                        );
+                      }
+                    },
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Icon(
@@ -158,7 +169,18 @@ class _ScribblePageState extends State<ScribblePage> {
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: _notifier.canRedo ? _notifier.redo : null,
+                    onTap: () {
+                      if (_notifier.canRedo) {
+                        _notifier.redo();
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Nothing to redo"),
+                            duration: Duration(milliseconds: 150),
+                          ),
+                        );
+                      }
+                    },
                     child: Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: Icon(
