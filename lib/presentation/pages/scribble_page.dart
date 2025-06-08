@@ -6,8 +6,11 @@ import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
 import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
-import 'package:flutter_scribble/presentation/widgets/scribble_notifier.dart';
+import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:flutter_scribble/presentation/widgets/theme_Selector.dart';
+import 'package:flutter_scribble/presentation/widgets/providers/theme_notifier.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class ScribblePage extends StatefulWidget {
   const ScribblePage({super.key});
@@ -61,7 +64,8 @@ class _ScribblePageState extends State<ScribblePage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Scribble to AI Image'),
+            const Text('Scribble'),
+            const ThemeSelector(),
             if (!isLoading)
               ElevatedButton.icon(
                 onPressed:
