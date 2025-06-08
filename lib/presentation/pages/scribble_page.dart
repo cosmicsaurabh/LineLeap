@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_scribble/core/utils/image_utils.dart';
@@ -21,6 +22,7 @@ class _ScribblePageState extends State<ScribblePage> {
 
   Uint8List? generatedImage;
   bool isLoading = false;
+  String prompt = '';
 
   Future<void> _handleGenerate() async {
     final bytes = await ImageUtils.capturePng(_paintKey);
@@ -30,8 +32,7 @@ class _ScribblePageState extends State<ScribblePage> {
     final api = AIHordeAPI();
     final repository = ImageGenerationRepositoryImpl(api);
     final useCase = GenerateImageUseCase(repository);
-
-    final imageUrl = await useCase(bytes, "a cute cat in watercolor style");
+    final imageUrl = await useCase(bytes, prompt);
 
     Uint8List? finalImageBytes;
     if (imageUrl != null) {
@@ -63,7 +64,12 @@ class _ScribblePageState extends State<ScribblePage> {
             const Text('Scribble to AI Image'),
             if (!isLoading)
               ElevatedButton.icon(
-                onPressed: isLoading ? null : _handleGenerate,
+                onPressed:
+                    isLoading
+                        ? null
+                        : prompt.isNotEmpty
+                        ? _handleGenerate
+                        : () => promptHandling(),
                 icon: const Icon(Icons.auto_fix_high),
                 label: const Text("Generate"),
               ),
@@ -84,14 +90,20 @@ class _ScribblePageState extends State<ScribblePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton.icon(
-                onPressed: _notifier.clear,
-                icon: const Icon(Icons.clear),
-                label: const Text("Clear"),
+              ElevatedButton(
+                onPressed: () async {
+                  promptHandling();
+                },
+                child: const Icon(Icons.text_fields, size: 28),
               ),
-              ElevatedButton.icon(
-                icon: Icon(Icons.color_lens, color: _notifier.currentColor),
-                label: const Text("Pick Color"),
+
+              ElevatedButton(
+                onPressed: _notifier.clear,
+                child: const Icon(Icons.clear, size: 28),
+              ),
+              ElevatedButton(
+                child: Icon(Icons.color_lens, color: _notifier.currentColor),
+
                 onPressed: () async {
                   Color pickedColor = _notifier.currentColor;
                   await showDialog(
@@ -181,6 +193,32 @@ class _ScribblePageState extends State<ScribblePage> {
         ],
       ),
     );
+  }
+
+  Future<void> promptHandling() async {
+    final result = await showTextInputDialog(
+      context: context,
+      title: 'Prompt Input',
+      message: 'Enter prompt for AI generation',
+
+      textFields: [
+        DialogTextField(
+          hintText: 'Express here',
+          initialText: prompt,
+          maxLines: 5,
+          minLines: 1,
+          validator:
+              (value) =>
+                  value?.isEmpty ?? true ? 'Prompt cannot be empty' : null,
+        ),
+      ],
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        prompt = result[0];
+      });
+    }
   }
 }
 
