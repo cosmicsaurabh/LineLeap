@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key});
@@ -525,9 +526,22 @@ class GalleryActionSheet extends StatelessWidget {
     }
   }
 
-  void _handleShare(BuildContext context) {
+  void _handleShare(BuildContext context) async {
     Navigator.of(context).pop();
-    // TODO: Implement share functionality
+    try {
+      final file = File(image.filePath);
+      if (await file.exists()) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text:
+              image.prompt ?? 'Check out my AI-generated image from scribble!',
+        );
+      } else {
+        _showNonInteractiveActionFeedback(parentContext, 'File not found');
+      }
+    } catch (e) {
+      _showNonInteractiveActionFeedback(parentContext, 'Failed to share image');
+    }
   }
 
   void _handleScribble(BuildContext context) {
