@@ -48,9 +48,9 @@ class GalleryNotifier extends ChangeNotifier {
 
   Future<void> deleteImage(GeneratedImage image) async {
     try {
-      await deleteGalleryImageUseCase(image);
       _images.remove(image);
       notifyListeners();
+      await deleteGalleryImageUseCase(image);
     } catch (e) {
       _error = 'Failed to delete image';
       notifyListeners();
