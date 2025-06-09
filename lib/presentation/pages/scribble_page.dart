@@ -5,10 +5,12 @@ import 'package:flutter_scribble/core/utils/image_utils.dart';
 import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
 import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
 import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
+import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
 import 'package:flutter_scribble/presentation/widgets/theme_selector/theme_selector.dart';
 import 'package:flutter_scribble/presentation/widgets/toolbar/scribble_toolbar.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class ScribblePage extends StatefulWidget {
   const ScribblePage({super.key});
@@ -26,13 +28,14 @@ class _ScribblePageState extends State<ScribblePage> {
   String prompt = '';
 
   Future<void> _handleGenerate() async {
+    final galleryProvider = context.read<GalleryNotifier>();
     final bytes = await ImageUtils.capturePng(_paintKey);
     if (bytes == null) return;
 
     setState(() => isLoading = true);
     final api = AIHordeAPI();
-    final repository = ImageGenerationRepositoryImpl(api);
-    final useCase = GenerateImageUseCase(repository);
+    final imageRepository = ImageGenerationRepositoryImpl(api);
+    final useCase = GenerateImageUseCase(imageRepository);
     final imageUrl = await useCase(bytes, prompt);
 
     Uint8List? finalImageBytes;
@@ -40,9 +43,20 @@ class _ScribblePageState extends State<ScribblePage> {
       final res = await http.get(Uri.parse(imageUrl));
       if (res.statusCode == 200) {
         finalImageBytes = res.bodyBytes;
+        galleryProvider.saveGeneratedImage(finalImageBytes, prompt);
+      } else {
+        // Handle error if image download fails
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download image: ${res.reasonPhrase}'),
+          ),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return;
       }
     }
-
     setState(() {
       generatedImage = finalImageBytes;
       isLoading = false;
