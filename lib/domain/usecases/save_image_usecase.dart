@@ -1,10 +1,13 @@
-import '../entities/generated_image.dart';
-import '../repositories/gallery_repository.dart';
+import 'dart:typed_data';
+
+import 'package:flutter_scribble/data/repositories/image_save_load_repository_impl.dart';
 
 class SaveImageUseCase {
-  final GalleryRepository repository;
+  final ImageSaveLoadRepositoryImpl imageRepository;
 
-  SaveImageUseCase(this.repository);
+  SaveImageUseCase(this.imageRepository);
 
-  Future<void> call(GeneratedImage image) => repository.saveImage(image);
+  Future<void> call(Uint8List bytes, String prompt) async {
+    await imageRepository.saveGeneratedImage(bytes, prompt);
+  }
 }

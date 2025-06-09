@@ -3,8 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:provider/provider.dart';
 
-class GalleryPage extends StatelessWidget {
+class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key});
+
+  @override
+  State<GalleryPage> createState() => _GalleryPageState();
+}
+
+class _GalleryPageState extends State<GalleryPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Delay fetch to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<GalleryNotifier>().loadImages();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

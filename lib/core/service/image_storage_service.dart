@@ -1,0 +1,28 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
+
+class ImageStorageService {
+  Future<String> saveImage(Uint8List imageBytes, String fileName) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final imagePath = '${directory.path}/$fileName.png';
+    final file = File(imagePath);
+    await file.writeAsBytes(imageBytes);
+    return imagePath;
+  }
+
+  Future<Uint8List> getImage(String imagePath) async {
+    final file = File(imagePath);
+    if (await file.exists()) {
+      return await file.readAsBytes();
+    }
+    throw Exception('Image not found');
+  }
+
+  Future<void> deleteImage(String imagePath) async {
+    final file = File(imagePath);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+}
