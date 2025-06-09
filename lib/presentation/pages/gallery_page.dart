@@ -42,25 +42,69 @@ class _GalleryPageState extends State<GalleryPage> {
       ),
       itemBuilder: (context, index) {
         final image = gallery.images[index];
-        return GestureDetector(
-          onTap:
-              () => showDialog(
-                context: context,
-                builder:
-                    (_) => Dialog(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Image.file(File(image.filePath)),
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(image.prompt),
+        return Stack(
+          children: [
+            GestureDetector(
+              onTap:
+                  () => showDialog(
+                    context: context,
+                    builder:
+                        (_) => Dialog(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Image.file(File(image.filePath)),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(image.prompt),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
+                  ), // existing image view
+              child: Image.file(File(image.filePath), fit: BoxFit.cover),
+            ),
+            Positioned(
+              right: 4,
+              top: 4,
+              child: PopupMenuButton<String>(
+                onSelected: (value) async {
+                  if (value == 'delete') {
+                    final shouldDelete = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (ctx) => AlertDialog(
+                            title: const Text('Delete Image?'),
+                            content: const Text(
+                              'Are you sure you want to delete this image?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx, true),
+                                child: const Text('Delete'),
+                              ),
+                            ],
+                          ),
+                    );
+                    if (shouldDelete == true) {
+                      await gallery.deleteImage(image);
+                    }
+                  }
+                },
+                itemBuilder:
+                    (ctx) => [
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Delete'),
                       ),
-                    ),
+                    ],
               ),
-          child: Image.file(File(image.filePath), fit: BoxFit.cover),
+            ),
+          ],
         );
       },
     );
