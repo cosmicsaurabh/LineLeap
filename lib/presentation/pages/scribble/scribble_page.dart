@@ -39,7 +39,7 @@ class DrawingState {
 
   const DrawingState({
     this.strokes = const [],
-    this.selectedColor = Colors.black,
+    this.selectedColor = Colors.grey,
     this.brushStyle = BrushStyle.medium,
     this.history = const [],
     this.historyIndex = -1,
