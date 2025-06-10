@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/scribble_page.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/scribble_painter.dart';
+import 'package:lineleap/presentation/pages/scribble/scribble_painter.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
 
 class DrawingCanvas extends StatefulWidget {
   final EnhancedScribbleNotifier notifier;

@@ -1,5 +1,5 @@
-import 'package:flutter_scribble/domain/entities/generated_image.dart';
-import 'package:flutter_scribble/domain/repositories/gallery_repository.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/domain/repositories/gallery_repository.dart';
 
 class DeleteGalleryImageUseCase {
   final GalleryRepository repository;

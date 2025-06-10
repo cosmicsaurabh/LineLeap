@@ -1,7 +1,6 @@
-// Enhanced Scribble Painter
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
 
 class EnhancedScribblePainter extends CustomPainter {
   final List<Stroke> strokes;

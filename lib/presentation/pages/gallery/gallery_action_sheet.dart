@@ -5,7 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -151,10 +151,10 @@ class GalleryActionSheet extends StatelessWidget {
   }
 
   void _handleScribble(BuildContext context) {
-    Navigator.of(context).pop();
+    // Navigator.of(context).pop();
     onActionComplete();
     // TODO: Navigate to scribble editor
-    _showNonInteractiveActionFeedback(context, 'Opening Scribble editor');
+    _showNonInteractiveActionFeedback(context, 'Coming soon');
   }
 
   void _handleDelete(BuildContext context) async {

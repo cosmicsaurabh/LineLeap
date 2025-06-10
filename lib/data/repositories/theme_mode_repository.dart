@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeModeRepositoryImpl implements ThemeModeRepository {

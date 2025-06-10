@@ -3,23 +3,22 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scribble/core/theme/app_theme.dart';
-import 'package:flutter_scribble/core/utils/image_utils.dart';
-import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
-import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
-import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/drawing_canvas.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/generated_image_viewer.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/model_selector_sheet.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/prompt_input_dialog.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/scribble_toolbar.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/toolbar/action_button.dart';
+import 'package:lineleap/core/theme/app_theme.dart';
+import 'package:lineleap/core/utils/image_utils.dart';
+import 'package:lineleap/data/remote/ai_horde_api.dart';
+import 'package:lineleap/data/repositories/image_generation_repository_impl.dart';
+import 'package:lineleap/domain/usecases/generate_image_usecase.dart';
+import 'package:lineleap/presentation/pages/scribble/drawing_canvas.dart';
+import 'package:lineleap/presentation/pages/scribble/generated_image_viewer.dart';
+import 'package:lineleap/presentation/pages/scribble/model_selector_sheet.dart';
+import 'package:lineleap/presentation/pages/scribble/prompt_input_dialog.dart';
+import 'package:lineleap/presentation/pages/scribble/scribble_toolbar.dart';
+import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/theme_notifier.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
-// Models
 enum BrushStyle {
   thin(2.0, 'Thin'),
   medium(4.0, 'Medium'),
@@ -63,126 +62,6 @@ class DrawingState {
   }
 }
 
-// Enhanced ScribbleNotifier
-class EnhancedScribbleNotifier extends ChangeNotifier {
-  DrawingState _state = const DrawingState();
-  DrawingState get state => _state;
-
-  bool get canUndo => _state.historyIndex > 0;
-  bool get canRedo => _state.historyIndex < _state.history.length - 1;
-
-  void selectColor(Color color) {
-    _state = _state.copyWith(selectedColor: color);
-    notifyListeners();
-  }
-
-  void selectBrushStyle(BrushStyle style) {
-    _state = _state.copyWith(brushStyle: style);
-    notifyListeners();
-  }
-
-  void startStroke(Offset point) {
-    final newStroke = Stroke(
-      points: [point],
-      color: _state.selectedColor,
-      width: _state.brushStyle.width,
-      style: _state.brushStyle,
-    );
-
-    final newStrokes = [..._state.strokes, newStroke];
-    _saveToHistory(newStrokes);
-  }
-
-  void appendPoint(Offset point) {
-    if (_state.strokes.isEmpty) return;
-
-    final lastStroke = _state.strokes.last;
-    final updatedStroke = lastStroke.copyWith(
-      points: [...lastStroke.points, point],
-    );
-
-    final newStrokes = [
-      ..._state.strokes.take(_state.strokes.length - 1),
-      updatedStroke,
-    ];
-
-    _state = _state.copyWith(strokes: newStrokes);
-    notifyListeners();
-  }
-
-  void endStroke() {
-    // Stroke is already saved in history from startStroke
-  }
-
-  void undo() {
-    if (!canUndo) return;
-
-    final newIndex = _state.historyIndex - 1;
-    _state = _state.copyWith(
-      strokes: _state.history[newIndex],
-      historyIndex: newIndex,
-    );
-    notifyListeners();
-  }
-
-  void redo() {
-    if (!canRedo) return;
-
-    final newIndex = _state.historyIndex + 1;
-    _state = _state.copyWith(
-      strokes: _state.history[newIndex],
-      historyIndex: newIndex,
-    );
-    notifyListeners();
-  }
-
-  void clear() {
-    _saveToHistory([]);
-  }
-
-  void _saveToHistory(List<Stroke> strokes) {
-    final newHistory = _state.history.take(_state.historyIndex + 1).toList();
-    newHistory.add(strokes);
-
-    _state = _state.copyWith(
-      strokes: strokes,
-      history: newHistory,
-      historyIndex: newHistory.length - 1,
-    );
-    notifyListeners();
-  }
-}
-
-// Enhanced Stroke Model
-class Stroke {
-  final List<Offset> points;
-  final Color color;
-  final double width;
-  final BrushStyle style;
-
-  const Stroke({
-    required this.points,
-    required this.color,
-    required this.width,
-    required this.style,
-  });
-
-  Stroke copyWith({
-    List<Offset>? points,
-    Color? color,
-    double? width,
-    BrushStyle? style,
-  }) {
-    return Stroke(
-      points: points ?? this.points,
-      color: color ?? this.color,
-      width: width ?? this.width,
-      style: style ?? this.style,
-    );
-  }
-}
-
-// Main ScribblePage
 class ScribblePage extends StatefulWidget {
   const ScribblePage({super.key});
 
@@ -313,14 +192,15 @@ class _ScribblePageState extends State<ScribblePage>
             color: theme.colorScheme.primary,
             size: 28,
           ),
-          const SizedBox(width: 8),
-          Text(
-            'Scribble AI',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
+          if (MediaQuery.of(context).size.width > 300) const SizedBox(width: 8),
+          if (MediaQuery.of(context).size.width > 300)
+            Text(
+              'LineLeap',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
         ],
       ),
       actions: [
@@ -341,7 +221,9 @@ class _ScribblePageState extends State<ScribblePage>
       ),
       child: IconButton(
         onPressed: () {
-          // Theme toggle logic would go here
+          context.read<ThemeNotifier>().setThemeMode(
+            isDark ? ThemeMode.light : ThemeMode.dark,
+          );
           HapticFeedback.selectionClick();
         },
         icon: AnimatedSwitcher(

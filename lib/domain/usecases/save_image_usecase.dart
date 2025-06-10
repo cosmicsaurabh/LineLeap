@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter_scribble/data/repositories/image_save_load_repository_impl.dart';
+import 'package:lineleap/data/repositories/image_save_load_repository_impl.dart';
 
 class SaveImageUseCase {
   final ImageSaveLoadRepositoryImpl imageRepository;

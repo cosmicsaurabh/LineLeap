@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/presentation/widgets/color_picker.dart/color_picker_dialog.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/toolbar/toolbar_icon_button.dart';
+import 'package:lineleap/presentation/widgets/color_picker.dart/color_picker_dialog.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/widgets/toolbar/toolbar_icon_button.dart';
 
 class ScribbleeToolbar extends StatelessWidget {
-  final ScribbleNotifier notifier;
+  final EnhancedScribbleNotifier notifier;
   final VoidCallback onPrompt;
   final VoidCallback onClear;
 
@@ -34,12 +34,12 @@ class ScribbleeToolbar extends StatelessWidget {
 
         // Color picker button
         ElevatedButton(
-          child: Icon(Icons.color_lens, color: notifier.currentColor),
+          child: Icon(Icons.color_lens, color: notifier.state.selectedColor),
           onPressed:
               () => showColorPickerDialog(
                 context: context,
-                initialColor: notifier.currentColor,
-                onColorSelected: notifier.setColor,
+                initialColor: notifier.state.selectedColor,
+                onColorSelected: notifier.selectColor,
               ),
         ),
 
