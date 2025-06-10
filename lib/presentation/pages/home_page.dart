@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'scribble_page.dart';
+import 'scribble/scribble_page.dart';
 import 'gallery/gallery_page.dart';
 
 class HomePage extends StatefulWidget {
