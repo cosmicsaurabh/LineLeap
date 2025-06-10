@@ -189,6 +189,24 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             // Zoom in button
                             GestureDetector(
                               onTap: () {
+                                if (_currentScale >= 10.0) {
+                                  setState(() {
+                                    _currentScale = 10.0;
+                                  });
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Maximum zoom in reached',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onError,
+                                        ),
+                                      ),
+                                      backgroundColor: theme.colorScheme.error,
+                                    ),
+                                  );
+                                  return;
+                                }
                                 _transformationController.value.scale(1.5);
                                 setState(() {
                                   _currentScale *= 1.5;
@@ -211,6 +229,23 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             // Zoom out button
                             GestureDetector(
                               onTap: () {
+                                if (_currentScale <= 1.0) {
+                                  setState(() {
+                                    _currentScale = 1.0;
+                                  });
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Maximum zoom out reached',
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onError,
+                                        ),
+                                      ),
+                                      backgroundColor: theme.colorScheme.error,
+                                    ),
+                                  );
+                                  return;
+                                }
                                 _transformationController.value.scale(0.75);
                                 setState(() {
                                   _currentScale *= 0.75;

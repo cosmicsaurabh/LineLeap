@@ -1,0 +1,561 @@
+import 'dart:typed_data';
+import 'dart:ui';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_scribble/core/theme/app_theme.dart';
+import 'package:flutter_scribble/core/utils/image_utils.dart';
+import 'package:flutter_scribble/data/remote/ai_horde_api.dart';
+import 'package:flutter_scribble/data/repositories/image_generation_repository_impl.dart';
+import 'package:flutter_scribble/domain/usecases/generate_image_usecase.dart';
+import 'package:flutter_scribble/presentation/pages/scribble/drawing_canvas.dart';
+import 'package:flutter_scribble/presentation/pages/scribble/generated_image_viewer.dart';
+import 'package:flutter_scribble/presentation/pages/scribble/model_selector_sheet.dart';
+import 'package:flutter_scribble/presentation/pages/scribble/prompt_input_dialog.dart';
+import 'package:flutter_scribble/presentation/pages/scribble/scribble_toolbar.dart';
+import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:flutter_scribble/presentation/widgets/toolbar/action_button.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+
+// Models
+enum BrushStyle {
+  thin(2.0, 'Thin'),
+  medium(4.0, 'Medium'),
+  thick(8.0, 'Thick'),
+  dotted(3.0, 'Dotted');
+
+  const BrushStyle(this.width, this.name);
+  final double width;
+  final String name;
+}
+
+class DrawingState {
+  final List<Stroke> strokes;
+  final Color selectedColor;
+  final BrushStyle brushStyle;
+  final List<List<Stroke>> history;
+  final int historyIndex;
+
+  const DrawingState({
+    this.strokes = const [],
+    this.selectedColor = Colors.black,
+    this.brushStyle = BrushStyle.medium,
+    this.history = const [],
+    this.historyIndex = -1,
+  });
+
+  DrawingState copyWith({
+    List<Stroke>? strokes,
+    Color? selectedColor,
+    BrushStyle? brushStyle,
+    List<List<Stroke>>? history,
+    int? historyIndex,
+  }) {
+    return DrawingState(
+      strokes: strokes ?? this.strokes,
+      selectedColor: selectedColor ?? this.selectedColor,
+      brushStyle: brushStyle ?? this.brushStyle,
+      history: history ?? this.history,
+      historyIndex: historyIndex ?? this.historyIndex,
+    );
+  }
+}
+
+// Enhanced ScribbleNotifier
+class EnhancedScribbleNotifier extends ChangeNotifier {
+  DrawingState _state = const DrawingState();
+  DrawingState get state => _state;
+
+  bool get canUndo => _state.historyIndex > 0;
+  bool get canRedo => _state.historyIndex < _state.history.length - 1;
+
+  void selectColor(Color color) {
+    _state = _state.copyWith(selectedColor: color);
+    notifyListeners();
+  }
+
+  void selectBrushStyle(BrushStyle style) {
+    _state = _state.copyWith(brushStyle: style);
+    notifyListeners();
+  }
+
+  void startStroke(Offset point) {
+    final newStroke = Stroke(
+      points: [point],
+      color: _state.selectedColor,
+      width: _state.brushStyle.width,
+      style: _state.brushStyle,
+    );
+
+    final newStrokes = [..._state.strokes, newStroke];
+    _saveToHistory(newStrokes);
+  }
+
+  void appendPoint(Offset point) {
+    if (_state.strokes.isEmpty) return;
+
+    final lastStroke = _state.strokes.last;
+    final updatedStroke = lastStroke.copyWith(
+      points: [...lastStroke.points, point],
+    );
+
+    final newStrokes = [
+      ..._state.strokes.take(_state.strokes.length - 1),
+      updatedStroke,
+    ];
+
+    _state = _state.copyWith(strokes: newStrokes);
+    notifyListeners();
+  }
+
+  void endStroke() {
+    // Stroke is already saved in history from startStroke
+  }
+
+  void undo() {
+    if (!canUndo) return;
+
+    final newIndex = _state.historyIndex - 1;
+    _state = _state.copyWith(
+      strokes: _state.history[newIndex],
+      historyIndex: newIndex,
+    );
+    notifyListeners();
+  }
+
+  void redo() {
+    if (!canRedo) return;
+
+    final newIndex = _state.historyIndex + 1;
+    _state = _state.copyWith(
+      strokes: _state.history[newIndex],
+      historyIndex: newIndex,
+    );
+    notifyListeners();
+  }
+
+  void clear() {
+    _saveToHistory([]);
+  }
+
+  void _saveToHistory(List<Stroke> strokes) {
+    final newHistory = _state.history.take(_state.historyIndex + 1).toList();
+    newHistory.add(strokes);
+
+    _state = _state.copyWith(
+      strokes: strokes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+    );
+    notifyListeners();
+  }
+}
+
+// Enhanced Stroke Model
+class Stroke {
+  final List<Offset> points;
+  final Color color;
+  final double width;
+  final BrushStyle style;
+
+  const Stroke({
+    required this.points,
+    required this.color,
+    required this.width,
+    required this.style,
+  });
+
+  Stroke copyWith({
+    List<Offset>? points,
+    Color? color,
+    double? width,
+    BrushStyle? style,
+  }) {
+    return Stroke(
+      points: points ?? this.points,
+      color: color ?? this.color,
+      width: width ?? this.width,
+      style: style ?? this.style,
+    );
+  }
+}
+
+// Main ScribblePage
+class ScribblePage extends StatefulWidget {
+  const ScribblePage({super.key});
+
+  @override
+  State<ScribblePage> createState() => _ScribblePageState();
+}
+
+class _ScribblePageState extends State<ScribblePage>
+    with TickerProviderStateMixin {
+  final EnhancedScribbleNotifier _notifier = EnhancedScribbleNotifier();
+  final GlobalKey _paintKey = GlobalKey();
+
+  late AnimationController _generateButtonController;
+  late AnimationController _toolbarController;
+
+  Uint8List? generatedImage;
+  bool isLoading = false;
+  String prompt = '';
+  String selectedModel = 'Stable Diffusion';
+
+  @override
+  void initState() {
+    super.initState();
+    _generateButtonController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _toolbarController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _toolbarController.forward();
+  }
+
+  @override
+  void dispose() {
+    _notifier.dispose();
+    _generateButtonController.dispose();
+    _toolbarController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleGenerate() async {
+    if (prompt.isEmpty) {
+      await _showPromptDialog();
+      return;
+    }
+
+    final galleryProvider = context.read<GalleryNotifier>();
+    final bytes = await ImageUtils.capturePng(_paintKey);
+    if (bytes == null) return;
+
+    setState(() => isLoading = true);
+    HapticFeedback.mediumImpact();
+
+    try {
+      final api = AIHordeAPI();
+      final imageRepository = ImageGenerationRepositoryImpl(api);
+      final useCase = GenerateImageUseCase(imageRepository);
+      final imageUrl = await useCase(bytes, prompt);
+
+      Uint8List? finalImageBytes;
+      if (imageUrl != null) {
+        final res = await http.get(Uri.parse(imageUrl));
+        if (res.statusCode == 200) {
+          finalImageBytes = res.bodyBytes;
+          galleryProvider.saveGeneratedImage(finalImageBytes, prompt);
+          HapticFeedback.lightImpact();
+        } else {
+          _showErrorSnackBar('Failed to download image: ${res.reasonPhrase}');
+        }
+      }
+
+      setState(() {
+        generatedImage = finalImageBytes;
+        isLoading = false;
+      });
+
+      if (finalImageBytes != null) {
+        await _showGeneratedImageDialog();
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+      _showErrorSnackBar('Generation failed: $e');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.smallRadius),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      appBar: _buildAppBar(theme, isDark),
+      body: Column(
+        children: [
+          _buildDrawingArea(theme, isDark),
+          _buildToolbar(theme, isDark),
+        ],
+      ),
+      floatingActionButton: _buildFloatingActionButton(theme),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(ThemeData theme, bool isDark) {
+    return AppBar(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      elevation: 0,
+      title: Row(
+        children: [
+          Icon(
+            CupertinoIcons.scribble,
+            color: theme.colorScheme.primary,
+            size: 28,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Scribble AI',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        _buildThemeToggle(theme, isDark),
+        const SizedBox(width: 8),
+        _buildGenerateButton(theme),
+        const SizedBox(width: 16),
+      ],
+    );
+  }
+
+  Widget _buildThemeToggle(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+      ),
+      child: IconButton(
+        onPressed: () {
+          // Theme toggle logic would go here
+          HapticFeedback.selectionClick();
+        },
+        icon: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Icon(
+            isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
+            key: ValueKey(isDark),
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGenerateButton(ThemeData theme) {
+    return AnimatedBuilder(
+      animation: _generateButtonController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: 1.0 - (_generateButtonController.value * 0.1),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary,
+                  theme.colorScheme.primary.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap:
+                    isLoading
+                        ? null
+                        : () {
+                          _generateButtonController.forward().then((_) {
+                            _generateButtonController.reverse();
+                          });
+                          _handleGenerate();
+                        },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isLoading)
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(
+                              theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                        )
+                      else
+                        Icon(
+                          CupertinoIcons.sparkles,
+                          size: 16,
+                          color: theme.colorScheme.onPrimary,
+                        ),
+                      const SizedBox(width: 8),
+                      Text(
+                        isLoading ? 'Generating...' : 'Generate',
+                        style: TextStyle(
+                          color: theme.colorScheme.onPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawingArea(ThemeData theme, bool isDark) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          child: RepaintBoundary(
+            key: _paintKey,
+            child: DrawingCanvas(notifier: _notifier),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildToolbar(ThemeData theme, bool isDark) {
+    return SlideTransition(
+      position: Tween<Offset>(
+        begin: const Offset(0, 1),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(parent: _toolbarController, curve: Curves.easeOutCubic),
+      ),
+      child: Container(
+        height: AppTheme.toolbarHeight,
+        margin: const EdgeInsets.all(16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: (isDark ? Colors.black : Colors.white).withOpacity(0.8),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                border: Border.all(
+                  color: theme.colorScheme.outline.withOpacity(0.2),
+                ),
+              ),
+              child: ScribbleToolbar(
+                notifier: _notifier,
+                onPrompt: _showPromptDialog,
+                onModelSelect: _showModelSelector,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget? _buildFloatingActionButton(ThemeData theme) {
+    if (generatedImage == null) return null;
+
+    return FloatingActionButton(
+      onPressed: _showGeneratedImageDialog,
+      backgroundColor: theme.colorScheme.secondary,
+      child: Icon(CupertinoIcons.photo, color: theme.colorScheme.onSecondary),
+    );
+  }
+
+  Future<void> _showPromptDialog() async {
+    final result = await showCupertinoDialog<String>(
+      context: context,
+      builder: (context) => PromptInputDialog(initialPrompt: prompt),
+    );
+
+    if (result != null) {
+      setState(() => prompt = result);
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  Future<void> _showModelSelector() async {
+    final result = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (context) => ModelSelectorSheet(selectedModel: selectedModel),
+    );
+
+    if (result != null) {
+      setState(() => selectedModel = result);
+      HapticFeedback.selectionClick();
+    }
+  }
+
+  Future<void> _showGeneratedImageDialog() async {
+    if (generatedImage == null) return;
+
+    await showDialog(
+      context: context,
+      builder:
+          (context) =>
+              GeneratedImageViewer(image: generatedImage!, prompt: prompt),
+    );
+  }
+}
+
+// Usage Example and Integration
+class ScribbleApp extends StatelessWidget {
+  const ScribbleApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Scribble AI',
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      home: const ScribblePage(),
+      debugShowCheckedModeBanner: false,
+    );
+  }
+}
