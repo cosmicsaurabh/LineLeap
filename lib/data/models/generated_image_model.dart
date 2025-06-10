@@ -1,4 +1,4 @@
-import 'package:flutter_scribble/domain/entities/generated_image.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:hive/hive.dart';
 
 part 'generated_image_model.g.dart';

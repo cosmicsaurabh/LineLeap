@@ -1,4 +1,4 @@
-package com.example.flutter_scribble
+package com.example.lineleap
 
 import io.flutter.embedding.android.FlutterActivity
 

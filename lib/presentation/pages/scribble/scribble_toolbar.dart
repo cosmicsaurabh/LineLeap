@@ -2,7 +2,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scribble/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
 
 class ScribbleToolbar extends StatelessWidget {
   final EnhancedScribbleNotifier notifier;

@@ -3,8 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/presentation/pages/gallery/gallery_action_sheet.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/pages/gallery/gallery_action_sheet.dart';
+import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final dynamic image;

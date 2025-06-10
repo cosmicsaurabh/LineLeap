@@ -35,7 +35,7 @@ class AIHordeAPI {
       headers: {
         'apikey': _apiKey,
         'Content-Type': 'application/json',
-        'Client-Agent': 'flutter_scribble',
+        'Client-Agent': 'lineleap',
       },
       body: jsonEncode(payload),
     );

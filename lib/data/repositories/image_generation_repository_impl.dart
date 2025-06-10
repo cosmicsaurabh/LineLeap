@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:flutter_scribble/domain/repositories/image_generation_repo.dart';
+import 'package:lineleap/domain/repositories/image_generation_repo.dart';
 
 import '../remote/ai_horde_api.dart';
 import 'dart:convert';

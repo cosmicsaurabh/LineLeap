@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/domain/usecases/get_gallery_images_usecase.dart';
-import 'package:flutter_scribble/domain/usecases/delete_gallery_image_usecase.dart';
-import 'package:flutter_scribble/domain/usecases/save_image_usecase.dart';
+import 'package:lineleap/domain/usecases/get_gallery_images_usecase.dart';
+import 'package:lineleap/domain/usecases/delete_gallery_image_usecase.dart';
+import 'package:lineleap/domain/usecases/save_image_usecase.dart';
 import '../../../domain/entities/generated_image.dart';
 
 // presentation/notifiers/gallery_notifier.dart

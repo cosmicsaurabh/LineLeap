@@ -1,72 +1,122 @@
 import 'package:flutter/material.dart';
+import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
 
-class Stroke {
-  final List<Offset?> points;
-  final Color color;
-  Stroke({required this.points, required this.color});
+// Enhanced ScribbleNotifier
+class EnhancedScribbleNotifier extends ChangeNotifier {
+  DrawingState _state = const DrawingState();
+  DrawingState get state => _state;
+
+  bool get canUndo => _state.historyIndex > 0;
+  bool get canRedo => _state.historyIndex < _state.history.length - 1;
+
+  void selectColor(Color color) {
+    _state = _state.copyWith(selectedColor: color);
+    notifyListeners();
+  }
+
+  void selectBrushStyle(BrushStyle style) {
+    _state = _state.copyWith(brushStyle: style);
+    notifyListeners();
+  }
+
+  void startStroke(Offset point) {
+    final newStroke = Stroke(
+      points: [point],
+      color: _state.selectedColor,
+      width: _state.brushStyle.width,
+      style: _state.brushStyle,
+    );
+
+    final newStrokes = [..._state.strokes, newStroke];
+    _saveToHistory(newStrokes);
+  }
+
+  void appendPoint(Offset point) {
+    if (_state.strokes.isEmpty) return;
+
+    final lastStroke = _state.strokes.last;
+    final updatedStroke = lastStroke.copyWith(
+      points: [...lastStroke.points, point],
+    );
+
+    final newStrokes = [
+      ..._state.strokes.take(_state.strokes.length - 1),
+      updatedStroke,
+    ];
+
+    _state = _state.copyWith(strokes: newStrokes);
+    notifyListeners();
+  }
+
+  void endStroke() {
+    // Stroke is already saved in history from startStroke
+  }
+
+  void undo() {
+    if (!canUndo) return;
+
+    final newIndex = _state.historyIndex - 1;
+    _state = _state.copyWith(
+      strokes: _state.history[newIndex],
+      historyIndex: newIndex,
+    );
+    notifyListeners();
+  }
+
+  void redo() {
+    if (!canRedo) return;
+
+    final newIndex = _state.historyIndex + 1;
+    _state = _state.copyWith(
+      strokes: _state.history[newIndex],
+      historyIndex: newIndex,
+    );
+    notifyListeners();
+  }
+
+  void clear() {
+    _saveToHistory([]);
+  }
+
+  void _saveToHistory(List<Stroke> strokes) {
+    final newHistory = _state.history.take(_state.historyIndex + 1).toList();
+    newHistory.add(strokes);
+
+    _state = _state.copyWith(
+      strokes: strokes,
+      history: newHistory,
+      historyIndex: newHistory.length - 1,
+    );
+    notifyListeners();
+  }
 }
 
-class ScribbleNotifier extends ChangeNotifier {
-  final List<Stroke> _strokes = [];
-  final List<Stroke> _redoStack = [];
-  Color _currentColor = Colors.black;
-  Stroke? _currentStroke;
-  get currentColor => _currentColor;
+//
+// Enhanced Stroke Model
+class Stroke {
+  final List<Offset> points;
+  final Color color;
+  final double width;
+  final BrushStyle style;
 
-  List<Stroke> get strokes => List.unmodifiable(_strokes);
+  const Stroke({
+    required this.points,
+    required this.color,
+    required this.width,
+    required this.style,
+  });
 
-  // Color selection
-  void setColor(Color color) {
-    _currentColor = color;
-    notifyListeners();
+  Stroke copyWith({
+    List<Offset>? points,
+    Color? color,
+    double? width,
+    BrushStyle? style,
+  }) {
+    return Stroke(
+      points: points ?? this.points,
+      color: color ?? this.color,
+      width: width ?? this.width,
+      style: style ?? this.style,
+    );
   }
-
-  // Start a new stroke
-  void startStroke(Offset point) {
-    _currentStroke = Stroke(points: [point], color: _currentColor);
-    notifyListeners();
-  }
-
-  // Add points to the current stroke
-  void appendPoint(Offset point) {
-    if (_currentStroke == null) return;
-    _currentStroke!.points.add(point);
-    notifyListeners();
-  }
-
-  // Finish the current stroke and add to history
-  void endStroke() {
-    if (_currentStroke == null) return;
-    _strokes.add(_currentStroke!);
-    _currentStroke = null;
-    _redoStack.clear();
-    notifyListeners();
-  }
-
-  // Clear all strokes
-  void clear() {
-    _strokes.clear();
-    _redoStack.clear();
-    _currentStroke = null;
-    notifyListeners();
-  }
-
-  // Undo last stroke
-  void undo() {
-    if (_strokes.isNotEmpty) {
-      _redoStack.add(_strokes.removeLast());
-      notifyListeners();
-    }
-  }
-
-  // Redo last undone stroke
-  void redo() {
-    if (_redoStack.isNotEmpty) {
-      _strokes.add(_redoStack.removeLast());
-      notifyListeners();
-    }
-  }
-
-  bool get canUndo => _strokes.isNotEmpty;
-  bool get canRedo => _redoStack.isNotEmpty;
 }

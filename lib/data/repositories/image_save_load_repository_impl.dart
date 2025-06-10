@@ -2,10 +2,10 @@
 import 'dart:developer';
 import 'dart:typed_data';
 
-import 'package:flutter_scribble/core/service/image_storage_service.dart';
-import 'package:flutter_scribble/data/models/generated_image_model.dart';
-import 'package:flutter_scribble/domain/entities/generated_image.dart';
-import 'package:flutter_scribble/domain/repositories/image_repository.dart';
+import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/data/models/generated_image_model.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/domain/repositories/image_repository.dart';
 import 'package:hive/hive.dart';
 
 class ImageSaveLoadRepositoryImpl implements ImageRepository {

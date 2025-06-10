@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_scribble/core/theme/app_theme.dart';
-import 'package:flutter_scribble/presentation/widgets/toolbar/action_button.dart';
+import 'package:lineleap/core/theme/app_theme.dart';
+import 'package:lineleap/presentation/widgets/toolbar/action_button.dart';
 
 class GeneratedImageViewer extends StatefulWidget {
   final Uint8List image;

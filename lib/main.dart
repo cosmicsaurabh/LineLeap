@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_scribble/core/service/image_storage_service.dart';
-import 'package:flutter_scribble/data/models/generated_image_model.dart';
-import 'package:flutter_scribble/data/repositories/gallery_repository_impl.dart';
-import 'package:flutter_scribble/data/repositories/image_save_load_repository_impl.dart';
-import 'package:flutter_scribble/data/repositories/theme_mode_repository.dart';
-import 'package:flutter_scribble/domain/usecases/delete_gallery_image_usecase.dart';
-import 'package:flutter_scribble/domain/usecases/get_gallery_images_usecase.dart';
-import 'package:flutter_scribble/domain/usecases/save_image_usecase.dart';
-import 'package:flutter_scribble/presentation/pages/home_page.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/gallery_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:flutter_scribble/presentation/widgets/providers/theme_notifier.dart';
-import 'package:flutter_scribble/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/data/models/generated_image_model.dart';
+import 'package:lineleap/data/repositories/gallery_repository_impl.dart';
+import 'package:lineleap/data/repositories/image_save_load_repository_impl.dart';
+import 'package:lineleap/data/repositories/theme_mode_repository.dart';
+import 'package:lineleap/domain/usecases/delete_gallery_image_usecase.dart';
+import 'package:lineleap/domain/usecases/get_gallery_images_usecase.dart';
+import 'package:lineleap/domain/usecases/save_image_usecase.dart';
+import 'package:lineleap/presentation/pages/home_page.dart';
+import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/theme_notifier.dart';
+import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -45,8 +45,8 @@ void main() async {
         ChangeNotifierProvider<ThemeNotifier>(
           create: (_) => ThemeNotifier(setThemeModeUseCase),
         ),
-        ChangeNotifierProvider<ScribbleNotifier>(
-          create: (_) => ScribbleNotifier(),
+        ChangeNotifierProvider<EnhancedScribbleNotifier>(
+          create: (_) => EnhancedScribbleNotifier(),
         ),
         ChangeNotifierProvider(
           create:

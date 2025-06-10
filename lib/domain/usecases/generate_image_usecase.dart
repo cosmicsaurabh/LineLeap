@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:flutter_scribble/domain/repositories/image_generation_repo.dart';
+import 'package:lineleap/domain/repositories/image_generation_repo.dart';
 
 class GenerateImageUseCase {
   final ImageGenerationRepository repository;
