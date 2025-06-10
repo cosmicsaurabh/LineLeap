@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const double borderRadius = 16.0;
-  static const double smallRadius = 8.0;
+  static const double borderRadius = 24.0;
+  static const double smallRadius = 12.0;
   static const double toolbarHeight = 80.0;
 
   static ThemeData lightTheme = ThemeData(

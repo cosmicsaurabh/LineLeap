@@ -3,12 +3,12 @@ import 'package:flutter_scribble/presentation/widgets/color_picker.dart/color_pi
 import 'package:flutter_scribble/presentation/widgets/providers/scribble_notifier.dart';
 import 'package:flutter_scribble/presentation/widgets/toolbar/toolbar_icon_button.dart';
 
-class ScribbleToolbar extends StatelessWidget {
+class ScribbleeToolbar extends StatelessWidget {
   final ScribbleNotifier notifier;
   final VoidCallback onPrompt;
   final VoidCallback onClear;
 
-  const ScribbleToolbar({
+  const ScribbleeToolbar({
     super.key,
     required this.notifier,
     required this.onPrompt,
