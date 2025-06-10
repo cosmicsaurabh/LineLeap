@@ -43,52 +43,48 @@ class _GlassColorPickerDialogState extends State<_GlassColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: CupertinoAlertDialog(
-            title: const Text('Select Color'),
-            content: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: ColorPicker(
-                pickerColor: pickedColor,
-                onColorChanged: (color) {
-                  setState(() => pickedColor = color);
-                },
-                enableAlpha: true,
-                displayThumbColor: true,
-                pickerAreaHeightPercent: 1,
-                colorPickerWidth: 240,
-                pickerAreaBorderRadius: BorderRadius.circular(12),
-                paletteType: PaletteType.hueWheel,
-                labelTypes: [
-                  ColorLabelType.rgb,
-                  ColorLabelType.hsl,
-                  ColorLabelType.hex,
-                ],
-                hexInputBar: true,
-                portraitOnly: true,
-              ),
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
+        child: CupertinoAlertDialog(
+          title: const Text('Select Color'),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: ColorPicker(
+              pickerColor: pickedColor,
+              onColorChanged: (color) {
+                setState(() => pickedColor = color);
+              },
+              enableAlpha: true,
+              displayThumbColor: true,
+              pickerAreaHeightPercent: 1,
+              colorPickerWidth: 240,
+              pickerAreaBorderRadius: BorderRadius.circular(12),
+              paletteType: PaletteType.hueWheel,
+              labelTypes: [
+                ColorLabelType.rgb,
+                ColorLabelType.hsl,
+                ColorLabelType.hex,
+              ],
+              hexInputBar: true,
+              portraitOnly: true,
             ),
-            actions: [
-              CupertinoDialogAction(
-                child: const Text('Cancel'),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                child: const Text('Select'),
-                onPressed: () {
-                  widget.onColorSelected(pickedColor);
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
           ),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              child: const Text('Select'),
+              onPressed: () {
+                widget.onColorSelected(pickedColor);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
         ),
       ),
     );
