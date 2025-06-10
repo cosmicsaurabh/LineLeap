@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/widgets/color_picker.dart/color_picker_dialog.dart';
 import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
 
 class ScribbleToolbar extends StatelessWidget {
@@ -19,44 +20,57 @@ class ScribbleToolbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return ListenableBuilder(
       listenable: notifier,
       builder: (context, child) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              _buildToolButton(
-                context,
-                icon: CupertinoIcons.arrow_uturn_left,
-                onPressed: notifier.canUndo ? notifier.undo : null,
-              ),
-              const SizedBox(width: 8),
-              _buildToolButton(
-                context,
-                icon: CupertinoIcons.arrow_uturn_right,
-                onPressed: notifier.canRedo ? notifier.redo : null,
-              ),
-              const SizedBox(width: 16),
-              _buildColorPicker(context),
-              const SizedBox(width: 16),
-              _buildBrushSelector(context),
-              const Spacer(),
-              _buildToolButton(
-                context,
-                icon: CupertinoIcons.textformat,
-                onPressed: onPrompt,
-              ),
-              const SizedBox(width: 8),
-              _buildToolButton(
-                context,
-                icon: CupertinoIcons.clear,
-                onPressed: notifier.clear,
-                color: Colors.red,
-              ),
-            ],
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                _buildToolButton(
+                  context,
+                  icon: CupertinoIcons.arrow_uturn_left,
+                  onPressed: notifier.canUndo ? notifier.undo : null,
+                ),
+                const SizedBox(width: 8),
+                _buildToolButton(
+                  context,
+                  icon: CupertinoIcons.arrow_uturn_right,
+                  onPressed: notifier.canRedo ? notifier.redo : null,
+                ),
+                const SizedBox(width: 8),
+                _buildToolButton(
+                  context,
+                  icon: Icons.palette,
+                  onPressed:
+                      () => showColorPickerDialog(
+                        context: context,
+                        initialColor: notifier.state.selectedColor,
+                        onColorSelected: notifier.selectColor,
+                      ),
+                ),
+                const SizedBox(width: 8),
+                _buildBrushSelector(context),
+                const SizedBox(width: 8),
+                _buildToolButton(
+                  context,
+                  icon: CupertinoIcons.textformat,
+                  onPressed: onPrompt,
+                ),
+                const SizedBox(width: 8),
+                _buildToolButton(
+                  context,
+                  icon: CupertinoIcons.clear,
+                  onPressed: notifier.clear,
+                  color: Colors.red,
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -100,53 +114,6 @@ class ScribbleToolbar extends StatelessWidget {
     );
   }
 
-  Widget _buildColorPicker(BuildContext context) {
-    final colors = [
-      Colors.black,
-      Colors.red,
-      Colors.blue,
-      Colors.green,
-      Colors.orange,
-      Colors.purple,
-    ];
-
-    return Row(
-      children:
-          colors.map((color) {
-            final isSelected = notifier.state.selectedColor == color;
-            return GestureDetector(
-              onTap: () {
-                notifier.selectColor(color);
-                HapticFeedback.selectionClick();
-              },
-              child: Container(
-                width: 24,
-                height: 24,
-                margin: const EdgeInsets.only(right: 8),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border:
-                      isSelected
-                          ? Border.all(color: Colors.white, width: 2)
-                          : null,
-                  boxShadow:
-                      isSelected
-                          ? [
-                            BoxShadow(
-                              color: color.withOpacity(0.5),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                            ),
-                          ]
-                          : null,
-                ),
-              ),
-            );
-          }).toList(),
-    );
-  }
-
   Widget _buildBrushSelector(BuildContext context) {
     return GestureDetector(
       onTap: () => _showBrushOptions(context),
@@ -154,7 +121,7 @@ class ScribbleToolbar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
