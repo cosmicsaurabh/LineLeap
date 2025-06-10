@@ -46,6 +46,7 @@ class ScribbleToolbar extends StatelessWidget {
                 const SizedBox(width: 8),
                 _buildToolButton(
                   context,
+                  color: notifier.state.selectedColor,
                   icon: Icons.palette,
                   onPressed:
                       () => showColorPickerDialog(

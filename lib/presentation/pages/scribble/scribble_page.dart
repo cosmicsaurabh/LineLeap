@@ -192,8 +192,8 @@ class _ScribblePageState extends State<ScribblePage>
             color: theme.colorScheme.primary,
             size: 28,
           ),
-          if (MediaQuery.of(context).size.width > 300) const SizedBox(width: 8),
-          if (MediaQuery.of(context).size.width > 300)
+          if (MediaQuery.of(context).size.width > 360) const SizedBox(width: 8),
+          if (MediaQuery.of(context).size.width > 360)
             Text(
               'LineLeap',
               style: theme.textTheme.headlineSmall?.copyWith(
