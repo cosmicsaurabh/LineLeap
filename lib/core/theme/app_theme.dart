@@ -10,6 +10,14 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blue,
       brightness: Brightness.light,
+      primary: const Color(0xFF007AFF), // iOS blue
+      onPrimary: Colors.white,
+      secondary: const Color(0xFF34C759), // iOS green
+      onSecondary: Colors.white,
+      surface: const Color(0xFFF8F9FA), // iOS light background
+      onSurface: Colors.black,
+      error: const Color(0xFFFF3B30), // iOS red
+      onError: Colors.white,
     ),
     scaffoldBackgroundColor: const Color(0xFFF8F9FA),
     cardTheme: CardTheme(
@@ -25,6 +33,14 @@ class AppTheme {
     colorScheme: ColorScheme.fromSeed(
       seedColor: Colors.blue,
       brightness: Brightness.dark,
+      primary: const Color(0xFF0A84FF), // iOS blue
+      onPrimary: Colors.white,
+      secondary: const Color(0xFF30D158), // iOS green
+      onSecondary: Colors.white,
+      surface: const Color(0xFF1C1C1E), // iOS dark background
+      onSurface: Colors.white,
+      error: const Color(0xFFFF453A), // iOS red
+      onError: Colors.white,
     ),
     scaffoldBackgroundColor: const Color(0xFF1C1C1E),
     cardTheme: CardTheme(

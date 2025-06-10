@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class PromptInputDialog extends StatefulWidget {
   final String initialPrompt;
@@ -26,13 +27,16 @@ class _PromptInputDialogState extends State<PromptInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return CupertinoAlertDialog(
       title: const Text('AI Generation Prompt'),
       content: Padding(
         padding: const EdgeInsets.only(top: 16),
         child: CupertinoTextField(
+          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+          autofocus: true,
           controller: _controller,
-          placeholder: 'Describe what you want to generate...',
+          placeholder: 'Describe the scribble...',
           maxLines: 4,
           minLines: 3,
           textAlignVertical: TextAlignVertical.top,
