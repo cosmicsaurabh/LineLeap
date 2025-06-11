@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -28,35 +30,38 @@ class _PromptInputDialogState extends State<PromptInputDialog> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return CupertinoAlertDialog(
-      title: const Text('AI Generation Prompt'),
-      content: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-        child: CupertinoTextField(
-          padding: const EdgeInsets.all(16),
-          style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-          autofocus: true,
-          controller: _controller,
-          placeholder: 'Describe the scribble...',
-          maxLines: 5,
-          minLines: 1,
-          textAlignVertical: TextAlignVertical.top,
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+      child: CupertinoAlertDialog(
+        title: const Text('AI Generation Prompt'),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+          child: CupertinoTextField(
+            padding: const EdgeInsets.all(16),
+            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+            autofocus: true,
+            controller: _controller,
+            placeholder: 'Describe the scribble...',
+            maxLines: 5,
+            minLines: 1,
+            textAlignVertical: TextAlignVertical.top,
+          ),
         ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            onPressed: () {
+              if (_controller.text.trim().isNotEmpty) {
+                Navigator.pop(context, _controller.text.trim());
+              }
+            },
+            child: const Text('Done'),
+          ),
+        ],
       ),
-      actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        CupertinoDialogAction(
-          onPressed: () {
-            if (_controller.text.trim().isNotEmpty) {
-              Navigator.pop(context, _controller.text.trim());
-            }
-          },
-          child: const Text('Done'),
-        ),
-      ],
     );
   }
 }
