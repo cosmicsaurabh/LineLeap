@@ -5,12 +5,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 class GalleryActionSheet extends StatelessWidget {
-  final dynamic image;
+  final GeneratedImage image;
   final GalleryNotifier gallery;
   final BuildContext parentContext;
   final VoidCallback onActionComplete;
@@ -111,7 +112,7 @@ class GalleryActionSheet extends StatelessWidget {
   void _handleDownload(BuildContext context) async {
     Navigator.of(context).pop();
     try {
-      final file = File(image.filePath);
+      final file = File(image.generatedImagefilePath);
       final Uint8List bytes = await file.readAsBytes();
 
       // Save to gallery
@@ -135,7 +136,7 @@ class GalleryActionSheet extends StatelessWidget {
   void _handleShare(BuildContext context) async {
     Navigator.of(context).pop();
     try {
-      final file = File(image.filePath);
+      final file = File(image.generatedImagefilePath);
       if (await file.exists()) {
         await Share.shareXFiles(
           [XFile(file.path)],

@@ -6,7 +6,6 @@ import 'package:lineleap/domain/usecases/delete_gallery_image_usecase.dart';
 import 'package:lineleap/domain/usecases/save_image_usecase.dart';
 import '../../../domain/entities/generated_image.dart';
 
-// presentation/notifiers/gallery_notifier.dart
 class GalleryNotifier extends ChangeNotifier {
   final GetGalleryImagesUseCase getGalleryImagesUseCase;
   final DeleteGalleryImageUseCase deleteGalleryImageUseCase;

@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 
 class GalleryImageTile extends StatelessWidget {
-  final dynamic image;
+  final GeneratedImage image;
   final VoidCallback onTap;
 
   const GalleryImageTile({super.key, required this.image, required this.onTap});
@@ -31,9 +32,9 @@ class GalleryImageTile extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Hero(
-              tag: 'image_${image.filePath}',
+              tag: 'image_${image.generatedImagefilePath}',
               child: Image.file(
-                File(image.filePath),
+                File(image.generatedImagefilePath),
                 fit: BoxFit.cover,
                 width: double.infinity,
                 height: double.infinity,

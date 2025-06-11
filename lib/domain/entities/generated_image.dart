@@ -1,10 +1,12 @@
 class GeneratedImage {
-  final String filePath;
+  final String generatedImagefilePath;
+  final String scribbleFilePath;
   final String prompt;
-  final DateTime timestamp;
+  final String timestamp;
 
   GeneratedImage({
-    required this.filePath,
+    required this.generatedImagefilePath,
+    required this.scribbleFilePath,
     required this.prompt,
     required this.timestamp,
   });

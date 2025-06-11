@@ -45,12 +45,12 @@ class _GlassColorPickerDialogState extends State<_GlassColorPickerDialog> {
   Widget build(BuildContext context) {
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-      child: Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 80),
-        child: CupertinoAlertDialog(
-          title: const Text('Select Color'),
-          content: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
+      child: CupertinoAlertDialog(
+        title: const Text('Select Color'),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Material(
+            color: Colors.transparent,
             child: ColorPicker(
               pickerColor: pickedColor,
               onColorChanged: (color) {
@@ -71,21 +71,21 @@ class _GlassColorPickerDialogState extends State<_GlassColorPickerDialog> {
               portraitOnly: true,
             ),
           ),
-          actions: [
-            CupertinoDialogAction(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: const Text('Select'),
-              onPressed: () {
-                widget.onColorSelected(pickedColor);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
         ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('Cancel'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('Select'),
+            onPressed: () {
+              widget.onColorSelected(pickedColor);
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       ),
     );
   }

@@ -25,7 +25,6 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
   double _currentScale = 1.0;
 
   void _shareImage(BuildContext context) {
-    // Implement share functionality
     HapticFeedback.lightImpact();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -36,7 +35,6 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
   }
 
   void _saveImage(BuildContext context) {
-    // Implement save functionality
     HapticFeedback.lightImpact();
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -131,7 +129,6 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             width: double.infinity,
                           ),
                           onInteractionEnd: (details) {
-                            // Update scale indicator when interaction ends
                             setState(() {
                               _currentScale =
                                   _transformationController.value
@@ -189,9 +186,9 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             // Zoom in button
                             GestureDetector(
                               onTap: () {
-                                if (_currentScale >= 10.0) {
+                                if (_currentScale >= 10) {
                                   setState(() {
-                                    _currentScale = 10.0;
+                                    _currentScale = 10;
                                   });
 
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -207,9 +204,16 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                   );
                                   return;
                                 }
-                                _transformationController.value.scale(1.5);
+                                double nextScale = _currentScale * 1.5;
+                                if (nextScale > 10) {
+                                  nextScale = 10;
+                                }
+                                double scaleFactor = nextScale / _currentScale;
+                                _transformationController.value.scale(
+                                  scaleFactor,
+                                );
                                 setState(() {
-                                  _currentScale *= 1.5;
+                                  _currentScale = nextScale;
                                 });
                               },
                               child: Container(
@@ -229,9 +233,9 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             // Zoom out button
                             GestureDetector(
                               onTap: () {
-                                if (_currentScale <= 1.0) {
+                                if (_currentScale <= 1) {
                                   setState(() {
-                                    _currentScale = 1.0;
+                                    _currentScale = 1;
                                   });
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -246,9 +250,16 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                   );
                                   return;
                                 }
-                                _transformationController.value.scale(0.75);
+                                double nextScale = _currentScale * 0.75;
+                                if (nextScale < 1) {
+                                  nextScale = 1;
+                                }
+                                double scaleFactor = nextScale / _currentScale;
+                                _transformationController.value.scale(
+                                  scaleFactor,
+                                );
                                 setState(() {
-                                  _currentScale *= 0.75;
+                                  _currentScale = nextScale;
                                 });
                               },
                               child: Container(

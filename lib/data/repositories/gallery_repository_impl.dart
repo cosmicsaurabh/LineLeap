@@ -26,7 +26,9 @@ class GalleryRepositoryImpl implements GalleryRepository {
   @override
   Future<void> deleteGalleryImage(GeneratedImage image) async {
     final model = box.values.firstWhere(
-      (e) => e.filePath == image.filePath && e.timestamp == image.timestamp,
+      (e) =>
+          e.generatedImagefilePath == image.generatedImagefilePath &&
+          e.timestamp == image.timestamp,
       orElse: () => throw Exception('Image not found'),
     );
     await box.delete(model.key);
