@@ -23,6 +23,7 @@ enum BrushStyle {
   thin(2.0, 'Thin'),
   medium(4.0, 'Medium'),
   thick(8.0, 'Thick'),
+  xtraThick(12.0, 'Extra Thick'),
   dotted(3.0, 'Dotted');
 
   const BrushStyle(this.width, this.name);
@@ -176,8 +177,8 @@ class _ScribblePageState extends State<ScribblePage>
           _buildToolbar(theme, isDark),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(theme),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      // floatingActionButton: _buildFloatingActionButton(theme),
+      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -379,15 +380,15 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  Widget? _buildFloatingActionButton(ThemeData theme) {
-    if (generatedImage == null) return null;
+  // Widget? _buildFloatingActionButton(ThemeData theme) {
+  //   if (generatedImage == null) return null;
 
-    return FloatingActionButton(
-      onPressed: _showGeneratedImageDialog,
-      backgroundColor: theme.colorScheme.secondary,
-      child: Icon(CupertinoIcons.photo, color: theme.colorScheme.onSecondary),
-    );
-  }
+  //   return FloatingActionButton(
+  //     onPressed: _showGeneratedImageDialog,
+  //     backgroundColor: theme.colorScheme.secondary,
+  //     child: Icon(CupertinoIcons.photo, color: theme.colorScheme.onSecondary),
+  //   );
+  // }
 
   Future<void> _showPromptDialog() async {
     final result = await showCupertinoDialog<String>(
