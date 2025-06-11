@@ -15,7 +15,8 @@ class EnhancedScribblePainter extends CustomPainter {
             ..color = stroke.color
             ..strokeWidth = stroke.width
             ..strokeCap = StrokeCap.round
-            ..strokeJoin = StrokeJoin.round;
+            ..strokeJoin = StrokeJoin.round
+            ..style = PaintingStyle.stroke; // Add this line
 
       if (stroke.style == BrushStyle.dotted) {
         _drawDottedStroke(canvas, stroke, paint);

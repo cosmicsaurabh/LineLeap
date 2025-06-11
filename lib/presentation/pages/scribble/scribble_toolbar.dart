@@ -155,8 +155,10 @@ class ScribbleToolbar extends StatelessWidget {
         return CupertinoIcons.paintbrush;
       case BrushStyle.thick:
         return CupertinoIcons.paintbrush_fill;
+      case BrushStyle.xtraThick:
+        return Icons.format_paint;
       case BrushStyle.dotted:
-        return CupertinoIcons.circle_grid_3x3;
+        return Icons.more_horiz;
     }
   }
 
