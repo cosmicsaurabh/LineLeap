@@ -25,9 +25,6 @@ class GalleryImageDialog extends StatefulWidget {
 
 class _GalleryImageDialogState extends State<GalleryImageDialog>
     with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
-  late Animation<double> _opacityAnimation;
   final TransformationController _transformationController =
       TransformationController();
   double _currentScale = 1.0;
@@ -36,20 +33,6 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
   void initState() {
     super.initState();
     _loadImage();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
-    );
-
-    _opacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
-    );
-
-    _animationController.forward();
   }
 
   Uint8List? _imageBytes;
@@ -83,7 +66,6 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
 
   @override
   void dispose() {
-    _animationController.dispose();
     super.dispose();
   }
 
@@ -91,120 +73,53 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final screenSize = MediaQuery.of(context).size;
-    final dialogWidth = screenSize.width * 0.85;
-    final maxWidth = dialogWidth > 400 ? 400.0 : dialogWidth;
 
     return BackdropFilter(
       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
       child: Dialog(
-        backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(20),
-        child: AnimatedBuilder(
-          animation: _animationController,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _scaleAnimation.value,
-              child: Opacity(
-                opacity: _opacityAnimation.value,
-                child: Container(
-                  width: maxWidth,
-                  constraints: BoxConstraints(
-                    maxHeight: screenSize.height * 0.8,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 40,
-                        offset: const Offset(0, 20),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color:
-                              isDarkMode
-                                  ? Colors.black.withOpacity(0.7)
-                                  : Colors.white.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color:
-                                isDarkMode
-                                    ? Colors.white.withOpacity(0.1)
-                                    : Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_isLoading)
-                              const Center(child: CircularProgressIndicator())
-                            else if (_imageBytes != null)
-                              _buildImageSection(
-                                _imageBytes!,
-                                context,
-                                isDarkMode,
-                                theme,
-                              )
-                            else
-                              Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    SizedBox(height: 32),
-                                    Icon(
-                                      CupertinoIcons.photo,
-                                      size: 64,
-                                      color:
-                                          isDarkMode
-                                              ? Colors.white38
-                                              : Colors.black26,
-                                    ),
-                                    const SizedBox(height: 16),
-                                    Text(
-                                      'Image not found',
-                                      style: TextStyle(
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white70
-                                                : Colors.black87,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'This image could not be loaded.',
-                                      style: TextStyle(
-                                        color:
-                                            isDarkMode
-                                                ? Colors.white38
-                                                : Colors.black45,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    SizedBox(height: 32),
-                                  ],
-                                ),
-                              ),
-                            if (widget.image.prompt.isNotEmpty)
-                              _buildPromptSection(theme, context, isDarkMode),
-                          ],
-                        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (_imageBytes != null)
+              _buildImageSection(_imageBytes!, context, isDarkMode, theme)
+            else
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 32),
+                    Icon(
+                      CupertinoIcons.photo,
+                      size: 64,
+                      color: isDarkMode ? Colors.white38 : Colors.black26,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Image not found',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black87,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'This image could not be loaded.',
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white38 : Colors.black45,
+                        fontSize: 14,
+                      ),
+                    ),
+                    SizedBox(height: 32),
+                  ],
                 ),
               ),
-            );
-          },
+            if (widget.image.prompt.isNotEmpty)
+              _buildPromptSection(theme, context, isDarkMode),
+          ],
         ),
       ),
     );
@@ -377,7 +292,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     required bool isDarkMode,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
@@ -386,24 +301,24 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
           decoration: BoxDecoration(
             color:
                 isDarkMode
-                    ? Colors.black.withOpacity(0.5)
-                    : Colors.white.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
+                    ? const Color.fromARGB(51, 159, 159, 213)
+                    : const Color.fromARGB(111, 249, 249, 250),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color:
                   isDarkMode
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? const Color.fromARGB(51, 159, 159, 213)
+                      : const Color.fromARGB(111, 249, 249, 250),
               width: 0.5,
             ),
           ),
-          child: IconButton(
+          child: CupertinoButton(
             padding: EdgeInsets.zero,
             onPressed: onPressed,
-            icon: Icon(
+            child: Icon(
               icon,
               size: 18,
-              color: isDarkMode ? Colors.white : Colors.black87,
+              color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
             ),
           ),
         ),
@@ -417,46 +332,48 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     String? label,
   }) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          width: 36,
           height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color:
                 isDarkMode
-                    ? Colors.black.withOpacity(0.5)
-                    : Colors.white.withOpacity(0.7),
-            borderRadius: BorderRadius.circular(20),
+                    ? const Color.fromARGB(51, 159, 159, 213)
+                    : const Color.fromARGB(111, 249, 249, 250),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color:
                   isDarkMode
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? CupertinoColors.systemGrey5.darkColor
+                      : CupertinoColors.systemGrey5.color,
               width: 0.5,
             ),
           ),
-          child: Row(
-            children: [
-              if (icon != null)
-                Icon(
-                  icon,
-                  size: 18,
-                  color: isDarkMode ? Colors.white : Colors.black87,
-                ),
-              if (label != null)
-                Padding(
-                  padding: const EdgeInsets.only(left: 4.0),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDarkMode ? Colors.white : Colors.black87,
+          child: Center(
+            child:
+                label != null
+                    ? Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color:
+                            isDarkMode
+                                ? CupertinoColors.white
+                                : CupertinoColors.black,
+                      ),
+                    )
+                    : Icon(
+                      icon,
+                      size: 18,
+                      color:
+                          isDarkMode
+                              ? CupertinoColors.white
+                              : CupertinoColors.black,
                     ),
-                  ),
-                ),
-            ],
           ),
         ),
       ),
@@ -473,30 +390,47 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.smallRadius),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        color:
+            isDarkMode
+                ? CupertinoColors.systemBackground.darkColor
+                : CupertinoColors.systemBackground.color,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(
+          color:
+              isDarkMode
+                  ? CupertinoColors.systemGrey5.darkColor
+                  : CupertinoColors.systemGrey5.color,
+        ),
       ),
-
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'Prompt',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.primary,
+            style: TextStyle(
+              fontSize: 15,
               fontWeight: FontWeight.w600,
+              color:
+                  isDarkMode
+                      ? CupertinoColors.activeBlue.darkColor
+                      : CupertinoColors.activeBlue.color,
+              letterSpacing: -0.5,
             ),
           ),
           const SizedBox(height: 8),
           ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxHeight: 120, // ~5-6 lines
-            ),
+            constraints: const BoxConstraints(maxHeight: 120),
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(), // iOS-style physics
               child: Text(
                 widget.image.prompt,
-                style: theme.textTheme.bodyMedium,
+                style: TextStyle(
+                  fontSize: 15,
+                  color:
+                      isDarkMode
+                          ? CupertinoColors.label.darkColor
+                          : CupertinoColors.label.color,
+                ),
               ),
             ),
           ),
