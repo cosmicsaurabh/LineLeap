@@ -197,14 +197,9 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
           Positioned(
             left: 8,
             bottom: 8,
-            child: Row(
+            child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildNonActionButton(
-                  label: '${_currentScale.toStringAsFixed(1)}x',
-                  isDarkMode: isDarkMode,
-                ),
-                const SizedBox(width: 8),
                 if (_currentScale != 1.0)
                   _buildActionButton(
                     icon: Icons.refresh,
@@ -222,6 +217,11 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                     onPressed: () {},
                     isDarkMode: isDarkMode,
                   ),
+                const SizedBox(height: 8),
+                _buildNonActionButton(
+                  label: '${_currentScale.toStringAsFixed(1)}x',
+                  isDarkMode: isDarkMode,
+                ),
               ],
             ),
           ),
