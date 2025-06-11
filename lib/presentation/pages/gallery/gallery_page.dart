@@ -60,7 +60,35 @@ class _GalleryPageState extends State<GalleryPage> {
       );
     }
 
-    return _buildResponsiveGrid(gallery, isDarkMode);
+    return Scaffold(
+      appBar: _buildAppBar(Theme.of(context), isDarkMode),
+      body: _buildResponsiveGrid(gallery, isDarkMode),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(ThemeData theme, bool isDark) {
+    return AppBar(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      elevation: 0,
+      title: Row(
+        children: [
+          Icon(
+            CupertinoIcons.scribble,
+            color: theme.colorScheme.primary,
+            size: 28,
+          ),
+          if (MediaQuery.of(context).size.width > 360) const SizedBox(width: 8),
+          if (MediaQuery.of(context).size.width > 360)
+            Text(
+              'LineLeap',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildResponsiveGrid(GalleryNotifier gallery, bool isDarkMode) {
