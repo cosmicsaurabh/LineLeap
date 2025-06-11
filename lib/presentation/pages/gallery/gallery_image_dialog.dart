@@ -147,29 +147,38 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     ThemeData theme,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.borderRadius),
       child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.smallRadius),
-            child: InteractiveViewer(
-              transformationController:
-                  _transformationController, // Add this controller
-              minScale: 1.0,
-              maxScale: 10.0,
-              panEnabled: true,
-              onInteractionEnd: (ScaleEndDetails details) {
-                setState(() {
-                  _currentScale =
-                      _transformationController.value.getMaxScaleOnAxis();
-                });
-              },
-              child: Hero(
-                tag: 'image_${widget.image.generatedImageFilePath}',
-                child: Image.memory(
-                  image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+              border: Border.all(
+                color:
+                    isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+              child: InteractiveViewer(
+                transformationController:
+                    _transformationController, // Add this controller
+                minScale: 1.0,
+                maxScale: 10.0,
+                panEnabled: true,
+                onInteractionEnd: (ScaleEndDetails details) {
+                  setState(() {
+                    _currentScale =
+                        _transformationController.value.getMaxScaleOnAxis();
+                  });
+                },
+                child: Hero(
+                  tag: 'image_${widget.image.generatedImageFilePath}',
+                  child: Image.memory(
+                    image,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                  ),
                 ),
               ),
             ),
@@ -401,7 +410,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     bool isDarkMode,
   ) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(AppTheme.borderRadius),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -409,13 +418,10 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
             isDarkMode
                 ? CupertinoColors.systemBackground.darkColor
                 : CupertinoColors.systemBackground.color,
-        borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color:
-              isDarkMode
-                  ? CupertinoColors.systemGrey5.darkColor
-                  : CupertinoColors.systemGrey5.color,
-        ),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        // border: Border.all(
+        //   color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+        // ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
