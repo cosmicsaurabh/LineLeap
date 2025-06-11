@@ -17,8 +17,8 @@ class GeneratedImageModelAdapter extends TypeAdapter<GeneratedImageModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return GeneratedImageModel(
-      generatedImagefilePath: fields[0] as String,
-      scribbleFilePath: fields[1] as String,
+      generatedImageFilePath: fields[0] as String,
+      scribbleImageFilePath: fields[1] as String,
       prompt: fields[2] as String,
       timestamp: fields[3] as String,
     );
@@ -29,9 +29,9 @@ class GeneratedImageModelAdapter extends TypeAdapter<GeneratedImageModel> {
     writer
       ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.generatedImagefilePath)
+      ..write(obj.generatedImageFilePath)
       ..writeByte(1)
-      ..write(obj.scribbleFilePath)
+      ..write(obj.scribbleImageFilePath)
       ..writeByte(2)
       ..write(obj.prompt)
       ..writeByte(3)

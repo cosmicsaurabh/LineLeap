@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_image_dialog.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_image_tile.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
@@ -80,7 +81,10 @@ class _GalleryPageState extends State<GalleryPage> {
             final image = gallery.images[index];
             return GalleryImageTile(
               image: image,
-              onTap: () => _showImageDialog(context, image, gallery),
+              onTap: () => _showImageDialog(1, context, image, gallery),
+              onScribbleTap: () {
+                _showImageDialog(0, context, image, gallery);
+              },
             );
           },
         );
@@ -95,14 +99,20 @@ class _GalleryPageState extends State<GalleryPage> {
   }
 
   void _showImageDialog(
+    int whichImage, // 0 for scribble, 1 for generated
     BuildContext context,
-    dynamic image,
+    GeneratedImage image,
     GalleryNotifier gallery,
   ) {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.1),
-      builder: (context) => GalleryImageDialog(image: image, gallery: gallery),
+      builder:
+          (context) => GalleryImageDialog(
+            image: image,
+            gallery: gallery,
+            whichImage: whichImage,
+          ),
     );
   }
 }

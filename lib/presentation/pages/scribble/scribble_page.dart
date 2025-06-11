@@ -112,8 +112,8 @@ class _ScribblePageState extends State<ScribblePage>
     }
 
     final galleryProvider = context.read<GalleryNotifier>();
-    final bytes = await ImageUtils.capturePng(_paintKey);
-    if (bytes == null) return;
+    final scribbleBytes = await ImageUtils.capturePng(_paintKey);
+    if (scribbleBytes == null) return;
 
     setState(() => isLoading = true);
     HapticFeedback.mediumImpact();
@@ -122,26 +122,30 @@ class _ScribblePageState extends State<ScribblePage>
       final api = AIHordeAPI();
       final imageRepository = ImageGenerationRepositoryImpl(api);
       final useCase = GenerateImageUseCase(imageRepository);
-      final imageUrl = await useCase(bytes, prompt);
+      final imageUrl = await useCase(scribbleBytes, prompt);
 
-      Uint8List? finalImageBytes;
+      Uint8List? generatedImageBytes;
       if (imageUrl != null) {
         final res = await http.get(Uri.parse(imageUrl));
         if (res.statusCode == 200) {
-          finalImageBytes = res.bodyBytes;
-          galleryProvider.saveGeneratedImage(finalImageBytes, prompt);
-          HapticFeedback.lightImpact();
+          generatedImageBytes = res.bodyBytes;
+          galleryProvider.saveGeneratedImage(
+            scribbleBytes,
+            generatedImageBytes,
+            prompt,
+          );
+          HapticFeedback.heavyImpact();
         } else {
           _showErrorSnackBar('Failed to download image: ${res.reasonPhrase}');
         }
       }
 
       setState(() {
-        generatedImage = finalImageBytes;
+        generatedImage = generatedImageBytes;
         isLoading = false;
       });
 
-      if (finalImageBytes != null) {
+      if (generatedImageBytes != null) {
         await _showGeneratedImageDialog();
       }
     } catch (e) {

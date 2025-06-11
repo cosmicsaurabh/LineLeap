@@ -15,6 +15,7 @@ class GalleryActionSheet extends StatelessWidget {
   final GalleryNotifier gallery;
   final BuildContext parentContext;
   final VoidCallback onActionComplete;
+  final int index;
 
   const GalleryActionSheet({
     super.key,
@@ -22,6 +23,7 @@ class GalleryActionSheet extends StatelessWidget {
     required this.gallery,
     required this.parentContext,
     required this.onActionComplete,
+    required this.index,
   });
 
   @override
@@ -34,14 +36,14 @@ class GalleryActionSheet extends StatelessWidget {
           context: context,
           icon: CupertinoIcons.cloud_download,
           title: 'Download',
-          onPressed: () => _handleDownload(context),
+          onPressed: () => _handleDownload(context, index),
           isDarkMode: isDarkMode,
         ),
         _buildActionTile(
           context: context,
           icon: CupertinoIcons.share,
           title: 'Share',
-          onPressed: () => _handleShare(context),
+          onPressed: () => _handleShare(context, index),
           isDarkMode: isDarkMode,
         ),
         _buildActionTile(
@@ -109,10 +111,18 @@ class GalleryActionSheet extends StatelessWidget {
     );
   }
 
-  void _handleDownload(BuildContext context) async {
+  void _handleDownload(BuildContext context, int index) async {
     Navigator.of(context).pop();
     try {
-      final file = File(image.generatedImagefilePath);
+      File? file;
+      if (index == 0) {
+        // If the image is a scribble, use the scribble file path
+        file = File(image.scribbleImageFilePath);
+      } else {
+        // If the image is a generated image, use the generated file path
+        file = File(image.generatedImageFilePath);
+      }
+
       final Uint8List bytes = await file.readAsBytes();
 
       // Save to gallery
@@ -133,18 +143,28 @@ class GalleryActionSheet extends StatelessWidget {
     }
   }
 
-  void _handleShare(BuildContext context) async {
+  void _handleShare(BuildContext context, int index) async {
     Navigator.of(context).pop();
     try {
-      final file = File(image.generatedImagefilePath);
-      if (await file.exists()) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text:
-              image.prompt ?? 'Check out my AI-generated image from scribble!',
-        );
+      File? file;
+      if (index == 0) {
+        // If the image is a scribble, use the scribble file path
+        file = File(image.scribbleImageFilePath);
+        if (await file.exists()) {
+          await Share.shareXFiles([
+            XFile(file.path),
+          ], text: 'Check out my scribble!');
+        } else {
+          _showNonInteractiveActionFeedback(parentContext, 'File not found');
+        }
       } else {
-        _showNonInteractiveActionFeedback(parentContext, 'File not found');
+        // If the image is a generated image, use the generated file path
+        file = File(image.generatedImageFilePath);
+        if (await file.exists()) {
+          await Share.shareXFiles([XFile(file.path)], text: image.prompt);
+        } else {
+          _showNonInteractiveActionFeedback(parentContext, 'File not found');
+        }
       }
     } catch (e) {
       _showNonInteractiveActionFeedback(parentContext, 'Failed to share image');
