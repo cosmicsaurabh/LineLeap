@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'scribble/scribble_page.dart';
 import 'gallery/gallery_page.dart';
@@ -17,12 +18,21 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: IndexedStack(
+        index: _selectedIndex,
+        children: _pages,
+      ), //to keep state of each page
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.edit), label: 'Scribble'),
-          BottomNavigationBarItem(icon: Icon(Icons.image), label: 'History'),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.scribble),
+            label: 'Scribble',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.list_bullet),
+            label: 'History',
+          ),
         ],
         onTap: (index) => setState(() => _selectedIndex = index),
       ),

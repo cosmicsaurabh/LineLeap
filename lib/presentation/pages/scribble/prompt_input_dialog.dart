@@ -31,14 +31,15 @@ class _PromptInputDialogState extends State<PromptInputDialog> {
     return CupertinoAlertDialog(
       title: const Text('AI Generation Prompt'),
       content: Padding(
-        padding: const EdgeInsets.only(top: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
         child: CupertinoTextField(
+          padding: const EdgeInsets.all(16),
           style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
           autofocus: true,
           controller: _controller,
           placeholder: 'Describe the scribble...',
-          maxLines: 4,
-          minLines: 3,
+          maxLines: 5,
+          minLines: 1,
           textAlignVertical: TextAlignVertical.top,
         ),
       ),
