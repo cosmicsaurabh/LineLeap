@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
 
-// Enhanced ScribbleNotifier
 class EnhancedScribbleNotifier extends ChangeNotifier {
   DrawingState _state = const DrawingState();
   DrawingState get state => _state;
@@ -91,8 +90,6 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 }
 
-//
-// Enhanced Stroke Model
 class Stroke {
   final List<Offset> points;
   final Color color;

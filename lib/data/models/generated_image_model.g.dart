@@ -17,21 +17,24 @@ class GeneratedImageModelAdapter extends TypeAdapter<GeneratedImageModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return GeneratedImageModel(
-      filePath: fields[0] as String,
-      prompt: fields[1] as String,
-      timestamp: fields[2] as DateTime,
+      generatedImagefilePath: fields[0] as String,
+      scribbleFilePath: fields[1] as String,
+      prompt: fields[2] as String,
+      timestamp: fields[3] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, GeneratedImageModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(4)
       ..writeByte(0)
-      ..write(obj.filePath)
+      ..write(obj.generatedImagefilePath)
       ..writeByte(1)
-      ..write(obj.prompt)
+      ..write(obj.scribbleFilePath)
       ..writeByte(2)
+      ..write(obj.prompt)
+      ..writeByte(3)
       ..write(obj.timestamp);
   }
 

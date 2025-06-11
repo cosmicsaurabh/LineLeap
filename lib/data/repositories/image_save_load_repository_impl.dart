@@ -23,18 +23,26 @@ class ImageSaveLoadRepositoryImpl implements ImageRepository {
     final fileName = 'image_$timestamp';
 
     // Save to device storage
-    final storagePath = await _storageService.saveImage(imageBytes, fileName);
+    final generatedImageStoragePath = await _storageService.saveImage(
+      imageBytes,
+      fileName,
+    );
+    final scribbleStoragePath = await _storageService.saveImage(
+      imageBytes,
+      fileName,
+    );
 
     // Save reference to Hive
     final image = GeneratedImage(
-      filePath: storagePath,
+      generatedImagefilePath: generatedImageStoragePath,
+      scribbleFilePath: scribbleStoragePath,
       prompt: prompt,
-      timestamp: DateTime.now(),
+      timestamp: DateTime.now().toIso8601String(),
     );
 
     await _imageBox.add(GeneratedImageModel.fromEntity(image));
     log('Saving image with prompt: $prompt');
-    log('Saved to path: $storagePath');
+    log('Saved to path: $generatedImageStoragePath');
     log(
       'Image saved in Hive box: ${_imageBox.name}, total: ${_imageBox.length}',
     );

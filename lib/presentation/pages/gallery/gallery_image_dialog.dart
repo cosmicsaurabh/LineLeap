@@ -3,11 +3,12 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
-  final dynamic image;
+  final GeneratedImage image;
   final GalleryNotifier gallery;
 
   const GalleryImageDialog({
@@ -131,11 +132,11 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: Hero(
-              tag: 'image_${widget.image.filePath}',
+              tag: 'image_${widget.image.generatedImagefilePath}',
               child: AspectRatio(
                 aspectRatio: 1.0,
                 child: Image.file(
-                  File(widget.image.filePath),
+                  File(widget.image.generatedImagefilePath),
                   fit: BoxFit.cover,
                   width: double.infinity,
                 ),
