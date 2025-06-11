@@ -469,15 +469,15 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     bool isDarkMode,
   ) {
     return Container(
+      margin: const EdgeInsets.all(16),
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color:
-            isDarkMode
-                ? Colors.white.withOpacity(0.05)
-                : Colors.black.withOpacity(0.03),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.smallRadius),
+        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
