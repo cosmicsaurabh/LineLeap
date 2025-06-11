@@ -6,10 +6,10 @@ part 'generated_image_model.g.dart';
 @HiveType(typeId: 0)
 class GeneratedImageModel extends HiveObject {
   @HiveField(0)
-  final String generatedImagefilePath;
+  final String generatedImageFilePath;
 
   @HiveField(1)
-  final String scribbleFilePath;
+  final String scribbleImageFilePath;
 
   @HiveField(2)
   final String prompt;
@@ -18,23 +18,23 @@ class GeneratedImageModel extends HiveObject {
   final String timestamp;
 
   GeneratedImageModel({
-    required this.generatedImagefilePath,
-    required this.scribbleFilePath,
+    required this.generatedImageFilePath,
+    required this.scribbleImageFilePath,
     required this.prompt,
     required this.timestamp,
   });
 
   factory GeneratedImageModel.fromEntity(GeneratedImage entity) =>
       GeneratedImageModel(
-        generatedImagefilePath: entity.generatedImagefilePath,
-        scribbleFilePath: entity.scribbleFilePath,
+        generatedImageFilePath: entity.generatedImageFilePath,
+        scribbleImageFilePath: entity.scribbleImageFilePath,
         prompt: entity.prompt,
         timestamp: entity.timestamp,
       );
 
   GeneratedImage toEntity() => GeneratedImage(
-    generatedImagefilePath: generatedImagefilePath,
-    scribbleFilePath: scribbleFilePath,
+    generatedImageFilePath: generatedImageFilePath,
+    scribbleImageFilePath: scribbleImageFilePath,
     prompt: prompt,
     timestamp: timestamp,
   );

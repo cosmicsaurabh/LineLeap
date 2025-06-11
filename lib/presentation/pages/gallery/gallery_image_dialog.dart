@@ -10,6 +10,7 @@ import 'package:lineleap/presentation/pages/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
+  final int whichImage; // 0 for scribble, 1 for generated
   final GeneratedImage image;
   final GalleryNotifier gallery;
 
@@ -17,6 +18,7 @@ class GalleryImageDialog extends StatefulWidget {
     super.key,
     required this.image,
     required this.gallery,
+    required this.whichImage,
   });
 
   @override
@@ -43,7 +45,20 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     });
 
     try {
-      final file = File(widget.image.generatedImagefilePath);
+      File? file;
+      if (widget.whichImage == 0) {
+        // Load scribble image
+        file = File(widget.image.scribbleImageFilePath);
+        if (!await file.exists()) {
+          throw Exception('Scribble image not found');
+        }
+      } else {
+        // Load generated image
+        file = File(widget.image.generatedImageFilePath);
+        if (!await file.exists()) {
+          throw Exception('Generated image not found');
+        }
+      }
       final bytes = await file.readAsBytes();
 
       if (mounted) {
@@ -150,7 +165,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                 });
               },
               child: Hero(
-                tag: 'image_${widget.image.generatedImagefilePath}',
+                tag: 'image_${widget.image.generatedImageFilePath}',
                 child: Image.memory(
                   image,
                   fit: BoxFit.cover,
@@ -453,6 +468,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
               // Then close the image dialog
               Navigator.of(context).pop();
             },
+            index: widget.whichImage,
           ),
     );
   }

@@ -26,8 +26,12 @@ class GalleryNotifier extends ChangeNotifier {
   }) {
     loadImages();
   }
-  Future<void> saveGeneratedImage(Uint8List imageBytes, String prompt) async {
-    await saveImageUseCase(imageBytes, prompt);
+  Future<void> saveGeneratedImage(
+    Uint8List scribbleBytes,
+    Uint8List generatedBytes,
+    String prompt,
+  ) async {
+    await saveImageUseCase(scribbleBytes, generatedBytes, prompt);
   }
 
   Future<void> loadImages() async {

@@ -7,7 +7,15 @@ class SaveImageUseCase {
 
   SaveImageUseCase(this.imageRepository);
 
-  Future<void> call(Uint8List bytes, String prompt) async {
-    await imageRepository.saveGeneratedImage(bytes, prompt);
+  Future<void> call(
+    Uint8List scribbleImageBytes,
+    Uint8List generatedImageBytes,
+    String prompt,
+  ) async {
+    await imageRepository.saveGeneratedImage(
+      scribbleImageBytes,
+      generatedImageBytes,
+      prompt,
+    );
   }
 }
