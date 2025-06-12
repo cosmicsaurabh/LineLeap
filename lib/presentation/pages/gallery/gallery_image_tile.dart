@@ -1,10 +1,11 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
 
 class GalleryImageTile extends StatelessWidget {
-  final GeneratedImage image;
+  final GalleryImagePresentation image;
   final VoidCallback onTap;
   final VoidCallback onScribbleTap;
 
@@ -41,14 +42,9 @@ class GalleryImageTile extends StatelessWidget {
             child: Stack(
               children: [
                 // Main generated image
-                Hero(
-                  tag: 'generated_image_${image.generatedImageFilePath}',
-                  child: Image.file(
-                    File(image.generatedImageFilePath),
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                    height: double.infinity,
-                  ),
+                _buildImageWidget(
+                  image.imageHiveObject.generatedImageFilePath,
+                  image.cachedGeneratedBytes,
                 ),
 
                 // Scribble preview in corner with its own tap handler
@@ -75,12 +71,9 @@ class GalleryImageTile extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: Hero(
-                          tag: 'scribble_image_${image.scribbleImageFilePath}',
-                          child: Image.file(
-                            File(image.scribbleImageFilePath),
-                            fit: BoxFit.cover,
-                          ),
+                        child: _buildImageWidget(
+                          image.imageHiveObject.scribbleImageFilePath,
+                          image.cachedScribbleBytes,
                         ),
                       ),
                     ),
@@ -119,6 +112,41 @@ class GalleryImageTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String filePath, Uint8List? cachedBytes) {
+    // If we have cached bytes, use them immediately
+    if (cachedBytes != null) {
+      Hero(
+        tag: 'generated_image_$filePath',
+        child: Image.memory(
+          cachedBytes,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
+            );
+          },
+        ),
+      );
+    }
+    // Otherwise load from file
+    return Hero(
+      tag: 'generated_image_$filePath',
+      child: Image.file(
+        File(filePath),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
+          );
+        },
       ),
     );
   }

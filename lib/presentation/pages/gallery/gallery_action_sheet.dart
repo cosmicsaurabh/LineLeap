@@ -2,16 +2,15 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 class GalleryActionSheet extends StatelessWidget {
-  final GeneratedImage image;
+  final GalleryImagePresentation image;
   final GalleryNotifier gallery;
   final BuildContext parentContext;
   final VoidCallback onActionComplete;
@@ -117,10 +116,10 @@ class GalleryActionSheet extends StatelessWidget {
       File? file;
       if (index == 0) {
         // If the image is a scribble, use the scribble file path
-        file = File(image.scribbleImageFilePath);
+        file = File(image.imageHiveObject.scribbleImageFilePath);
       } else {
         // If the image is a generated image, use the generated file path
-        file = File(image.generatedImageFilePath);
+        file = File(image.imageHiveObject.generatedImageFilePath);
       }
 
       final Uint8List bytes = await file.readAsBytes();
@@ -149,7 +148,7 @@ class GalleryActionSheet extends StatelessWidget {
       File? file;
       if (index == 0) {
         // If the image is a scribble, use the scribble file path
-        file = File(image.scribbleImageFilePath);
+        file = File(image.imageHiveObject.scribbleImageFilePath);
         if (await file.exists()) {
           await Share.shareXFiles([
             XFile(file.path),
@@ -159,9 +158,11 @@ class GalleryActionSheet extends StatelessWidget {
         }
       } else {
         // If the image is a generated image, use the generated file path
-        file = File(image.generatedImageFilePath);
+        file = File(image.imageHiveObject.generatedImageFilePath);
         if (await file.exists()) {
-          await Share.shareXFiles([XFile(file.path)], text: image.prompt);
+          await Share.shareXFiles([
+            XFile(file.path),
+          ], text: image.imageHiveObject.prompt);
         } else {
           _showNonInteractiveActionFeedback(parentContext, 'File not found');
         }
