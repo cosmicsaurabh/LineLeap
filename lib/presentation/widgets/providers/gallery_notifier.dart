@@ -4,18 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:lineleap/domain/usecases/get_gallery_images_usecase.dart';
 import 'package:lineleap/domain/usecases/delete_gallery_image_usecase.dart';
 import 'package:lineleap/domain/usecases/save_image_usecase.dart';
-import '../../../domain/entities/generated_image.dart';
+import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
 
 class GalleryNotifier extends ChangeNotifier {
   final GetGalleryImagesUseCase getGalleryImagesUseCase;
   final DeleteGalleryImageUseCase deleteGalleryImageUseCase;
   final SaveImageUseCase saveImageUseCase;
 
-  List<GeneratedImage> _images = [];
+  List<GalleryImagePresentation> _images = [];
   bool _isLoading = false;
   String? _error;
 
-  List<GeneratedImage> get images => _images;
+  List<GalleryImagePresentation> get images => _images;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -31,16 +31,35 @@ class GalleryNotifier extends ChangeNotifier {
     Uint8List generatedBytes,
     String prompt,
   ) async {
-    await saveImageUseCase(scribbleBytes, generatedBytes, prompt);
+    final savedImage = await saveImageUseCase(
+      scribbleBytes,
+      generatedBytes,
+      prompt,
+    );
+
+    // Create presentation model with both entity and cached bytes
+    _images.insert(
+      0,
+      GalleryImagePresentation(
+        imageHiveObject: savedImage,
+        cachedScribbleBytes: scribbleBytes,
+        cachedGeneratedBytes: generatedBytes,
+      ),
+    );
+
+    notifyListeners();
   }
 
   Future<void> loadImages() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
-
     try {
-      _images = await getGalleryImagesUseCase();
+      final generatedImages = await getGalleryImagesUseCase();
+      _images =
+          generatedImages
+              .map((img) => GalleryImagePresentation(imageHiveObject: img))
+              .toList();
     } catch (e) {
       _error = 'Failed to load images';
     } finally {
@@ -49,11 +68,12 @@ class GalleryNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteImage(GeneratedImage image) async {
+  Future<void> deleteImage(GalleryImagePresentation image) async {
     try {
       _images.remove(image);
       notifyListeners();
-      await deleteGalleryImageUseCase(image);
+      // After removing the image from the list, any cached bytes will be eligible for garbage collection.
+      await deleteGalleryImageUseCase(image.imageHiveObject);
     } catch (e) {
       _error = 'Failed to delete image';
       notifyListeners();

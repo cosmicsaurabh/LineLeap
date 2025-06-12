@@ -5,13 +5,13 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/core/theme/app_theme.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated
-  final GeneratedImage image;
+  final GalleryImagePresentation image;
   final GalleryNotifier gallery;
 
   const GalleryImageDialog({
@@ -39,43 +39,63 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
 
   Uint8List? _imageBytes;
   bool _isLoading = false;
-  _loadImage() async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> _loadImage() async {
+    if (_isLoading) return; // Prevent concurrent loading
+
+    setState(() => _isLoading = true);
 
     try {
-      File? file;
-      if (widget.whichImage == 0) {
-        // Load scribble image
-        file = File(widget.image.scribbleImageFilePath);
-        if (!await file.exists()) {
-          throw Exception('Scribble image not found');
-        }
-      } else {
-        // Load generated image
-        file = File(widget.image.generatedImageFilePath);
-        if (!await file.exists()) {
-          throw Exception('Generated image not found');
-        }
-      }
-      final bytes = await file.readAsBytes();
+      // Determine which image we're working with
+      final bool isScribble = widget.whichImage == 0;
+      final String imagePath =
+          isScribble
+              ? widget.image.imageHiveObject.scribbleImageFilePath
+              : widget.image.imageHiveObject.generatedImageFilePath;
+      final Uint8List? cachedBytes =
+          isScribble
+              ? widget.image.cachedScribbleBytes
+              : widget.image.cachedGeneratedBytes;
 
-      if (mounted) {
+      // Use cached bytes if available
+      if (cachedBytes != null) {
         setState(() {
-          _imageBytes = bytes;
+          _imageBytes = cachedBytes;
           _isLoading = false;
         });
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+
+      // Otherwise load from file
+      final file = File(imagePath);
+      if (!await file.exists()) {
+        setState(() => _isLoading = false);
+        if (!mounted) return;
+
+        final errorMessage =
+            isScribble
+                ? 'Scribble image not found'
+                : 'Generated image not found';
+
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading image: $e')));
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        return;
       }
+
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+
+      setState(() {
+        _imageBytes = bytes;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading image: $e')));
     }
   }
 
@@ -132,7 +152,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   ],
                 ),
               ),
-            if (widget.image.prompt.isNotEmpty)
+            if (widget.image.imageHiveObject.prompt.isNotEmpty)
               _buildPromptSection(theme, context, isDarkMode),
           ],
         ),
@@ -173,7 +193,8 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   });
                 },
                 child: Hero(
-                  tag: 'image_${widget.image.generatedImageFilePath}',
+                  tag:
+                      'image_${widget.image.imageHiveObject.generatedImageFilePath}',
                   child: Image.memory(
                     image,
                     fit: BoxFit.cover,
@@ -444,7 +465,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(), // iOS-style physics
               child: Text(
-                widget.image.prompt,
+                widget.image.imageHiveObject.prompt,
                 style: TextStyle(
                   fontSize: 15,
                   color:
