@@ -53,4 +53,12 @@ class GalleryRepositoryImpl implements GalleryRepository {
       log('Error deleting image files: $e');
     }
   }
+
+  @override
+  Future<void> saveToGallery(GeneratedImage image) async {
+    // Convert to model and save to Hive
+    final model = GeneratedImageModel.fromEntity(image);
+    await box.add(model);
+    log('Image saved to gallery: ${image.prompt}');
+  }
 }

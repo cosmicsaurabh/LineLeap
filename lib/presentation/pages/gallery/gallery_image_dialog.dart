@@ -5,13 +5,13 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/core/theme/app_theme.dart';
-import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated
-  final GalleryImagePresentation image;
+  final GeneratedImage image;
   final GalleryNotifier gallery;
 
   const GalleryImageDialog({
@@ -49,12 +49,10 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       final bool isScribble = widget.whichImage == 0;
       final String imagePath =
           isScribble
-              ? widget.image.imageHiveObject.scribbleImageFilePath
-              : widget.image.imageHiveObject.generatedImageFilePath;
-      final Uint8List? cachedBytes =
-          isScribble
-              ? widget.image.cachedScribbleBytes
-              : widget.image.cachedGeneratedBytes;
+              ? widget.image.scribbleImageFilePath
+              : widget.image.generatedImageFilePath;
+      Uint8List? cachedBytes;
+
 
       // Use cached bytes if available
       if (cachedBytes != null) {
@@ -152,7 +150,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   ],
                 ),
               ),
-            if (widget.image.imageHiveObject.prompt.isNotEmpty)
+            if (widget.image.prompt.isNotEmpty)
               _buildPromptSection(theme, context, isDarkMode),
           ],
         ),
@@ -194,7 +192,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                 },
                 child: Hero(
                   tag:
-                      'image_${widget.image.imageHiveObject.generatedImageFilePath}',
+                      'image_${widget.image.generatedImageFilePath}',
                   child: Image.memory(
                     image,
                     fit: BoxFit.cover,
@@ -465,7 +463,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(), // iOS-style physics
               child: Text(
-                widget.image.imageHiveObject.prompt,
+                widget.image.prompt,
                 style: TextStyle(
                   fontSize: 15,
                   color:

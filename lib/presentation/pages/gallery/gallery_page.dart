@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_image_dialog.dart';
 import 'package:lineleap/presentation/pages/gallery/gallery_image_tile.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
@@ -106,7 +106,7 @@ class _GalleryPageState extends State<GalleryPage> {
             childAspectRatio: 1.0,
           ),
           itemBuilder: (context, index) {
-            GalleryImagePresentation image = gallery.images[index];
+            GeneratedImage image = gallery.images[index];
             return GalleryImageTile(
               image: image,
               onTap: () => _showImageDialog(1, context, image, gallery),
@@ -129,7 +129,7 @@ class _GalleryPageState extends State<GalleryPage> {
   void _showImageDialog(
     int whichImage, // 0 for scribble, 1 for generated
     BuildContext context,
-    GalleryImagePresentation image,
+    GeneratedImage image,
     GalleryNotifier gallery,
   ) {
     showDialog(

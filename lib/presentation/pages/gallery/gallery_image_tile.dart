@@ -2,10 +2,10 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lineleap/presentation/models/gallery_image_presentation.dart';
+import 'package:lineleap/domain/entities/generated_image.dart';
 
 class GalleryImageTile extends StatelessWidget {
-  final GalleryImagePresentation image;
+  final GeneratedImage image;
   final VoidCallback onTap;
   final VoidCallback onScribbleTap;
 
@@ -42,10 +42,7 @@ class GalleryImageTile extends StatelessWidget {
             child: Stack(
               children: [
                 // Main generated image
-                _buildImageWidget(
-                  image.imageHiveObject.generatedImageFilePath,
-                  image.cachedGeneratedBytes,
-                ),
+                _buildImageWidget(image.generatedImageFilePath),
 
                 // Scribble preview in corner with its own tap handler
                 Positioned(
@@ -71,10 +68,7 @@ class GalleryImageTile extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: _buildImageWidget(
-                          image.imageHiveObject.scribbleImageFilePath,
-                          image.cachedScribbleBytes,
-                        ),
+                        child: _buildImageWidget(image.scribbleImageFilePath),
                       ),
                     ),
                   ),
@@ -116,24 +110,24 @@ class GalleryImageTile extends StatelessWidget {
     );
   }
 
-  Widget _buildImageWidget(String filePath, Uint8List? cachedBytes) {
+  Widget _buildImageWidget(String filePath) {
     // If we have cached bytes, use them immediately
-    if (cachedBytes != null) {
-      Hero(
-        tag: 'generated_image_$filePath',
-        child: Image.memory(
-          cachedBytes,
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
-          errorBuilder: (context, error, stackTrace) {
-            return const Center(
-              child: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
-            );
-          },
-        ),
-      );
-    }
+    // if (cachedBytes != null) {
+    //   Hero(
+    //     tag: 'generated_image_$filePath',
+    //     child: Image.memory(
+    //       cachedBytes,
+    //       fit: BoxFit.cover,
+    //       width: double.infinity,
+    //       height: double.infinity,
+    //       errorBuilder: (context, error, stackTrace) {
+    //         return const Center(
+    //           child: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
+    //         );
+    //       },
+    //     ),
+    //   );
+    // }
     // Otherwise load from file
     return Hero(
       tag: 'generated_image_$filePath',
