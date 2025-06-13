@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
-import 'package:lineleap/presentation/common/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 import 'package:lineleap/presentation/common/widgets/toolbar/toolbar_icon_button.dart';
 
 class ScribbleeToolbar extends StatelessWidget {

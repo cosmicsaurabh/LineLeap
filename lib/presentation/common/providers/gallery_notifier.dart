@@ -31,15 +31,6 @@ class GalleryNotifier extends ChangeNotifier {
   Future<String> saveImage(Uint8List imageBytes) async {
     final savedImagePath = await saveImageUseCase(imageBytes);
 
-    // // Create presentation model with both entity and cached bytes
-    // _images.insert(
-    //   0,
-    //   GalleryImagePresentation(
-    //     imageHiveObject: savedImage,
-    //     cachedScribbleBytes: scribbleBytes,
-    //     cachedGeneratedBytes: generatedBytes,
-    //   ),
-    // );
     return savedImagePath;
   }
 
@@ -60,8 +51,6 @@ class GalleryNotifier extends ChangeNotifier {
       await saveImageToGalleryUseCase(generatedImage);
 
       _images.insert(0, generatedImage);
-
-      //now remove from queue list since its added to gallery
 
       notifyListeners();
       return true;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
-import 'package:lineleap/presentation/common/widgets/providers/queue_status_provider.dart';
+import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../domain/entities/generation_request.dart';
 
