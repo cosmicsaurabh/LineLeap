@@ -1,12 +1,12 @@
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
-import 'package:lineleap/domain/repositories/gallery_repository.dart';
+import 'package:lineleap/domain/repositories/history_repository.dart';
 
 class SaveScribbletransformationToHistory {
-  final GalleryRepository _galleryRepository;
+  final HistoryRepository historyRepository;
 
-  SaveScribbletransformationToHistory(this._galleryRepository);
+  SaveScribbletransformationToHistory(this.historyRepository);
 
   Future<void> call(ScribbleTransformation image) async {
-    await _galleryRepository.saveToGallery(image);
+    await historyRepository.saveToHistory(image);
   }
 }

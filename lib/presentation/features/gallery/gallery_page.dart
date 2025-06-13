@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:lineleap/domain/entities/sketch_transformation.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_tile.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';

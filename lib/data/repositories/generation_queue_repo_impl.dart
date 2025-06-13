@@ -8,9 +8,6 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
   // In-memory queue notifier
   final GenerationQueueNotifier _queueNotifier;
 
-  // Optional storage service for persistence
-  // final GenerationRequestStorageService? _storageService;
-
   GenerationQueueRepositoryImpl(
     this._queueNotifier,
     // [this._storageService]
@@ -20,11 +17,6 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
   Future<void> enqueueRequest(GenerationRequest request) async {
     // Add to in-memory queue
     await _queueNotifier.addRequest(request);
-
-    // // Optionally persist
-    // if (_storageService != null) {
-    //   await _storageService!.saveRequest(request);
-    // }
   }
 
   @override
@@ -46,21 +38,11 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
   @override
   Future<void> updateRequest(GenerationRequest request) async {
     await _queueNotifier.updateRequest(request);
-
-    // // Optionally persist the update
-    // if (_storageService != null) {
-    //   await _storageService!.updateRequest(request);
-    // }
   }
 
   @override
   Future<void> removeRequest(String localId) async {
     await _queueNotifier.removeRequest(localId);
-
-    // // Optionally remove from persistence
-    // if (_storageService != null) {
-    //   await _storageService!.deleteRequest(localId);
-    // }
   }
 
   @override

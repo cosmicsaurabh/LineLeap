@@ -1,12 +1,12 @@
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
-import 'package:lineleap/domain/repositories/gallery_repository.dart';
+import 'package:lineleap/domain/repositories/history_repository.dart';
 
 class GalleryDeleteScribbleTransformation {
-  final GalleryRepository repository;
+  final HistoryRepository repository;
 
   GalleryDeleteScribbleTransformation(this.repository);
 
   Future<void> call(ScribbleTransformation image) async {
-    await repository.deleteGalleryImage(image);
+    await repository.deleteHistoryImage(image);
   }
 }
