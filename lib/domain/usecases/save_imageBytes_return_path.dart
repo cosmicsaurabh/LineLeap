@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
-import 'package:lineleap/data/repositories/image_save_load_repository_impl.dart';
+import 'package:lineleap/data/repositories/image_save_load_delete_repository_impl.dart';
 
 class SaveImagebytesReturnPathUseCase {
-  final ImageSaveLoadRepositoryImpl imageRepository;
+  final ImageSaveLoadDeleteRepositoryImpl imageRepository;
 
   SaveImagebytesReturnPathUseCase(this.imageRepository);
 

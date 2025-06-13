@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:lineleap/domain/services/generation_service.dart';
+import 'package:lineleap/domain/services/horde_generation_service.dart';
 
 import '../entities/generation_request.dart';
 import '../repositories/generation_queue_repository.dart';
 
 class ProcessGenerationQueueUseCase {
   final GenerationQueueRepository queueRepository;
-  final GenerationService generationService;
+  final HordeGenerationService generationService;
   Timer? _processingTimer;
   bool _isProcessing = false;
 

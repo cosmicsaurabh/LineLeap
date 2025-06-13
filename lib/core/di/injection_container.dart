@@ -6,12 +6,15 @@ import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/data/remote/ai_horde_api.dart';
 import 'package:lineleap/data/repositories/history_repository_impl.dart';
 import 'package:lineleap/data/repositories/generation_queue_repo_impl.dart';
-import 'package:lineleap/data/repositories/image_save_load_repository_impl.dart';
-import 'package:lineleap/data/repositories/theme_mode_repository.dart';
+import 'package:lineleap/data/repositories/image_generation_repository_impl.dart';
+import 'package:lineleap/data/repositories/image_save_load_delete_repository_impl.dart';
+import 'package:lineleap/data/repositories/theme_mode_repository._impl.dart';
 import 'package:lineleap/data/services/horde_generation_service_impl.dart';
 import 'package:lineleap/domain/repositories/history_repository.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
-import 'package:lineleap/domain/repositories/image_save_load_repository.dart';
+import 'package:lineleap/domain/repositories/image_generation_repo.dart';
+import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
+import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/services/generation_service.dart';
 import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
@@ -60,8 +63,12 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<GenerationQueueRepository>(
     () => GenerationQueueRepositoryImpl(sl<GenerationQueueNotifier>()),
   );
-  sl.registerLazySingleton<ImageSaveLoadRepository>(
-    () => ImageSaveLoadRepositoryImpl(sl<ImageDeviceInteractionService>()),
+  sl.registerLazySingleton<ImageSaveLoadDeleteRepository>(
+    () =>
+        ImageSaveLoadDeleteRepositoryImpl(sl<ImageDeviceInteractionService>()),
+  );
+  sl.registerLazySingleton<ImageGenerationRepository>(
+    () => ImageGenerationRepositoryImpl(sl<AIHordeAPI>()),
   );
 
   // Use cases
