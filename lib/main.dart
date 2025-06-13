@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/core/di/injection_container.dart';
 import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
-import 'package:lineleap/data/models/generated_image_model.dart';
+import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/presentation/features/nav_bar.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';

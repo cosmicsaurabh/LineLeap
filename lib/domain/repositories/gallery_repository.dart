@@ -1,4 +1,4 @@
-import '../entities/sketch_transformation.dart';
+import '../entities/scribble_transformation.dart';
 
 abstract class GalleryRepository {
   Future<List<ScribbleTransformation>> getGalleryImages();
