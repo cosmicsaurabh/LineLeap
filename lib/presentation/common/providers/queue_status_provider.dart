@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../../../../domain/entities/generation_request.dart';
-import '../../../../domain/usecases/get_generation_queue_usecase.dart';
+import '../../../domain/entities/generation_request.dart';
+import '../../../domain/usecases/get_generation_queue_usecase.dart';
 
 class QueueStatusProvider extends ChangeNotifier {
   final GetGenerationQueueUseCase _getQueueUseCase;

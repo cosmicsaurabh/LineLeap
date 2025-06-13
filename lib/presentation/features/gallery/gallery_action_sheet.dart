@@ -5,7 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/generated_image.dart';
-import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:image_gallery_saver_plus/image_gallery_saver_plus.dart';
 import 'package:share_plus/share_plus.dart';
 

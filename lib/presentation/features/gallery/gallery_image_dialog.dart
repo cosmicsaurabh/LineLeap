@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:lineleap/theme/app_theme.dart';
 import 'package:lineleap/domain/entities/generated_image.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_action_sheet.dart';
-import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated

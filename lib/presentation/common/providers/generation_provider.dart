@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../../../../domain/entities/generation_request.dart';
-import '../../../../domain/usecases/enqueue_generation_request_usecase.dart';
-import '../../../../domain/usecases/process_generation_queue_usecase.dart';
-import '../../../../domain/repositories/generation_queue_repository.dart';
+import '../../../domain/entities/generation_request.dart';
+import '../../../domain/usecases/enqueue_generation_request_usecase.dart';
+import '../../../domain/usecases/process_generation_queue_usecase.dart';
+import '../../../domain/repositories/generation_queue_repository.dart';
 
 class GenerationProvider extends ChangeNotifier {
   final EnqueueGenerationRequestUseCase _enqueueUseCase;
