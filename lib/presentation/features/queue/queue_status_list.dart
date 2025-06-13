@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
-import 'package:lineleap/presentation/widgets/providers/queue_status_provider.dart';
+import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/providers/queue_status_provider.dart';
 import 'package:provider/provider.dart';
-import '../../domain/entities/generation_request.dart';
+import '../../../domain/entities/generation_request.dart';
 
 class QueueStatusList extends StatelessWidget {
   const QueueStatusList({super.key});

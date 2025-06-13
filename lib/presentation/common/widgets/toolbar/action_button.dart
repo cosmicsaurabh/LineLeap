@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lineleap/core/theme/app_theme.dart';
+import 'package:lineleap/theme/app_theme.dart';
 
 Widget buildActionButton(
   BuildContext context, {

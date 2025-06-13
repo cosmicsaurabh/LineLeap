@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
 
 class EnhancedScribbleNotifier extends ChangeNotifier {
   DrawingState _state = const DrawingState();
