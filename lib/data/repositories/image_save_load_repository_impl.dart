@@ -1,25 +1,23 @@
 import 'dart:developer';
 import 'dart:typed_data';
 
-import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/core/service/image_device_interaction_service.dart';
 import 'package:lineleap/domain/repositories/image_save_load_repository.dart';
 
 class ImageSaveLoadRepositoryImpl implements ImageSaveLoadRepository {
-  final ImageStorageService storageService;
+  final ImageDeviceInteractionService _imageDeviceInteractionService;
 
-  ImageSaveLoadRepositoryImpl(this.storageService);
+  ImageSaveLoadRepositoryImpl(this._imageDeviceInteractionService);
 
   @override
-  Future<String> saveImage(Uint8List imageBytes) async {
+  Future<String> saveImageBytesReturnPath(Uint8List imageBytes) async {
     try {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final imageFileName = 'image_$timestamp';
 
       // Save to device storage
-      final savedImagePath = await storageService.saveImage(
-        imageBytes,
-        imageFileName,
-      );
+      final savedImagePath = await _imageDeviceInteractionService
+          .saveImageToDevice(imageBytes, imageFileName);
       return savedImagePath;
     } catch (e) {
       log('Error saving image: $e');
@@ -29,7 +27,7 @@ class ImageSaveLoadRepositoryImpl implements ImageSaveLoadRepository {
   }
 
   @override
-  Future<Uint8List> getImageBytes(String storagePath) async {
-    return await storageService.getImage(storagePath);
+  Future<Uint8List> getImageBytesFromPath(String storagePath) async {
+    return await _imageDeviceInteractionService.getImageFromDevice(storagePath);
   }
 }

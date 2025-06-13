@@ -2,16 +2,16 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
-import 'package:lineleap/domain/usecases/gallery_get_scribbleTransformation.dart';
-import 'package:lineleap/domain/usecases/gallery_delete_scribbleTransformation.dart';
+import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history.dart';
+import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
 import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history.dart';
 import 'package:lineleap/domain/usecases/save_imageBytes_return_path.dart';
 
 class GalleryNotifier extends ChangeNotifier {
-  final GalleryGetScribbleTransformation getGalleryImagesUseCase;
-  final GalleryDeleteScribbleTransformation deleteGalleryImageUseCase;
-  final SaveImagebytesReturnPath saveImageUseCase;
-  final SaveScribbletransformationToHistory saveImageToGalleryUseCase;
+  final GetScribbleTransformationsFromHistory getGalleryImagesUseCase;
+  final DeleteScribbleTransformationFromHistory deleteGalleryImageUseCase;
+  final SaveImagebytesReturnPathUseCase saveImageUseCase;
+  final SaveScribbleTransformationToHistoryUseCase saveImageToGalleryUseCase;
   List<ScribbleTransformation> _images = [];
   bool _isLoading = false;
   String? _error;
