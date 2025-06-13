@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'scribble/scribble_page.dart';
 import 'gallery/gallery_page.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class NavBar extends StatefulWidget {
+  const NavBar({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<NavBar> createState() => _NavBarState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _NavBarState extends State<NavBar> {
   int _selectedIndex = 0;
 
   final _pages = [const ScribblePage(), const GalleryPage()];

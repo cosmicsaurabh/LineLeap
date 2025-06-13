@@ -15,17 +15,17 @@ import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/save_generatedModel_usecase.dart';
 import 'package:lineleap/domain/usecases/save_image_usecase.dart';
-import 'package:lineleap/presentation/pages/home_page.dart';
-import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
-import 'package:lineleap/presentation/widgets/providers/generation_provider.dart';
-import 'package:lineleap/presentation/widgets/providers/queue_status_provider.dart';
-import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:lineleap/presentation/widgets/providers/theme_notifier.dart';
+import 'package:lineleap/presentation/features/nav_bar.dart';
+import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/providers/generation_provider.dart';
+import 'package:lineleap/presentation/common/widgets/providers/queue_status_provider.dart';
+import 'package:lineleap/presentation/common/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/providers/theme_notifier.dart';
 import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'core/theme/app_theme.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -116,7 +116,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: Provider.of<ThemeNotifier>(context).themeMode,
-      home: const HomePage(),
+      home: const NavBar(),
     );
   }
 }

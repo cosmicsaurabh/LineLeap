@@ -2,10 +2,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lineleap/presentation/pages/queue_screen.dart';
-import 'package:lineleap/presentation/pages/scribble/scribble_page.dart';
-import 'package:lineleap/presentation/widgets/color_picker.dart/color_picker_dialog.dart';
-import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/features/queue/queue_screen.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
+import 'package:lineleap/presentation/common/widgets/providers/scribble_notifier.dart';
 
 class ScribbleToolbar extends StatelessWidget {
   final EnhancedScribbleNotifier notifier;

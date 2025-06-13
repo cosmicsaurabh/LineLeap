@@ -3,18 +3,18 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lineleap/core/theme/app_theme.dart';
+import 'package:lineleap/theme/app_theme.dart';
 import 'package:lineleap/core/utils/image_utils.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
-import 'package:lineleap/presentation/pages/queue_screen.dart';
-import 'package:lineleap/presentation/pages/scribble/drawing_canvas.dart';
-import 'package:lineleap/presentation/pages/scribble/model_selector_sheet.dart';
-import 'package:lineleap/presentation/pages/scribble/prompt_input_dialog.dart';
-import 'package:lineleap/presentation/pages/scribble/scribble_toolbar.dart';
-import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
-import 'package:lineleap/presentation/widgets/providers/generation_provider.dart';
-import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
-import 'package:lineleap/presentation/widgets/providers/theme_notifier.dart';
+import 'package:lineleap/presentation/features/queue/queue_screen.dart';
+import 'package:lineleap/presentation/features/scribble/drawing_canvas.dart';
+import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
+import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_toolbar.dart';
+import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/providers/generation_provider.dart';
+import 'package:lineleap/presentation/common/widgets/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/providers/theme_notifier.dart';
 import 'package:provider/provider.dart';
 
 enum BrushStyle {

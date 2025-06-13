@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:lineleap/domain/entities/generated_image.dart';
-import 'package:lineleap/presentation/pages/gallery/gallery_image_dialog.dart';
-import 'package:lineleap/presentation/pages/gallery/gallery_image_tile.dart';
-import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
+import 'package:lineleap/presentation/features/gallery/gallery_image_tile.dart';
+import 'package:lineleap/presentation/common/widgets/providers/gallery_notifier.dart';
 import 'package:provider/provider.dart';
 
 class GalleryPage extends StatefulWidget {
