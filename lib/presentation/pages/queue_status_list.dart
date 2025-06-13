@@ -118,14 +118,21 @@ class _QueueItemTile extends StatelessWidget {
         context,
         listen: false,
       );
+      final queueProvider = Provider.of<QueueStatusProvider>(
+        context,
+        listen: false,
+      );
 
       // Save to gallery
-      await galleryNotifier.saveToHistory(
+      bool success = await galleryNotifier.saveToHistory(
         scribblePath: item.scribblePath,
         generatedPath: item.generatedPath!,
         prompt: item.prompt,
         timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
       );
+      if (success) {
+        queueProvider.removeFromQueue(item);
+      }
 
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
