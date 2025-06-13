@@ -16,6 +16,7 @@ import 'package:lineleap/domain/repositories/image_generation_repo.dart';
 import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
 import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
+import 'package:lineleap/domain/usecases/delete_imageBytes_from_path.dart';
 import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/generate_transformationFromScribble.dart';
@@ -76,6 +77,7 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(() => GetScribbleTransformationsFromHistory(sl()));
   sl.registerLazySingleton(() => DeleteScribbleTransformationFromHistory(sl()));
   sl.registerLazySingleton(() => SaveImagebytesReturnPathUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteImagebytesFromPathUseCase(sl()));
   sl.registerLazySingleton(
     () => SaveScribbleTransformationToHistoryUseCase(sl()),
   );
