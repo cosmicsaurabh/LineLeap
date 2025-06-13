@@ -6,10 +6,10 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:lineleap/core/service/image_device_interaction_service.dart';
 
-import '../../domain/services/generation_service.dart';
+import '../../domain/services/horde_generation_service.dart';
 import '../remote/ai_horde_api.dart';
 
-class HordeGenerationServiceImpl implements GenerationService {
+class HordeGenerationServiceImpl implements HordeGenerationService {
   final AIHordeAPI _hordeAPI;
   final ImageDeviceInteractionService _imageDeviceInteractionService;
 
