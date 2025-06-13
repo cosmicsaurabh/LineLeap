@@ -5,13 +5,13 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/theme/app_theme.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated
-  final GeneratedImage image;
+  final ScribbleTransformation image;
   final GalleryNotifier gallery;
 
   const GalleryImageDialog({
@@ -49,18 +49,8 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       final bool isScribble = widget.whichImage == 0;
       final String imagePath =
           isScribble
-              ? widget.image.scribbleImageFilePath
-              : widget.image.generatedImageFilePath;
-      Uint8List? cachedBytes;
-
-      // Use cached bytes if available
-      if (cachedBytes != null) {
-        setState(() {
-          _imageBytes = cachedBytes;
-          _isLoading = false;
-        });
-        return;
-      }
+              ? widget.image.scribbleImagePath
+              : widget.image.generatedImagePath;
 
       // Otherwise load from file
       final file = File(imagePath);
@@ -190,7 +180,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   });
                 },
                 child: Hero(
-                  tag: 'image_${widget.image.generatedImageFilePath}',
+                  tag: 'image_${widget.image.generatedImagePath}',
                   child: Image.memory(
                     image,
                     fit: BoxFit.cover,

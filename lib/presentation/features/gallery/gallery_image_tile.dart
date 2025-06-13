@@ -1,11 +1,13 @@
+// ignore_for_file: unused_import
+
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
 
 class GalleryImageTile extends StatelessWidget {
-  final GeneratedImage image;
+  final ScribbleTransformation image;
   final VoidCallback onTap;
   final VoidCallback onScribbleTap;
 
@@ -42,7 +44,7 @@ class GalleryImageTile extends StatelessWidget {
             child: Stack(
               children: [
                 // Main generated image
-                _buildImageWidget(image.generatedImageFilePath),
+                _buildImageWidget(image.generatedImagePath),
 
                 // Scribble preview in corner with its own tap handler
                 Positioned(
@@ -68,7 +70,7 @@ class GalleryImageTile extends StatelessWidget {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
-                        child: _buildImageWidget(image.scribbleImageFilePath),
+                        child: _buildImageWidget(image.scribbleImagePath),
                       ),
                     ),
                   ),
