@@ -100,7 +100,6 @@ Future<void> initDependencies() async {
     () => GalleryNotifier(
       getGalleryImagesUseCase: sl(),
       deleteGalleryImageUseCase: sl(),
-      saveImageUseCase: sl(),
       saveImageToGalleryUseCase: sl(),
     ),
   );
@@ -109,6 +108,7 @@ Future<void> initDependencies() async {
       enqueueUseCase: sl(),
       processUseCase: sl(),
       queueRepository: sl(),
+      saveImageUseCase: sl(),
     ),
   );
   sl.registerFactory(() => QueueStatusProvider(getQueueUseCase: sl()));

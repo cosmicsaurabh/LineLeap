@@ -36,7 +36,7 @@ class _GalleryPageState extends State<GalleryPage> {
       );
     }
 
-    if (gallery.images.isEmpty) {
+    if (gallery.scribbleTransformations.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -48,7 +48,7 @@ class _GalleryPageState extends State<GalleryPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              "No images found",
+              "No scribbleTransformations found",
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -98,7 +98,7 @@ class _GalleryPageState extends State<GalleryPage> {
 
         return GridView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: gallery.images.length,
+          itemCount: gallery.scribbleTransformations.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 12,
@@ -106,7 +106,8 @@ class _GalleryPageState extends State<GalleryPage> {
             childAspectRatio: 1.0,
           ),
           itemBuilder: (context, index) {
-            ScribbleTransformation image = gallery.images[index];
+            ScribbleTransformation image =
+                gallery.scribbleTransformations[index];
             return GalleryImageTile(
               image: image,
               onTap: () => _showImageDialog(1, context, image, gallery),
