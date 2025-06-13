@@ -15,4 +15,9 @@ class GetGenerationQueueUseCase {
   Stream<List<GenerationRequest>> observe() {
     return repository.observeQueuedRequests();
   }
+
+  //remove item from queue
+  Future<void> removeFromQueue(GenerationRequest request) async {
+    await repository.removeRequest(request.localId);
+  }
 }

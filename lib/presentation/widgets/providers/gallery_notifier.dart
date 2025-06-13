@@ -43,7 +43,7 @@ class GalleryNotifier extends ChangeNotifier {
     return savedImagePath;
   }
 
-  Future<void> saveToHistory({
+  Future<bool> saveToHistory({
     required String scribblePath,
     required String generatedPath,
     required String prompt,
@@ -60,11 +60,15 @@ class GalleryNotifier extends ChangeNotifier {
       await saveImageToGalleryUseCase(generatedImage);
 
       _images.insert(0, generatedImage);
+
+      //now remove from queue list since its added to gallery
+
       notifyListeners();
+      return true;
     } catch (e) {
       _error = 'Failed to save image r45454to gallery';
       notifyListeners();
-      rethrow;
+      return false;
     }
   }
 
