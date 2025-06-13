@@ -1,22 +1,22 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:lineleap/domain/entities/generated_image.dart';
-import 'package:lineleap/domain/usecases/get_gallery_images_usecase.dart';
-import 'package:lineleap/domain/usecases/delete_gallery_image_usecase.dart';
-import 'package:lineleap/domain/usecases/save_generatedModel_usecase.dart';
-import 'package:lineleap/domain/usecases/save_image_usecase.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
+import 'package:lineleap/domain/usecases/gallery_get_scribbleTransformation.dart';
+import 'package:lineleap/domain/usecases/gallery_delete_scribbleTransformation.dart';
+import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history.dart';
+import 'package:lineleap/domain/usecases/save_imageBytes_return_path.dart';
 
 class GalleryNotifier extends ChangeNotifier {
-  final GetGalleryImagesUseCase getGalleryImagesUseCase;
-  final DeleteGalleryImageUseCase deleteGalleryImageUseCase;
-  final SaveImageUseCase saveImageUseCase;
-  final SaveGeneratedModelUseCase saveImageToGalleryUseCase;
-  List<GeneratedImage> _images = [];
+  final GalleryGetScribbleTransformation getGalleryImagesUseCase;
+  final GalleryDeleteScribbleTransformation deleteGalleryImageUseCase;
+  final SaveImagebytesReturnPath saveImageUseCase;
+  final SaveScribbletransformationToHistory saveImageToGalleryUseCase;
+  List<ScribbleTransformation> _images = [];
   bool _isLoading = false;
   String? _error;
 
-  List<GeneratedImage> get images => _images;
+  List<ScribbleTransformation> get images => _images;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -42,9 +42,9 @@ class GalleryNotifier extends ChangeNotifier {
   }) async {
     // Implement the logic to save the image paths and metadata to history
     try {
-      final generatedImage = GeneratedImage(
-        generatedImageFilePath: generatedPath,
-        scribbleImageFilePath: scribblePath,
+      final generatedImage = ScribbleTransformation(
+        generatedImagePath: generatedPath,
+        scribbleImagePath: scribblePath,
         prompt: prompt,
         timestamp: timestamp,
       );
@@ -70,9 +70,9 @@ class GalleryNotifier extends ChangeNotifier {
       _images =
           generatedImages
               .map(
-                (img) => GeneratedImage(
-                  generatedImageFilePath: img.generatedImageFilePath,
-                  scribbleImageFilePath: img.scribbleImageFilePath,
+                (img) => ScribbleTransformation(
+                  generatedImagePath: img.generatedImagePath,
+                  scribbleImagePath: img.scribbleImagePath,
                   prompt: img.prompt,
                   timestamp: img.timestamp,
                 ),
@@ -86,7 +86,7 @@ class GalleryNotifier extends ChangeNotifier {
     }
   }
 
-  Future<void> deleteImage(GeneratedImage image) async {
+  Future<void> deleteImage(ScribbleTransformation image) async {
     try {
       _images.remove(image);
       notifyListeners();

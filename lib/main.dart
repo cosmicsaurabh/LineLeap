@@ -19,7 +19,7 @@ void main() async {
 
   final appDocumentDir = await getApplicationDocumentsDirectory();
   await Hive.initFlutter(appDocumentDir.path);
-  Hive.registerAdapter(GeneratedImageModelAdapter());
+  Hive.registerAdapter(ScribbleTransformationHiveAdapter());
 
   //initialize dependencies
   await initDependencies();

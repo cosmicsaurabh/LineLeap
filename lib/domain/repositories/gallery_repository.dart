@@ -1,7 +1,7 @@
-import '../entities/generated_image.dart';
+import '../entities/sketch_transformation.dart';
 
 abstract class GalleryRepository {
-  Future<List<GeneratedImage>> getGalleryImages();
-  Future<void> deleteGalleryImage(GeneratedImage image);
-  Future<void> saveToGallery(GeneratedImage image); // Add this method
+  Future<List<ScribbleTransformation>> getGalleryImages();
+  Future<void> deleteGalleryImage(ScribbleTransformation image);
+  Future<void> saveToGallery(ScribbleTransformation image); // Add this method
 }
