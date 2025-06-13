@@ -1,22 +1,20 @@
-import 'dart:typed_data';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/core/theme/app_theme.dart';
 import 'package:lineleap/core/utils/image_utils.dart';
-import 'package:lineleap/data/remote/ai_horde_api.dart';
-import 'package:lineleap/data/repositories/image_generation_repository_impl.dart';
-import 'package:lineleap/domain/usecases/generate_image_usecase.dart';
+import 'package:lineleap/domain/entities/generation_request.dart';
+import 'package:lineleap/presentation/pages/queue_screen.dart';
 import 'package:lineleap/presentation/pages/scribble/drawing_canvas.dart';
-import 'package:lineleap/presentation/pages/scribble/generated_image_viewer.dart';
 import 'package:lineleap/presentation/pages/scribble/model_selector_sheet.dart';
 import 'package:lineleap/presentation/pages/scribble/prompt_input_dialog.dart';
 import 'package:lineleap/presentation/pages/scribble/scribble_toolbar.dart';
 import 'package:lineleap/presentation/widgets/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/widgets/providers/generation_provider.dart';
 import 'package:lineleap/presentation/widgets/providers/scribble_notifier.dart';
 import 'package:lineleap/presentation/widgets/providers/theme_notifier.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 enum BrushStyle {
@@ -78,7 +76,6 @@ class _ScribblePageState extends State<ScribblePage>
   late AnimationController _generateButtonController;
   late AnimationController _toolbarController;
 
-  Uint8List? generatedImage;
   bool isLoading = false;
   String prompt = '';
   String selectedModel = 'Stable Diffusion';
@@ -106,51 +103,94 @@ class _ScribblePageState extends State<ScribblePage>
   }
 
   Future<void> _handleGenerate() async {
+    final galleryProvider = context.read<GalleryNotifier>();
+    final generationProvider = context.read<GenerationProvider>();
     if (prompt.isEmpty) {
       await _showPromptDialog();
-      return;
+      if (prompt.isEmpty) return;
     }
-
-    final galleryProvider = context.read<GalleryNotifier>();
-    final scribbleBytes = await ImageUtils.capturePng(_paintKey);
-    if (scribbleBytes == null) return;
 
     setState(() => isLoading = true);
     HapticFeedback.mediumImpact();
 
     try {
-      final api = AIHordeAPI();
-      final imageRepository = ImageGenerationRepositoryImpl(api);
-      final useCase = GenerateImageUseCase(imageRepository);
-      final imageUrl = await useCase(scribbleBytes, prompt);
-
-      Uint8List? generatedImageBytes;
-      if (imageUrl != null) {
-        final res = await http.get(Uri.parse(imageUrl));
-        if (res.statusCode == 200) {
-          generatedImageBytes = res.bodyBytes;
-          galleryProvider.saveGeneratedImage(
-            scribbleBytes,
-            generatedImageBytes,
-            prompt,
-          );
-          HapticFeedback.heavyImpact();
-        } else {
-          _showErrorSnackBar('Failed to download image: ${res.reasonPhrase}');
-        }
+      // 1. Capture the scribble image
+      final scribbleBytes = await ImageUtils.capturePng(_paintKey);
+      if (scribbleBytes == null) {
+        setState(() => isLoading = false);
+        return;
       }
 
-      setState(() {
-        generatedImage = generatedImageBytes;
-        isLoading = false;
-      });
+      // 2. Save the scribble to a temporary file
+      final String scribblePath = await galleryProvider.saveImage(
+        scribbleBytes,
+      );
 
-      if (generatedImageBytes != null) {
-        await _showGeneratedImageDialog();
-      }
+      // 3. Enqueue the generation request via the provider
+      final request = await generationProvider.generateImage(
+        prompt: prompt,
+        scribblePath: scribblePath,
+      );
+
+      // 4. Poll for completion
+      await _watchRequestUntilComplete(request.localId, scribbleBytes);
     } catch (e) {
       setState(() => isLoading = false);
       _showErrorSnackBar('Generation failed: $e');
+    }
+  }
+
+  Future<void> _watchRequestUntilComplete(
+    String requestId,
+    Uint8List originalScribble,
+  ) async {
+    final generationProvider = context.read<GenerationProvider>();
+    final galleryProvider = context.read<GalleryNotifier>();
+
+    bool isComplete = false;
+    int attempts = 0;
+    const maxAttempts = 60; // Timeout after 60 seconds
+
+    while (!isComplete && attempts < maxAttempts) {
+      attempts++;
+      await Future.delayed(const Duration(seconds: 2));
+
+      final request = await generationProvider.getRequest(requestId);
+
+      // Check if request completed or failed
+      if (request?.status == GenerationStatus.completed) {
+        if (request?.generatedPath != null) {
+          final generatedBytes =
+              await File(request!.generatedPath!).readAsBytes();
+
+          // Save to gallery
+          galleryProvider.saveImage(generatedBytes);
+
+          // Update UI
+          setState(() {
+            isLoading = false;
+          });
+
+          // await _showGeneratedImageDialog();
+          isComplete = true;
+          HapticFeedback.heavyImpact();
+        }
+      } else if (request?.status == GenerationStatus.failed) {
+        _showErrorSnackBar(
+          'Generation failed: ${request?.error ?? "Unknown error"}',
+        );
+        setState(() => isLoading = false);
+        isComplete = true;
+      } else if (request == null) {
+        _showErrorSnackBar('Request was removed from queue');
+        setState(() => isLoading = false);
+        isComplete = true;
+      }
+    }
+
+    if (!isComplete) {
+      _showErrorSnackBar('Generation timed out');
+      setState(() => isLoading = false);
     }
   }
 
@@ -177,6 +217,16 @@ class _ScribblePageState extends State<ScribblePage>
       appBar: _buildAppBar(theme, isDark),
       body: Column(
         children: [
+          ListTile(
+            leading: const Icon(Icons.queue),
+            title: const Text('Queue Status'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QueueScreen()),
+              );
+            },
+          ),
           _buildDrawingArea(theme, isDark),
           _buildToolbar(theme, isDark),
         ],
@@ -418,16 +468,16 @@ class _ScribblePageState extends State<ScribblePage>
     }
   }
 
-  Future<void> _showGeneratedImageDialog() async {
-    if (generatedImage == null) return;
+  // Future<void> _showGeneratedImageDialog() async {
+  //   if (generatedImage == null) return;
 
-    await showDialog(
-      context: context,
-      builder:
-          (context) =>
-              GeneratedImageViewer(image: generatedImage!, prompt: prompt),
-    );
-  }
+  //   await showDialog(
+  //     context: context,
+  //     builder:
+  //         (context) =>
+  //             GeneratedImageViewer(image: generatedImage!, prompt: prompt),
+  //   );
+  // }
 }
 
 // Usage Example and Integration
