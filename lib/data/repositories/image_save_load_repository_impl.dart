@@ -4,10 +4,10 @@ import 'dart:typed_data';
 
 import 'package:lineleap/core/service/image_storage_service.dart';
 import 'package:lineleap/data/models/generated_image_model.dart';
-import 'package:lineleap/domain/repositories/image_repository.dart';
+import 'package:lineleap/domain/repositories/image_save_load_repository.dart';
 import 'package:hive/hive.dart';
 
-class ImageSaveLoadRepositoryImpl implements ImageRepository {
+class ImageSaveLoadRepositoryImpl implements ImageSaveLoadRepository {
   final ImageStorageService _storageService;
   final Box<GeneratedImageModel> _imageBox;
 
