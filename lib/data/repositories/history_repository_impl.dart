@@ -1,5 +1,5 @@
 import 'dart:developer';
-import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/core/service/image_device_interaction_service.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/domain/repositories/history_repository.dart';
 import 'package:hive/hive.dart';
@@ -7,12 +7,13 @@ import '../models/scribble_transformation_hive_model.dart';
 
 class HistoryRepositoryImpl implements HistoryRepository {
   final Box<ScribbleTransformationHive> box;
-  final ImageStorageService imageStorageService;
+  final ImageDeviceInteractionService _imageDeviceInteractionService;
 
-  HistoryRepositoryImpl(this.box, this.imageStorageService);
+  HistoryRepositoryImpl(this.box, this._imageDeviceInteractionService);
 
   @override
-  Future<List<ScribbleTransformation>> getHistoryImages() async {
+  Future<List<ScribbleTransformation>>
+  getScribbleTransformationsFromHistory() async {
     log('History box name: ${box.name}, total images: ${box.length}');
     log('Fetching history images from Hive');
     if (box.isEmpty) {
@@ -23,7 +24,7 @@ class HistoryRepositoryImpl implements HistoryRepository {
   }
 
   @override
-  Future<void> deleteHistoryImage(
+  Future<void> deleteScribbleTransformationFromHistory(
     ScribbleTransformation scribbleTransformation,
   ) async {
     // Find and delete entry from Hive database
@@ -38,10 +39,12 @@ class HistoryRepositoryImpl implements HistoryRepository {
 
     // Delete the actual image files from device storage
     try {
-      imageStorageService.deleteImage(
+      _imageDeviceInteractionService.deleteImageFromDevice(
         scribbleTransformation.generatedImagePath,
       );
-      imageStorageService.deleteImage(scribbleTransformation.scribbleImagePath);
+      _imageDeviceInteractionService.deleteImageFromDevice(
+        scribbleTransformation.scribbleImagePath,
+      );
       log('Image files deleted successfully');
     } catch (e) {
       log('Error deleting image files: $e');
@@ -49,7 +52,7 @@ class HistoryRepositoryImpl implements HistoryRepository {
   }
 
   @override
-  Future<void> saveToHistory(
+  Future<void> saveScribbleTransformationToHistory(
     ScribbleTransformation scribbleTransformation,
   ) async {
     // Convert to model and save to Hive(we already have the image files saved)

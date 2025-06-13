@@ -4,16 +4,19 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
-import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/core/service/image_device_interaction_service.dart';
 
 import '../../domain/services/generation_service.dart';
 import '../remote/ai_horde_api.dart';
 
 class HordeGenerationServiceImpl implements GenerationService {
   final AIHordeAPI _hordeAPI;
-  final ImageStorageService _imageStorageService;
+  final ImageDeviceInteractionService _imageDeviceInteractionService;
 
-  HordeGenerationServiceImpl(this._hordeAPI, this._imageStorageService);
+  HordeGenerationServiceImpl(
+    this._hordeAPI,
+    this._imageDeviceInteractionService,
+  );
 
   @override
   Future<String> generateFromPrompt({
@@ -58,10 +61,8 @@ class HordeGenerationServiceImpl implements GenerationService {
       }
 
       // 4. Save the result to a file
-      final String outputPath = await _imageStorageService.saveImage(
-        generatedImageBytes,
-        jobId,
-      );
+      final String outputPath = await _imageDeviceInteractionService
+          .saveImageToDevice(generatedImageBytes, jobId);
       return outputPath;
     } catch (e) {
       log("Generation error: $e");

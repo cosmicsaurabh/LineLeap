@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
-import 'package:lineleap/core/service/image_storage_service.dart';
+import 'package:lineleap/core/service/image_device_interaction_service.dart';
 import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
 import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/data/remote/ai_horde_api.dart';
@@ -13,10 +13,10 @@ import 'package:lineleap/domain/repositories/history_repository.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
 import 'package:lineleap/domain/repositories/image_save_load_repository.dart';
 import 'package:lineleap/domain/services/generation_service.dart';
-import 'package:lineleap/domain/usecases/gallery_delete_scribbleTransformation.dart';
+import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/generate_transformationFromScribble.dart';
-import 'package:lineleap/domain/usecases/gallery_get_scribbleTransformation.dart';
+import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history.dart';
@@ -39,10 +39,14 @@ Future<void> initDependencies() async {
   sl.registerSingleton<GenerationQueueNotifier>(GenerationQueueNotifier());
 
   // Services
-  sl.registerLazySingleton<ImageStorageService>(() => ImageStorageService());
+  sl.registerLazySingleton<ImageDeviceInteractionService>(
+    () => ImageDeviceInteractionService(),
+  );
   sl.registerLazySingleton<GenerationService>(
-    () =>
-        HordeGenerationServiceImpl(sl<AIHordeAPI>(), sl<ImageStorageService>()),
+    () => HordeGenerationServiceImpl(
+      sl<AIHordeAPI>(),
+      sl<ImageDeviceInteractionService>(),
+    ),
   );
 
   // Repositories
@@ -50,22 +54,24 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton<HistoryRepository>(
     () => HistoryRepositoryImpl(
       sl<Box<ScribbleTransformationHive>>(),
-      sl<ImageStorageService>(),
+      sl<ImageDeviceInteractionService>(),
     ),
   );
   sl.registerLazySingleton<GenerationQueueRepository>(
     () => GenerationQueueRepositoryImpl(sl<GenerationQueueNotifier>()),
   );
   sl.registerLazySingleton<ImageSaveLoadRepository>(
-    () => ImageSaveLoadRepositoryImpl(sl<ImageStorageService>()),
+    () => ImageSaveLoadRepositoryImpl(sl<ImageDeviceInteractionService>()),
   );
 
   // Use cases
   sl.registerLazySingleton(() => SetThemeModeUseCase(sl()));
-  sl.registerLazySingleton(() => GalleryGetScribbleTransformation(sl()));
-  sl.registerLazySingleton(() => GalleryDeleteScribbleTransformation(sl()));
-  sl.registerLazySingleton(() => SaveImagebytesReturnPath(sl()));
-  sl.registerLazySingleton(() => SaveScribbletransformationToHistory(sl()));
+  sl.registerLazySingleton(() => GetScribbleTransformationsFromHistory(sl()));
+  sl.registerLazySingleton(() => DeleteScribbleTransformationFromHistory(sl()));
+  sl.registerLazySingleton(() => SaveImagebytesReturnPathUseCase(sl()));
+  sl.registerLazySingleton(
+    () => SaveScribbleTransformationToHistoryUseCase(sl()),
+  );
   sl.registerLazySingleton(() => EnqueueGenerationRequestUseCase(sl()));
   sl.registerLazySingleton(() => GetGenerationQueueUseCase(sl()));
   sl.registerLazySingleton(
@@ -74,7 +80,9 @@ Future<void> initDependencies() async {
       generationService: sl(),
     ),
   );
-  sl.registerLazySingleton(() => GenerateTransformationfromscribble(sl()));
+  sl.registerLazySingleton(
+    () => GenerateTransformationfromscribbleUseCase(sl()),
+  );
 
   // Notifiers/Providers
   sl.registerFactory(() => ThemeNotifier(sl()));
