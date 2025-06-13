@@ -103,7 +103,6 @@ class _ScribblePageState extends State<ScribblePage>
   }
 
   Future<void> _handleGenerate() async {
-    final galleryProvider = context.read<GalleryNotifier>();
     final generationProvider = context.read<GenerationProvider>();
     if (prompt.isEmpty) {
       await _showPromptDialog();
@@ -122,7 +121,7 @@ class _ScribblePageState extends State<ScribblePage>
       }
 
       // 2. Save the scribble to a temporary file
-      final String scribblePath = await galleryProvider.saveImage(
+      final String scribblePath = await generationProvider.saveImageToDevice(
         scribbleBytes,
       );
 
@@ -145,7 +144,6 @@ class _ScribblePageState extends State<ScribblePage>
     Uint8List originalScribble,
   ) async {
     final generationProvider = context.read<GenerationProvider>();
-    final galleryProvider = context.read<GalleryNotifier>();
 
     bool isComplete = false;
     int attempts = 0;
@@ -164,7 +162,7 @@ class _ScribblePageState extends State<ScribblePage>
               await File(request!.generatedPath!).readAsBytes();
 
           // Save to gallery
-          galleryProvider.saveImage(generatedBytes);
+          generationProvider.saveImageToDevice(generatedBytes);
 
           // Update UI
           setState(() {

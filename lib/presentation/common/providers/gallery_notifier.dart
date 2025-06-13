@@ -1,37 +1,30 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history.dart';
 import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
 import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history.dart';
-import 'package:lineleap/domain/usecases/save_imageBytes_return_path.dart';
 
 class GalleryNotifier extends ChangeNotifier {
+  // Use cases (Gallery operations like loading, saving, deleting whole ScribbleTransformation Objects)
   final GetScribbleTransformationsFromHistory getGalleryImagesUseCase;
-  final DeleteScribbleTransformationFromHistory deleteGalleryImageUseCase;
-  final SaveImagebytesReturnPathUseCase saveImageUseCase;
   final SaveScribbleTransformationToHistoryUseCase saveImageToGalleryUseCase;
-  List<ScribbleTransformation> _images = [];
+  final DeleteScribbleTransformationFromHistory deleteGalleryImageUseCase;
+
+  List<ScribbleTransformation> _scribbleTransformations = [];
   bool _isLoading = false;
   String? _error;
 
-  List<ScribbleTransformation> get images => _images;
+  List<ScribbleTransformation> get scribbleTransformations =>
+      _scribbleTransformations;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
   GalleryNotifier({
     required this.getGalleryImagesUseCase,
     required this.deleteGalleryImageUseCase,
-    required this.saveImageUseCase,
     required this.saveImageToGalleryUseCase,
   }) {
     loadImages();
-  }
-  Future<String> saveImage(Uint8List imageBytes) async {
-    final savedImagePath = await saveImageUseCase(imageBytes);
-
-    return savedImagePath;
   }
 
   Future<bool> saveToHistory({
@@ -50,7 +43,7 @@ class GalleryNotifier extends ChangeNotifier {
       );
       await saveImageToGalleryUseCase(generatedImage);
 
-      _images.insert(0, generatedImage);
+      _scribbleTransformations.insert(0, generatedImage);
 
       notifyListeners();
       return true;
@@ -67,7 +60,7 @@ class GalleryNotifier extends ChangeNotifier {
     notifyListeners();
     try {
       final generatedImages = await getGalleryImagesUseCase();
-      _images =
+      _scribbleTransformations =
           generatedImages
               .map(
                 (img) => ScribbleTransformation(
@@ -79,19 +72,21 @@ class GalleryNotifier extends ChangeNotifier {
               )
               .toList();
     } catch (e) {
-      _error = 'Failed to load images';
+      _error = 'Failed to load scribbleTransformations';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> deleteImage(ScribbleTransformation image) async {
+  Future<void> deleteImage(
+    ScribbleTransformation selectedScribbleTransformation,
+  ) async {
     try {
-      _images.remove(image);
+      _scribbleTransformations.remove(selectedScribbleTransformation);
       notifyListeners();
       // After removing the image from the list, any cached bytes will be eligible for garbage collection.
-      await deleteGalleryImageUseCase(image);
+      await deleteGalleryImageUseCase(selectedScribbleTransformation);
     } catch (e) {
       _error = 'Failed to delete image';
       notifyListeners();
