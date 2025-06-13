@@ -4,12 +4,12 @@ import 'package:lineleap/core/service/image_storage_service.dart';
 import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
 import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/data/remote/ai_horde_api.dart';
-import 'package:lineleap/data/repositories/gallery_repository_impl.dart';
+import 'package:lineleap/data/repositories/history_repository_impl.dart';
 import 'package:lineleap/data/repositories/generation_queue_repo_impl.dart';
 import 'package:lineleap/data/repositories/image_save_load_repository_impl.dart';
 import 'package:lineleap/data/repositories/theme_mode_repository.dart';
 import 'package:lineleap/data/services/horde_generation_service_impl.dart';
-import 'package:lineleap/domain/repositories/gallery_repository.dart';
+import 'package:lineleap/domain/repositories/history_repository.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
 import 'package:lineleap/domain/repositories/image_save_load_repository.dart';
 import 'package:lineleap/domain/services/generation_service.dart';
@@ -47,8 +47,11 @@ Future<void> initDependencies() async {
 
   // Repositories
   sl.registerSingleton<ThemeModeRepository>(ThemeModeRepositoryImpl());
-  sl.registerLazySingleton<GalleryRepository>(
-    () => GalleryRepositoryImpl(sl<Box<ScribbleTransformationHive>>()),
+  sl.registerLazySingleton<HistoryRepository>(
+    () => HistoryRepositoryImpl(
+      sl<Box<ScribbleTransformationHive>>(),
+      sl<ImageStorageService>(),
+    ),
   );
   sl.registerLazySingleton<GenerationQueueRepository>(
     () => GenerationQueueRepositoryImpl(sl<GenerationQueueNotifier>()),

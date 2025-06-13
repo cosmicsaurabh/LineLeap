@@ -1,10 +1,10 @@
 import '../entities/scribble_transformation.dart';
-import '../repositories/gallery_repository.dart';
+import '../repositories/history_repository.dart';
 
 class GalleryGetScribbleTransformation {
-  final GalleryRepository repository;
+  final HistoryRepository repository;
 
   GalleryGetScribbleTransformation(this.repository);
 
-  Future<List<ScribbleTransformation>> call() => repository.getGalleryImages();
+  Future<List<ScribbleTransformation>> call() => repository.getHistoryImages();
 }
