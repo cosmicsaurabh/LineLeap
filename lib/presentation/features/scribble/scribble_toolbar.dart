@@ -2,6 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lineleap/presentation/common/widgets/action_button.dart';
 import 'package:lineleap/presentation/features/queue/queue_screen.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
@@ -33,118 +34,82 @@ class ScribbleToolbar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                _buildToolButton(
-                  context,
+                ActionButton(
+                  icon: CupertinoIcons.square_list,
+                  label: 'Queue',
+                  onPressed:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const QueueScreen(),
+                        ),
+                      ),
+                  style: ActionButtonStyle.primary,
+                ),
+                SizedBox(width: 8),
+                ActionButton(
                   icon: CupertinoIcons.arrow_uturn_left,
-                  onPressed: notifier.canUndo ? notifier.undo : null,
+                  onPressed: notifier.canUndo ? notifier.undo : () {},
+                  style: ActionButtonStyle.secondary,
+                  showBorder: false,
                 ),
                 const SizedBox(width: 8),
-                _buildToolButton(
-                  context,
+                ActionButton(
                   icon: CupertinoIcons.arrow_uturn_right,
-                  onPressed: notifier.canRedo ? notifier.redo : null,
+                  onPressed: notifier.canRedo ? notifier.redo : () {},
+                  style: ActionButtonStyle.secondary,
+                  showBorder: false,
+                ),
+                // const SizedBox(width: 8),
+                // ActionButton(
+                //   onPressed: onModelSelect,
+                //   icon: CupertinoIcons.square_list,
+                //   label: 'Models',
+                //   style: ActionButtonStyle.primary,
+                // ),
+                const SizedBox(width: 8),
+                ActionButton(
+                  icon: CupertinoIcons.textformat,
+                  onPressed: onPrompt,
+                  style: ActionButtonStyle.secondary,
+                  showBorder: false,
                 ),
                 const SizedBox(width: 8),
-                _buildToolButton(
-                  context,
-                  color: notifier.state.selectedColor,
-                  icon: Icons.palette,
+                ActionButton(
+                  icon: CupertinoIcons.color_filter,
                   onPressed:
                       () => showColorPickerDialog(
                         context: context,
                         initialColor: notifier.state.selectedColor,
                         onColorSelected: notifier.selectColor,
                       ),
+                  style: ActionButtonStyle.secondary,
+                  showBorder: false,
+                ),
+
+                const SizedBox(width: 8),
+                ActionButton(
+                  onPressed: () {
+                    _showBrushOptions(context);
+                  },
+                  icon: _getBrushIcon(notifier.state.brushStyle),
+
+                  style: ActionButtonStyle.secondary,
+                  label: notifier.state.brushStyle.name,
+                  showBorder: false,
                 ),
                 const SizedBox(width: 8),
-                _buildBrushSelector(context),
-                const SizedBox(width: 8),
-                _buildToolButton(
-                  context,
-                  icon: CupertinoIcons.textformat,
-                  onPressed: onPrompt,
-                ),
-                const SizedBox(width: 8),
-                _buildToolButton(
-                  context,
+                ActionButton(
                   icon: CupertinoIcons.clear,
                   onPressed: notifier.clear,
-                  color: Colors.red,
+                  style: ActionButtonStyle.secondary,
+                  showBorder: false,
                 ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildToolButton(
-    BuildContext context, {
-    required IconData icon,
-    VoidCallback? onPressed,
-    Color? color,
-  }) {
-    final theme = Theme.of(context);
-    final isEnabled = onPressed != null;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: onPressed,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color:
-                isEnabled
-                    ? (color ?? theme.colorScheme.primary).withOpacity(0.1)
-                    : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(
-            icon,
-            color:
-                isEnabled
-                    ? (color ?? theme.colorScheme.primary)
-                    : theme.colorScheme.outline,
-            size: 20,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBrushSelector(BuildContext context) {
-    return GestureDetector(
-      onTap: () => _showBrushOptions(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              _getBrushIcon(notifier.state.brushStyle),
-              size: 16,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              notifier.state.brushStyle.name,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
