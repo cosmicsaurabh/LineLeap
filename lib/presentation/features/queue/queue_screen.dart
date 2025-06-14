@@ -1,6 +1,6 @@
 // Example: adding a queue view to a screen
 import 'package:flutter/material.dart';
-import 'package:lineleap/presentation/features/queue/queue_status_list.dart';
+import 'package:lineleap/presentation/common/widgets/generation_queue.dart';
 import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +21,7 @@ class QueueScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const QueueStatusList(),
+      body: const GenerationQueueWidget(),
     );
   }
 }
