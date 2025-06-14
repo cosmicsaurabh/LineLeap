@@ -30,7 +30,9 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
   final TransformationController _transformationController =
       TransformationController();
   double _currentScale = 1.0;
+  String? createdAt;
 
+  String? imagePathForHero;
   @override
   void initState() {
     super.initState();
@@ -41,16 +43,28 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
   bool _isLoading = false;
   Future<void> _loadImage() async {
     if (_isLoading) return; // Prevent concurrent loading
+    createdAt = widget.scribbleTransformation.timestamp;
+    try {
+      final timestamp = int.parse(widget.scribbleTransformation.timestamp);
+      final date =
+          DateTime.fromMillisecondsSinceEpoch(timestamp).toIso8601String();
+      createdAt = date;
+    } catch (e) {
+      createdAt = "-";
+    }
 
     setState(() => _isLoading = true);
 
     try {
       // Determine which image we're working with
       final bool isScribble = widget.whichImage == 0;
-      final String imagePath =
+      final imagePath =
           isScribble
               ? widget.scribbleTransformation.scribbleImagePath
               : widget.scribbleTransformation.generatedImagePath;
+      setState(() {
+        imagePathForHero = imagePath;
+      });
 
       // Otherwise load from file
       final file = File(imagePath);
@@ -106,7 +120,13 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else if (_imageBytes != null)
-              _buildImageSection(_imageBytes!, context, isDarkMode, theme)
+              _buildImageSection(
+                _imageBytes!,
+                context,
+                isDarkMode,
+                theme,
+                imagePathForHero,
+              )
             else
               Center(
                 child: Column(
@@ -139,11 +159,12 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   ],
                 ),
               ),
-            Text(
-              DateTime.fromMillisecondsSinceEpoch(
-                int.parse(widget.scribbleTransformation.timestamp),
-              ).toIso8601String(),
-              style: TextStyle(fontSize: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("created at: "),
+                Text(createdAt ?? "-", style: TextStyle(fontSize: 10)),
+              ],
             ),
             if (widget.scribbleTransformation.prompt.isNotEmpty)
               _buildPromptSection(theme, context, isDarkMode),
@@ -158,6 +179,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     BuildContext context,
     bool isDarkMode,
     ThemeData theme,
+    String? imagePathForHero,
   ) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.borderRadius),
@@ -186,8 +208,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   });
                 },
                 child: Hero(
-                  tag:
-                      'image_${widget.scribbleTransformation.generatedImagePath}',
+                  tag: 'image_$imagePathForHero',
                   child: Image.memory(
                     image,
                     fit: BoxFit.cover,

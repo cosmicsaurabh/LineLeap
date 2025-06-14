@@ -8,6 +8,7 @@ class GenerationRequest {
   final String? generatedPath;
   final GenerationStatus status;
   final String? error;
+  final DateTime? createdAt;
   final DateTime? completedAt;
 
   GenerationRequest({
@@ -18,6 +19,7 @@ class GenerationRequest {
     this.generatedPath,
     this.status = GenerationStatus.queued,
     this.error,
+    this.createdAt,
     this.completedAt,
   });
 
@@ -30,6 +32,7 @@ class GenerationRequest {
     GenerationStatus? status,
     String? error,
     DateTime? completedAt,
+    DateTime? createdAt,
   }) {
     return GenerationRequest(
       localId: localId ?? this.localId,
@@ -40,6 +43,7 @@ class GenerationRequest {
       status: status ?? this.status,
       error: error ?? this.error,
       completedAt: completedAt ?? this.completedAt,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

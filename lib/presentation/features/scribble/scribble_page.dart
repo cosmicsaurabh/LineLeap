@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:developer';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lineleap/presentation/common/widgets/action_button.dart';
 import 'package:lineleap/theme/app_theme.dart';
 import 'package:lineleap/core/utils/image_utils.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
@@ -75,7 +77,6 @@ class _ScribblePageState extends State<ScribblePage>
   late AnimationController _generateButtonController;
   late AnimationController _toolbarController;
 
-  bool isLoading = false;
   String prompt = '';
   String selectedModel = 'Stable Diffusion';
 
@@ -107,88 +108,10 @@ class _ScribblePageState extends State<ScribblePage>
       await _showPromptDialog();
       if (prompt.isEmpty) return;
     }
-
-    setState(() => isLoading = true);
-    HapticFeedback.mediumImpact();
-
-    try {
-      // 1. Capture the scribble image
-      final scribbleBytes = await ImageUtils.capturePng(_paintKey);
-      if (scribbleBytes == null) {
-        setState(() => isLoading = false);
-        return;
-      }
-
-      // 2. Save the scribble to a temporary file
-      final String scribblePath = await generationProvider.saveImageToDevice(
-        scribbleBytes,
-      );
-
-      // 3. Enqueue the generation request via the provider
-      final request = await generationProvider.generateImage(
-        prompt: prompt,
-        scribblePath: scribblePath,
-      );
-
-      // 4. Poll for completion
-      await _watchRequestUntilComplete(request.localId, scribbleBytes);
-    } catch (e) {
-      setState(() => isLoading = false);
-      _showErrorSnackBar('Generation failed: $e');
-    }
-  }
-
-  Future<void> _watchRequestUntilComplete(
-    String requestId,
-    Uint8List originalScribble,
-  ) async {
-    final generationProvider = context.read<GenerationProvider>();
-
-    bool isComplete = false;
-    int attempts = 0;
-    const maxAttempts = 60; // Timeout after 60 seconds
-
-    while (!isComplete && attempts < maxAttempts) {
-      attempts++;
-      await Future.delayed(const Duration(seconds: 2));
-
-      final request = await generationProvider.getRequest(requestId);
-
-      // Check if request completed or failed
-      if (request?.status == GenerationStatus.completed) {
-        if (request?.generatedPath != null) {
-          final generatedBytes =
-              await File(request!.generatedPath!).readAsBytes();
-
-          // Save to gallery
-          generationProvider.saveImageToDevice(generatedBytes);
-
-          // Update UI
-          setState(() {
-            isLoading = false;
-          });
-
-          // await _showGeneratedImageDialog();
-          isComplete = true;
-          HapticFeedback.heavyImpact();
-        }
-      } else if (request?.status == GenerationStatus.failed) {
-        _showErrorSnackBar(
-          'Generation failed: ${request?.error ?? "Unknown error"}',
-        );
-        setState(() => isLoading = false);
-        isComplete = true;
-      } else if (request == null) {
-        _showErrorSnackBar('Request was removed from queue');
-        setState(() => isLoading = false);
-        isComplete = true;
-      }
-    }
-
-    if (!isComplete) {
-      _showErrorSnackBar('Generation timed out');
-      setState(() => isLoading = false);
-    }
+    generationProvider.sequenceForGenerationRequest(
+      prompt: prompt,
+      canvasKey: _paintKey,
+    );
   }
 
   void _showErrorSnackBar(String message) {
@@ -208,10 +131,11 @@ class _ScribblePageState extends State<ScribblePage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final bool isCapturing = context.watch<GenerationProvider>().isCapturing;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: _buildAppBar(theme, isDark),
+      appBar: _buildAppBar(theme, isDark, isCapturing),
       body: Column(
         children: [
           _buildDrawingArea(theme, isDark),
@@ -223,7 +147,11 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(ThemeData theme, bool isDark) {
+  PreferredSizeWidget _buildAppBar(
+    ThemeData theme,
+    bool isDark,
+    bool isCapturing,
+  ) {
     return AppBar(
       backgroundColor: theme.scaffoldBackgroundColor,
       elevation: 0,
@@ -248,8 +176,40 @@ class _ScribblePageState extends State<ScribblePage>
       actions: [
         _buildThemeToggle(theme, isDark),
         const SizedBox(width: 8),
-        _buildGenerateButton(theme),
-        const SizedBox(width: 16),
+        // _buildGenerateButton(theme),
+        ActionButton(
+          icon: isCapturing ? CupertinoIcons.stop : CupertinoIcons.add,
+          onPressed:
+              isCapturing
+                  ? () {
+                    log('Generate button pressed while loading');
+                  }
+                  : () {
+                    log('Generate button pressed while not loading');
+                    _generateButtonController.forward().then((_) {
+                      _generateButtonController.reverse();
+                    });
+                    _handleGenerate();
+                    HapticFeedback.selectionClick();
+                  },
+          style: ActionButtonStyle.primary,
+
+          // label: 'Clear Canvas',
+        ),
+        const SizedBox(width: 8),
+        ActionButton(
+          icon: CupertinoIcons.list_bullet,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const QueueScreen()),
+            );
+            HapticFeedback.selectionClick();
+          },
+          // label: 'View Queue',
+          style: ActionButtonStyle.secondary,
+        ),
+        const SizedBox(width: 8),
       ],
     );
   }
@@ -280,85 +240,85 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  Widget _buildGenerateButton(ThemeData theme) {
-    return AnimatedBuilder(
-      animation: _generateButtonController,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: 1.0 - (_generateButtonController.value * 0.1),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primary.withOpacity(0.8),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap:
-                    isLoading
-                        ? null
-                        : () {
-                          _generateButtonController.forward().then((_) {
-                            _generateButtonController.reverse();
-                          });
-                          _handleGenerate();
-                        },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isLoading)
-                        SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(
-                              theme.colorScheme.onPrimary,
-                            ),
-                          ),
-                        )
-                      else
-                        Icon(
-                          CupertinoIcons.sparkles,
-                          size: 16,
-                          color: theme.colorScheme.onPrimary,
-                        ),
-                      const SizedBox(width: 8),
-                      Text(
-                        isLoading ? 'Generating...' : 'Generate',
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Widget _buildGenerateButton(ThemeData theme) {
+  //   return AnimatedBuilder(
+  //     animation: _generateButtonController,
+  //     builder: (context, child) {
+  //       return Transform.scale(
+  //         scale: 1.0 - (_generateButtonController.value * 0.1),
+  //         child: Container(
+  //           decoration: BoxDecoration(
+  //             gradient: LinearGradient(
+  //               colors: [
+  //                 theme.colorScheme.primary,
+  //                 theme.colorScheme.primary.withOpacity(0.8),
+  //               ],
+  //             ),
+  //             borderRadius: BorderRadius.circular(20),
+  //             boxShadow: [
+  //               BoxShadow(
+  //                 color: theme.colorScheme.primary.withOpacity(0.3),
+  //                 blurRadius: 8,
+  //                 offset: const Offset(0, 2),
+  //               ),
+  //             ],
+  //           ),
+  //           child: Material(
+  //             color: Colors.transparent,
+  //             child: InkWell(
+  //               borderRadius: BorderRadius.circular(20),
+  //               onTap:
+  //                   isCapturing
+  //                       ? null
+  //                       : () {
+  //                         _generateButtonController.forward().then((_) {
+  //                           _generateButtonController.reverse();
+  //                         });
+  //                         _handleGenerate();
+  //                       },
+  //               child: Padding(
+  //                 padding: const EdgeInsets.symmetric(
+  //                   horizontal: 16,
+  //                   vertical: 12,
+  //                 ),
+  //                 child: Row(
+  //                   mainAxisSize: MainAxisSize.min,
+  //                   children: [
+  //                     if (isCapturing)
+  //                       SizedBox(
+  //                         width: 16,
+  //                         height: 16,
+  //                         child: CircularProgressIndicator(
+  //                           strokeWidth: 2,
+  //                           valueColor: AlwaysStoppedAnimation(
+  //                             theme.colorScheme.onPrimary,
+  //                           ),
+  //                         ),
+  //                       )
+  //                     else
+  //                       Icon(
+  //                         CupertinoIcons.sparkles,
+  //                         size: 16,
+  //                         color: theme.colorScheme.onPrimary,
+  //                       ),
+  //                     const SizedBox(width: 8),
+  //                     Text(
+  //                       isCapturing ? 'Generating...' : 'Generate',
+  //                       style: TextStyle(
+  //                         color: theme.colorScheme.onPrimary,
+  //                         fontWeight: FontWeight.w600,
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildDrawingArea(ThemeData theme, bool isDark) {
     return Expanded(
