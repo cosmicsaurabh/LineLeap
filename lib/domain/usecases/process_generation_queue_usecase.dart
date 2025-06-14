@@ -62,6 +62,12 @@ class ProcessGenerationQueueUseCase {
         final result = await hordeGenerationService.generateFromPrompt(
           prompt: nextRequest.prompt,
           scribblePath: nextRequest.scribblePath,
+          onProgress: (progress) async {
+            updatingRequest = updatingRequest.copyWith(
+              status: GenerationStatus.polling,
+            );
+            await generationQueueRepository.updateRequest(updatingRequest);
+          },
         );
 
         // Update with success result
@@ -133,6 +139,22 @@ class ProcessGenerationQueueUseCase {
       await generationQueueRepository.updateRequest(updatingRequest);
     } finally {
       _isProcessing = false;
+    }
+  }
+
+  Future<void> retryRequestById(String localId) async {
+    try {
+      // Get the specific request
+      final request = await generationQueueRepository.getRequestById(localId);
+      if (request == null || request.status != GenerationStatus.failed) {
+        return; // Request not found or not in failed state
+      }
+
+      // Update status to retrying
+      var updatingRequest = request.copyWith(status: GenerationStatus.queued);
+      await generationQueueRepository.updateRequest(updatingRequest);
+    } catch (e) {
+      // Handle error
     }
   }
 

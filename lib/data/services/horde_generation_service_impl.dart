@@ -22,6 +22,7 @@ class HordeGenerationServiceImpl implements HordeGenerationService {
   Future<String> generateFromPrompt({
     required String prompt,
     required String scribblePath,
+    void Function(int)? onProgress,
   }) async {
     try {
       // 1. Read the scribble image and convert to base64
@@ -42,6 +43,9 @@ class HordeGenerationServiceImpl implements HordeGenerationService {
       log("Generation job submitted with ID: $jobId");
 
       // 3. Poll for results
+      if (onProgress != null) {
+        onProgress(1);
+      }
 
       final String? generatedImageURL = await _hordeAPI.pollForResult(jobId);
       if (generatedImageURL == null) {

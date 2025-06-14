@@ -130,5 +130,7 @@ Future<void> initDependencies() async {
       watchRequestUseCase: sl(),
     ),
   );
-  sl.registerFactory(() => QueueStatusProvider(getQueueUseCase: sl()));
+  sl.registerFactory(
+    () => QueueStatusProvider(getQueueUseCase: sl(), processQueueUseCase: sl()),
+  );
 }

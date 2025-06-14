@@ -114,63 +114,83 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
       child: Dialog(
         insetPadding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (_imageBytes != null)
-              _buildImageSection(
-                _imageBytes!,
-                context,
-                isDarkMode,
-                theme,
-                imagePathForHero,
-              )
-            else
-              Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 32),
-                    Icon(
-                      CupertinoIcons.photo,
-                      size: 64,
-                      color: isDarkMode ? Colors.white38 : Colors.black26,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Image not found',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white70 : Colors.black87,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.padding16),
+
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator())
+              else if (_imageBytes != null)
+                _buildImageSection(
+                  _imageBytes!,
+                  context,
+                  isDarkMode,
+                  theme,
+                  imagePathForHero,
+                )
+              else
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SizedBox(height: AppTheme.spacing24),
+                      Icon(
+                        CupertinoIcons.photo,
+                        size: 64,
+                        color: isDarkMode ? Colors.white38 : Colors.black26,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This image could not be loaded.',
-                      style: TextStyle(
-                        color: isDarkMode ? Colors.white38 : Colors.black45,
-                        fontSize: 14,
+                      const SizedBox(height: AppTheme.spacing16),
+                      Text(
+                        'Image not found',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white70 : Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: AppTheme.spacing8),
+                      Text(
+                        'This image could not be loaded.',
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white38 : Colors.black45,
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(height: AppTheme.spacing24),
+                    ],
+                  ),
                 ),
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("created at: "),
-                Text(createdAt ?? "-", style: TextStyle(fontSize: 10)),
-              ],
-            ),
-            if (widget.scribbleTransformation.prompt.isNotEmpty)
-              _buildPromptSection(theme, context, isDarkMode),
-          ],
+              const SizedBox(height: AppTheme.spacing16),
+              _buildTimeStampSection(createdAt, context, isDarkMode),
+              const SizedBox(height: AppTheme.spacing16),
+              if (widget.scribbleTransformation.prompt.isNotEmpty)
+                _buildPromptSection(theme, context, isDarkMode),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeStampSection(
+    String? createdAt,
+    BuildContext context,
+    bool isDarkMode,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text("Created at: "),
+        Text(
+          createdAt ?? "-",
+          style: TextStyle(
+            fontSize: 10,
+            color: isDarkMode ? Colors.white70 : Colors.black54,
+          ),
+        ),
+      ],
     );
   }
 
@@ -181,167 +201,163 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     ThemeData theme,
     String? imagePathForHero,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.borderRadius),
-      child: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-              border: Border.all(
-                color:
-                    isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            border: Border.all(
+              color: isDarkMode ? CupertinoColors.white : CupertinoColors.black,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            child: InteractiveViewer(
+              transformationController:
+                  _transformationController, // Add this controller
+              minScale: 1.0,
+              maxScale: 10.0,
+              panEnabled: true,
+              onInteractionEnd: (ScaleEndDetails details) {
+                setState(() {
+                  _currentScale =
+                      _transformationController.value.getMaxScaleOnAxis();
+                });
+              },
+              child: Hero(
+                tag: 'image_$imagePathForHero',
+                child: Image.memory(
+                  image,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                ),
               ),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-              child: InteractiveViewer(
-                transformationController:
-                    _transformationController, // Add this controller
-                minScale: 1.0,
-                maxScale: 10.0,
-                panEnabled: true,
-                onInteractionEnd: (ScaleEndDetails details) {
+          ),
+        ),
+        Positioned(
+          right: 8,
+          top: 8,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildActionButton(
+                icon: CupertinoIcons.ellipsis,
+                onPressed: () => _showActionMenu(context),
+                isDarkMode: isDarkMode,
+              ),
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: CupertinoIcons.xmark,
+                onPressed: () => Navigator.of(context).pop(),
+                isDarkMode: isDarkMode,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 8,
+          bottom: 8,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_currentScale != 1.0)
+                _buildActionButton(
+                  icon: Icons.refresh,
+                  onPressed: () {
+                    _transformationController.value = Matrix4.identity();
+                    setState(() {
+                      _currentScale = 1.0;
+                    });
+                  },
+                  isDarkMode: isDarkMode,
+                )
+              else
+                _buildActionButton(
+                  icon: CupertinoIcons.arrow_up_left_arrow_down_right,
+                  onPressed: () {},
+                  isDarkMode: isDarkMode,
+                ),
+              const SizedBox(height: 8),
+              _buildNonActionButton(
+                label: '${_currentScale.toStringAsFixed(1)}x',
+                isDarkMode: isDarkMode,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          right: 8,
+          bottom: 8,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildActionButton(
+                icon: CupertinoIcons.add,
+                onPressed: () {
+                  if (_currentScale >= 10) {
+                    setState(() {
+                      _currentScale = 10;
+                    });
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Maximum zoom in reached',
+                          style: TextStyle(color: theme.colorScheme.onError),
+                        ),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                    );
+                    return;
+                  }
+                  double nextScale = _currentScale * 1.5;
+                  if (nextScale > 10) {
+                    nextScale = 10;
+                  }
+                  double scaleFactor = nextScale / _currentScale;
+                  _transformationController.value.scale(scaleFactor);
                   setState(() {
-                    _currentScale =
-                        _transformationController.value.getMaxScaleOnAxis();
+                    _currentScale = nextScale;
                   });
                 },
-                child: Hero(
-                  tag: 'image_$imagePathForHero',
-                  child: Image.memory(
-                    image,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  ),
-                ),
+                isDarkMode: isDarkMode,
               ),
-            ),
-          ),
-          Positioned(
-            right: 8,
-            top: 8,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildActionButton(
-                  icon: CupertinoIcons.ellipsis,
-                  onPressed: () => _showActionMenu(context),
-                  isDarkMode: isDarkMode,
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: CupertinoIcons.xmark,
-                  onPressed: () => Navigator.of(context).pop(),
-                  isDarkMode: isDarkMode,
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            left: 8,
-            bottom: 8,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_currentScale != 1.0)
-                  _buildActionButton(
-                    icon: Icons.refresh,
-                    onPressed: () {
-                      _transformationController.value = Matrix4.identity();
-                      setState(() {
-                        _currentScale = 1.0;
-                      });
-                    },
-                    isDarkMode: isDarkMode,
-                  )
-                else
-                  _buildActionButton(
-                    icon: CupertinoIcons.arrow_up_left_arrow_down_right,
-                    onPressed: () {},
-                    isDarkMode: isDarkMode,
-                  ),
-                const SizedBox(height: 8),
-                _buildNonActionButton(
-                  label: '${_currentScale.toStringAsFixed(1)}x',
-                  isDarkMode: isDarkMode,
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 8,
-            bottom: 8,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildActionButton(
-                  icon: CupertinoIcons.add,
-                  onPressed: () {
-                    if (_currentScale >= 10) {
-                      setState(() {
-                        _currentScale = 10;
-                      });
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Maximum zoom in reached',
-                            style: TextStyle(color: theme.colorScheme.onError),
-                          ),
-                          backgroundColor: theme.colorScheme.error,
-                        ),
-                      );
-                      return;
-                    }
-                    double nextScale = _currentScale * 1.5;
-                    if (nextScale > 10) {
-                      nextScale = 10;
-                    }
-                    double scaleFactor = nextScale / _currentScale;
-                    _transformationController.value.scale(scaleFactor);
+              const SizedBox(width: 8),
+              _buildActionButton(
+                icon: CupertinoIcons.minus,
+                onPressed: () {
+                  if (_currentScale <= 1.0) {
                     setState(() {
-                      _currentScale = nextScale;
+                      _currentScale = 1.0;
                     });
-                  },
-                  isDarkMode: isDarkMode,
-                ),
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: CupertinoIcons.minus,
-                  onPressed: () {
-                    if (_currentScale <= 1.0) {
-                      setState(() {
-                        _currentScale = 1.0;
-                      });
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Maximum zoom out reached',
-                            style: TextStyle(color: theme.colorScheme.onError),
-                          ),
-                          backgroundColor: theme.colorScheme.error,
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Maximum zoom out reached',
+                          style: TextStyle(color: theme.colorScheme.onError),
                         ),
-                      );
-                      return;
-                    }
-                    double nextScale = _currentScale * 0.75;
-                    if (nextScale < 1) {
-                      nextScale = 1;
-                    }
-                    double scaleFactor = nextScale / _currentScale;
-                    _transformationController.value.scale(scaleFactor);
-                    setState(() {
-                      _currentScale = nextScale;
-                    });
-                  },
-                  isDarkMode: isDarkMode,
-                ),
-              ],
-            ),
+                        backgroundColor: theme.colorScheme.error,
+                      ),
+                    );
+                    return;
+                  }
+                  double nextScale = _currentScale * 0.75;
+                  if (nextScale < 1) {
+                    nextScale = 1;
+                  }
+                  double scaleFactor = nextScale / _currentScale;
+                  _transformationController.value.scale(scaleFactor);
+                  setState(() {
+                    _currentScale = nextScale;
+                  });
+                },
+                isDarkMode: isDarkMode,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -445,7 +461,6 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
     bool isDarkMode,
   ) {
     return Container(
-      margin: const EdgeInsets.all(AppTheme.borderRadius),
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
