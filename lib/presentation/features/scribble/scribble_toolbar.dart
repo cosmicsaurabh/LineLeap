@@ -34,18 +34,18 @@ class ScribbleToolbar extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
               children: [
-                ActionButton(
-                  icon: CupertinoIcons.square_list,
-                  label: 'Queue',
-                  onPressed:
-                      () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const QueueScreen(),
-                        ),
-                      ),
-                  style: ActionButtonStyle.primary,
-                ),
+                // ActionButton(
+                //   icon: CupertinoIcons.square_list,
+                //   label: 'Queue',
+                //   onPressed:
+                //       () => Navigator.push(
+                //         context,
+                //         MaterialPageRoute(
+                //           builder: (context) => const QueueScreen(),
+                //         ),
+                //       ),
+                //   style: ActionButtonStyle.primary,
+                // ),
                 SizedBox(width: 8),
                 ActionButton(
                   icon: CupertinoIcons.arrow_uturn_left,

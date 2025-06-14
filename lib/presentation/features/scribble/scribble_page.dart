@@ -192,7 +192,10 @@ class _ScribblePageState extends State<ScribblePage>
                     _handleGenerate();
                     HapticFeedback.selectionClick();
                   },
-          style: ActionButtonStyle.primary,
+          style:
+              isCapturing
+                  ? ActionButtonStyle.secondary
+                  : ActionButtonStyle.primary,
 
           // label: 'Clear Canvas',
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
+import 'package:lineleap/presentation/common/widgets/action_button.dart';
 
 class GenerationQueueItem extends StatelessWidget {
   final GenerationRequest request;
@@ -87,6 +88,21 @@ class GenerationQueueItem extends StatelessWidget {
             ),
           ],
         );
+      case GenerationStatus.submitting:
+        return Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Submitting...',
+              style: TextStyle(color: Colors.blue, fontSize: 12),
+            ),
+          ],
+        );
       case GenerationStatus.polling:
         return Row(
           children: [
@@ -126,19 +142,6 @@ class GenerationQueueItem extends StatelessWidget {
             ),
           ],
         );
-      case GenerationStatus.failed:
-        return Row(
-          children: [
-            Icon(Icons.access_time, size: 16, color: Colors.orange),
-            const SizedBox(width: 4),
-            Text(
-              'Timed out',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-          ],
-        );
-      default:
-        return const SizedBox.shrink();
     }
   }
 
@@ -146,29 +149,34 @@ class GenerationQueueItem extends StatelessWidget {
     switch (request.status) {
       case GenerationStatus.queued:
       case GenerationStatus.polling:
-        return IconButton(
-          icon: const Icon(Icons.close, color: Colors.grey),
+        return ActionButton(
           onPressed: onRemove,
-          tooltip: 'Cancel',
+          icon: Icons.close,
+          // label: 'Cancel',
+          style: ActionButtonStyle.secondary,
         );
+
       case GenerationStatus.completed:
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.visibility, color: Colors.blue),
+            ActionButton(
               onPressed: onView,
-              tooltip: 'View',
+              icon: Icons.visibility,
+              // label: 'View',
+              style: ActionButtonStyle.primary,
             ),
-            IconButton(
-              icon: const Icon(Icons.download, color: Colors.green),
+            ActionButton(
               onPressed: onDownload,
-              tooltip: 'Download',
+              icon: Icons.download,
+              // label: 'Download',
+              style: ActionButtonStyle.primary,
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.grey),
+            ActionButton(
               onPressed: onRemove,
-              tooltip: 'Remove',
+              icon: Icons.close,
+              // label: 'Remove',
+              style: ActionButtonStyle.secondary,
             ),
           ],
         );
@@ -177,15 +185,17 @@ class GenerationQueueItem extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.refresh, color: Colors.orange),
+            ActionButton(
               onPressed: onRetry,
-              tooltip: 'Retry',
+              icon: Icons.refresh,
+              // label: 'Retry',
+              style: ActionButtonStyle.primary,
             ),
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.grey),
+            ActionButton(
               onPressed: onRemove,
-              tooltip: 'Remove',
+              icon: Icons.close,
+              // label: 'Remove',
+              style: ActionButtonStyle.secondary,
             ),
           ],
         );

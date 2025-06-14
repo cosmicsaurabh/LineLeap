@@ -147,6 +147,8 @@ class GenerationProvider extends ChangeNotifier {
       notifyListeners();
       return null;
     }
+    _isCapturing = false;
+    notifyListeners();
     final request = await enqueueGenerationRequest(
       scribblePath: scribblePath,
       prompt: prompt,
