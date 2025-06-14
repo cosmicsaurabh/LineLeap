@@ -95,7 +95,7 @@ class ScribbleToolbar extends StatelessWidget {
                   icon: _getBrushIcon(notifier.state.brushStyle),
 
                   style: ActionButtonStyle.secondary,
-                  label: notifier.state.brushStyle.name,
+                  tooltip: notifier.state.brushStyle.name,
                   showBorder: false,
                 ),
                 const SizedBox(width: 8),
