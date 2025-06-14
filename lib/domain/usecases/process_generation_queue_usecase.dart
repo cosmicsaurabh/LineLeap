@@ -42,13 +42,10 @@ class ProcessGenerationQueueUseCase {
 
       // Find the first request with status 'queued'
       GenerationRequest? nextRequest;
-      try {
-        nextRequest = requests.firstWhere(
-          (req) => req.status == GenerationStatus.queued,
-        );
-      } catch (e) {
-        nextRequest = null;
-      }
+      nextRequest = requests.cast<GenerationRequest?>().firstWhere(
+        (req) => req?.status == GenerationStatus.queued,
+        orElse: () => null,
+      );
 
       if (nextRequest == null) {
         return; // No requests to process

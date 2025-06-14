@@ -9,6 +9,7 @@ class ActionButton extends StatelessWidget {
   final VoidCallback onPressed;
   final ActionButtonStyle style;
   final bool showBorder;
+  final bool disabled;
 
   const ActionButton({
     super.key,
@@ -17,6 +18,7 @@ class ActionButton extends StatelessWidget {
     required this.onPressed,
     this.style = ActionButtonStyle.primary,
     this.showBorder = true,
+    this.disabled = false,
   });
 
   @override
@@ -48,12 +50,12 @@ class ActionButton extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onPressed,
+        onTap: disabled ? null : onPressed,
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: bgColor,
+            color: disabled ? bgColor.withOpacity(0.5) : bgColor,
             borderRadius: BorderRadius.circular(16),
             border:
                 showBorder

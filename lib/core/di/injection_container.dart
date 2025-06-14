@@ -26,6 +26,7 @@ import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history_usecase.dart';
 import 'package:lineleap/domain/usecases/save_imageBytes_return_path_usecase.dart';
 import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
+import 'package:lineleap/domain/usecases/watch_generation_request_usecase.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
@@ -107,6 +108,9 @@ Future<void> initDependencies() async {
   sl.registerLazySingleton(
     () => GenerateTransformationfromscribbleUseCase(sl()),
   );
+  sl.registerLazySingleton(
+    () => WatchGenerationRequestUseCase(generationQueueRepository: sl()),
+  );
   // Notifiers/Providers
   sl.registerFactory(() => ThemeNotifier(sl()));
   sl.registerFactory(() => EnhancedScribbleNotifier());
@@ -123,6 +127,7 @@ Future<void> initDependencies() async {
       processUseCase: sl(),
       queueRepository: sl(),
       saveImageUseCase: sl(),
+      watchRequestUseCase: sl(),
     ),
   );
   sl.registerFactory(() => QueueStatusProvider(getQueueUseCase: sl()));

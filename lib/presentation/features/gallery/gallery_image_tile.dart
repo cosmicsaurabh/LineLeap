@@ -113,26 +113,9 @@ class GalleryImageTile extends StatelessWidget {
   }
 
   Widget _buildImageWidget(String filePath) {
-    // If we have cached bytes, use them immediately
-    // if (cachedBytes != null) {
-    //   Hero(
-    //     tag: 'generated_image_$filePath',
-    //     child: Image.memory(
-    //       cachedBytes,
-    //       fit: BoxFit.cover,
-    //       width: double.infinity,
-    //       height: double.infinity,
-    //       errorBuilder: (context, error, stackTrace) {
-    //         return const Center(
-    //           child: Icon(CupertinoIcons.photo_fill_on_rectangle_fill),
-    //         );
-    //       },
-    //     ),
-    //   );
-    // }
     // Otherwise load from file
     return Hero(
-      tag: 'generated_image_$filePath',
+      tag: 'generated_image_${filePath}',
       child: Image.file(
         File(filePath),
         fit: BoxFit.cover,
