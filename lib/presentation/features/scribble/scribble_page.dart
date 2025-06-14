@@ -11,7 +11,6 @@ import 'package:lineleap/presentation/features/scribble/drawing_canvas.dart';
 import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
 import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_toolbar.dart';
-import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 import 'package:lineleap/presentation/common/providers/theme_notifier.dart';

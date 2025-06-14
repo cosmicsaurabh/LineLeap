@@ -3,10 +3,10 @@ import 'package:uuid/uuid.dart';
 import '../entities/generation_request.dart';
 
 class EnqueueGenerationRequestUseCase {
-  final GenerationQueueRepository repository;
+  final GenerationQueueRepository generationQueueRepository;
   final Uuid _uuid = const Uuid();
 
-  EnqueueGenerationRequestUseCase(this.repository);
+  EnqueueGenerationRequestUseCase({required this.generationQueueRepository});
 
   Future<GenerationRequest> call({
     required String prompt,
@@ -24,7 +24,7 @@ class EnqueueGenerationRequestUseCase {
     );
 
     // Add to repository (which handles both in-memory queue and persistence)
-    await repository.enqueueRequest(request);
+    await generationQueueRepository.enqueueRequest(request);
 
     return request;
   }

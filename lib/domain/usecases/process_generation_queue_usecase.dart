@@ -6,14 +6,14 @@ import '../entities/generation_request.dart';
 import '../repositories/generation_queue_repository.dart';
 
 class ProcessGenerationQueueUseCase {
-  final GenerationQueueRepository queueRepository;
-  final HordeGenerationService generationService;
+  final GenerationQueueRepository generationQueueRepository;
+  final HordeGenerationService hordeGenerationService;
   Timer? _processingTimer;
   bool _isProcessing = false;
 
   ProcessGenerationQueueUseCase({
-    required this.queueRepository,
-    required this.generationService,
+    required this.generationQueueRepository,
+    required this.hordeGenerationService,
   });
 
   /// Start processing the generation queue at regular intervals
@@ -38,7 +38,7 @@ class ProcessGenerationQueueUseCase {
       _isProcessing = true;
 
       // Get all queued requests
-      final requests = await queueRepository.getQueuedRequests();
+      final requests = await generationQueueRepository.getQueuedRequests();
 
       // Find the first request with status 'queued'
       GenerationRequest? nextRequest;
@@ -58,11 +58,11 @@ class ProcessGenerationQueueUseCase {
       var updatingRequest = nextRequest.copyWith(
         status: GenerationStatus.submitting,
       );
-      await queueRepository.updateRequest(updatingRequest);
+      await generationQueueRepository.updateRequest(updatingRequest);
 
       try {
         // Process the generation request thjis should return a path to the generated file
-        final result = await generationService.generateFromPrompt(
+        final result = await hordeGenerationService.generateFromPrompt(
           prompt: nextRequest.prompt,
           scribblePath: nextRequest.scribblePath,
         );
@@ -84,7 +84,7 @@ class ProcessGenerationQueueUseCase {
       }
 
       // Update the request in repository
-      await queueRepository.updateRequest(updatingRequest);
+      await generationQueueRepository.updateRequest(updatingRequest);
     } finally {
       _isProcessing = false;
     }
@@ -100,7 +100,7 @@ class ProcessGenerationQueueUseCase {
       _isProcessing = true;
 
       // Get the specific request
-      final request = await queueRepository.getRequestById(localId);
+      final request = await generationQueueRepository.getRequestById(localId);
       if (request == null || request.status != GenerationStatus.queued) {
         return; // Request not found or not in queued state
       }
@@ -109,11 +109,11 @@ class ProcessGenerationQueueUseCase {
       var updatingRequest = request.copyWith(
         status: GenerationStatus.submitting,
       );
-      await queueRepository.updateRequest(updatingRequest);
+      await generationQueueRepository.updateRequest(updatingRequest);
 
       try {
         // Process the generation request
-        final result = await generationService.generateFromPrompt(
+        final result = await hordeGenerationService.generateFromPrompt(
           prompt: request.prompt,
           scribblePath: request.scribblePath,
         );
@@ -133,7 +133,7 @@ class ProcessGenerationQueueUseCase {
       }
 
       // Update the request in repository
-      await queueRepository.updateRequest(updatingRequest);
+      await generationQueueRepository.updateRequest(updatingRequest);
     } finally {
       _isProcessing = false;
     }

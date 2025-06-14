@@ -16,10 +16,10 @@ import 'package:lineleap/domain/repositories/image_generation_repo.dart';
 import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
 import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
-import 'package:lineleap/domain/usecases/delete_imageBytes_from_path.dart';
-import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history.dart';
+import 'package:lineleap/domain/usecases/delete_imageBytes_from_path_usecase.dart';
+import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
-import 'package:lineleap/domain/usecases/generate_transformationFromScribble.dart';
+import 'package:lineleap/domain/usecases/generate_transformationFromScribble_usecase.dart';
 import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
@@ -73,26 +73,40 @@ Future<void> initDependencies() async {
   );
 
   // Use cases
-  sl.registerLazySingleton(() => SetThemeModeUseCase(sl()));
-  sl.registerLazySingleton(() => GetScribbleTransformationsFromHistory(sl()));
-  sl.registerLazySingleton(() => DeleteScribbleTransformationFromHistory(sl()));
-  sl.registerLazySingleton(() => SaveImagebytesReturnPathUseCase(sl()));
-  sl.registerLazySingleton(() => DeleteImagebytesFromPathUseCase(sl()));
   sl.registerLazySingleton(
-    () => SaveScribbleTransformationToHistoryUseCase(sl()),
+    () => SetThemeModeUseCase(themeModeRepository: sl()),
   );
-  sl.registerLazySingleton(() => EnqueueGenerationRequestUseCase(sl()));
-  sl.registerLazySingleton(() => GetGenerationQueueUseCase(sl()));
+  sl.registerLazySingleton(
+    () => GetScribbleTransformationsFromHistoryUseCase(historyRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () =>
+        DeleteScribbleTransformationFromHistoryUseCase(historyRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => SaveImagebytesReturnPathUseCase(imageSaveLoadDeleteRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => DeleteImagebytesFromPathUseCase(imageSaveLoadDeleteRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => SaveScribbleTransformationToHistoryUseCase(historyRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => EnqueueGenerationRequestUseCase(generationQueueRepository: sl()),
+  );
+  sl.registerLazySingleton(
+    () => GetGenerationQueueUseCase(generationQueueRepository: sl()),
+  );
   sl.registerLazySingleton(
     () => ProcessGenerationQueueUseCase(
-      queueRepository: sl(),
-      generationService: sl(),
+      generationQueueRepository: sl(),
+      hordeGenerationService: sl(),
     ),
   );
   sl.registerLazySingleton(
     () => GenerateTransformationfromscribbleUseCase(sl()),
   );
-
   // Notifiers/Providers
   sl.registerFactory(() => ThemeNotifier(sl()));
   sl.registerFactory(() => EnhancedScribbleNotifier());
