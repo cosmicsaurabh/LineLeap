@@ -1,13 +1,15 @@
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/domain/repositories/history_repository.dart';
 
-class DeleteScribbleTransformationFromHistory {
-  final HistoryRepository repository;
+class DeleteScribbleTransformationFromHistoryUseCase {
+  final HistoryRepository historyRepository;
 
-  DeleteScribbleTransformationFromHistory(this.repository);
+  DeleteScribbleTransformationFromHistoryUseCase({
+    required this.historyRepository,
+  });
 
   Future<void> call(ScribbleTransformation scribbleTransformation) async {
-    await repository.deleteScribbleTransformationFromHistory(
+    await historyRepository.deleteScribbleTransformationFromHistory(
       scribbleTransformation,
     );
   }

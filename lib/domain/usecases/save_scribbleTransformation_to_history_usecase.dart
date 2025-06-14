@@ -4,7 +4,7 @@ import 'package:lineleap/domain/repositories/history_repository.dart';
 class SaveScribbleTransformationToHistoryUseCase {
   final HistoryRepository historyRepository;
 
-  SaveScribbleTransformationToHistoryUseCase(this.historyRepository);
+  SaveScribbleTransformationToHistoryUseCase({required this.historyRepository});
 
   Future<void> call(ScribbleTransformation scribbleTransformation) async {
     await historyRepository.saveScribbleTransformationToHistory(
