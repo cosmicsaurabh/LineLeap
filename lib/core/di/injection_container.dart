@@ -20,11 +20,11 @@ import 'package:lineleap/domain/usecases/delete_imageBytes_from_path_usecase.dar
 import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/generate_transformationFromScribble_usecase.dart';
-import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history.dart';
+import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
-import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history.dart';
-import 'package:lineleap/domain/usecases/save_imageBytes_return_path.dart';
+import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history_usecase.dart';
+import 'package:lineleap/domain/usecases/save_imageBytes_return_path_usecase.dart';
 import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';

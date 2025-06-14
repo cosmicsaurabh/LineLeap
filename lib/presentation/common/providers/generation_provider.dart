@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:lineleap/domain/usecases/save_imageBytes_return_path.dart';
+import 'package:lineleap/domain/usecases/save_imageBytes_return_path_usecase.dart';
 import '../../../domain/entities/generation_request.dart';
 import '../../../domain/usecases/enqueue_generation_request_usecase.dart';
 import '../../../domain/usecases/process_generation_queue_usecase.dart';
