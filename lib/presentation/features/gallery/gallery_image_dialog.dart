@@ -11,12 +11,12 @@ import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated
-  final ScribbleTransformation image;
+  final ScribbleTransformation scribbleTransformation;
   final GalleryNotifier gallery;
 
   const GalleryImageDialog({
     super.key,
-    required this.image,
+    required this.scribbleTransformation,
     required this.gallery,
     required this.whichImage,
   });
@@ -49,8 +49,8 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       final bool isScribble = widget.whichImage == 0;
       final String imagePath =
           isScribble
-              ? widget.image.scribbleImagePath
-              : widget.image.generatedImagePath;
+              ? widget.scribbleTransformation.scribbleImagePath
+              : widget.scribbleTransformation.generatedImagePath;
 
       // Otherwise load from file
       final file = File(imagePath);
@@ -139,7 +139,13 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   ],
                 ),
               ),
-            if (widget.image.prompt.isNotEmpty)
+            Text(
+              DateTime.fromMillisecondsSinceEpoch(
+                int.parse(widget.scribbleTransformation.timestamp),
+              ).toIso8601String(),
+              style: TextStyle(fontSize: 10),
+            ),
+            if (widget.scribbleTransformation.prompt.isNotEmpty)
               _buildPromptSection(theme, context, isDarkMode),
           ],
         ),
@@ -180,7 +186,8 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                   });
                 },
                 child: Hero(
-                  tag: 'image_${widget.image.generatedImagePath}',
+                  tag:
+                      'image_${widget.scribbleTransformation.generatedImagePath}',
                   child: Image.memory(
                     image,
                     fit: BoxFit.cover,
@@ -434,8 +441,10 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
+            maxLines: 2,
             'Prompt',
             style: TextStyle(
+              overflow: TextOverflow.ellipsis,
               fontSize: 15,
               fontWeight: FontWeight.w600,
               color:
@@ -451,7 +460,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(), // iOS-style physics
               child: Text(
-                widget.image.prompt,
+                widget.scribbleTransformation.prompt,
                 style: TextStyle(
                   fontSize: 15,
                   color:
@@ -472,7 +481,7 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
       context: context,
       builder:
           (context) => GalleryActionSheet(
-            image: widget.image,
+            image: widget.scribbleTransformation,
             gallery: widget.gallery,
             parentContext: this.context, // Pass the dialog's context
             onActionComplete: () {

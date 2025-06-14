@@ -130,7 +130,7 @@ class _GalleryPageState extends State<GalleryPage> {
   void _showImageDialog(
     int whichImage, // 0 for scribble, 1 for generated
     BuildContext context,
-    ScribbleTransformation image,
+    ScribbleTransformation scribbleTransformation,
     GalleryNotifier gallery,
   ) {
     showDialog(
@@ -138,7 +138,7 @@ class _GalleryPageState extends State<GalleryPage> {
       barrierColor: Colors.black.withOpacity(0.1),
       builder:
           (context) => GalleryImageDialog(
-            image: image,
+            scribbleTransformation: scribbleTransformation,
             gallery: gallery,
             whichImage: whichImage,
           ),
