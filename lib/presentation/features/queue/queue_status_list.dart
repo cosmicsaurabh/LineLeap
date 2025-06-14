@@ -123,7 +123,7 @@ class _QueueItemTile extends StatelessWidget {
         listen: false,
       );
 
-      // Save to gallery
+      // Save to history
       bool success = await galleryNotifier.saveToHistory(
         scribblePath: item.scribblePath,
         generatedPath: item.generatedPath!,

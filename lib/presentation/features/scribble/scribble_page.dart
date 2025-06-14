@@ -214,16 +214,6 @@ class _ScribblePageState extends State<ScribblePage>
       appBar: _buildAppBar(theme, isDark),
       body: Column(
         children: [
-          ListTile(
-            leading: const Icon(Icons.queue),
-            title: const Text('Queue Status'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const QueueScreen()),
-              );
-            },
-          ),
           _buildDrawingArea(theme, isDark),
           _buildToolbar(theme, isDark),
         ],
