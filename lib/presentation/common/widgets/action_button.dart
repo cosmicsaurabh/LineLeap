@@ -5,7 +5,7 @@ enum ActionButtonStyle { primary, secondary, destructive }
 
 class ActionButton extends StatelessWidget {
   final IconData? icon;
-  final String? label;
+  final String? tooltip;
   final VoidCallback onPressed;
   final ActionButtonStyle style;
   final bool showBorder;
@@ -14,7 +14,7 @@ class ActionButton extends StatelessWidget {
   const ActionButton({
     super.key,
     this.icon,
-    this.label,
+    this.tooltip,
     required this.onPressed,
     this.style = ActionButtonStyle.primary,
     this.showBorder = true,
@@ -73,10 +73,10 @@ class ActionButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) Icon(icon, color: textColor, size: 18),
-              if (icon != null && label != null) const SizedBox(width: 8),
-              if (label != null)
+              if (icon != null && tooltip != null) const SizedBox(width: 8),
+              if (tooltip != null)
                 Text(
-                  label!,
+                  tooltip!,
                   style: TextStyle(
                     color: textColor,
                     fontWeight: FontWeight.w500,

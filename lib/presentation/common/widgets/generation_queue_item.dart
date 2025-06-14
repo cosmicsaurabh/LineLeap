@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
@@ -20,66 +22,42 @@ class GenerationQueueItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Scribble thumbnail
+          // Scribble and Generated thumbnails
           Column(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child:
-                      request.scribblePath != null
-                          ? Image.asset(
-                            request.scribblePath!,
-                            fit: BoxFit.cover,
-                          )
-                          : const Icon(Icons.image, color: Colors.grey),
-                ),
+              _buildThumbnailImage(
+                context,
+                path: request.scribblePath,
+                iconData: Icons.edit_outlined,
               ),
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child:
-                      request.generatedPath != null
-                          ? Image.asset(
-                            request.generatedPath!,
-                            fit: BoxFit.cover,
-                          )
-                          : request.status == GenerationStatus.queued
-                          ? const Icon(
-                            Icons.hourglass_bottom,
-                            color: Colors.yellow,
-                          )
-                          : request.status == GenerationStatus.submitting
-                          ? const Icon(Icons.upload, color: Colors.grey)
-                          : request.status == GenerationStatus.polling
-                          ? const CircularProgressIndicator(strokeWidth: 2)
-                          : request.status == GenerationStatus.completed
-                          ? Image.asset(
-                            request.generatedPath!,
-                            fit: BoxFit.cover,
-                          )
-                          : const Icon(Icons.image, color: Colors.grey),
-                ),
+              const SizedBox(height: 8),
+              _buildThumbnailImage(
+                context,
+                path: request.generatedPath,
+                status: request.status,
+                isGeneratedImage: true,
               ),
             ],
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 16),
 
           // Content and status
           Expanded(
@@ -87,26 +65,33 @@ class GenerationQueueItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  request.prompt ?? 'No prompt',
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  request.prompt ?? 'No prompt provided',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.textTheme.bodyLarge?.color?.withOpacity(0.85),
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 _buildStatusWidget(context),
                 if (request.status == GenerationStatus.polling)
                   const SizedBox(height: 8),
                 if (request.status == GenerationStatus.polling)
-                  LinearProgressIndicator(
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      Theme.of(context).primaryColor,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      minHeight: 6,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.primaryColor,
+                      ),
                     ),
                   ),
               ],
             ),
           ),
-
+          const SizedBox(width: 8),
           // Actions
           _buildActionButtons(context),
         ],
@@ -114,127 +99,237 @@ class GenerationQueueItem extends StatelessWidget {
     );
   }
 
+  Widget _buildThumbnailImage(
+    BuildContext context, {
+    String? path,
+    IconData? iconData,
+    GenerationStatus? status,
+    bool isGeneratedImage = false,
+  }) {
+    final theme = Theme.of(context);
+    Widget child;
+
+    if (path != null) {
+      child = Image.file(
+        File(path),
+        fit: BoxFit.cover,
+        errorBuilder:
+            (context, error, stackTrace) => Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                color: Colors.grey.shade400,
+                size: 32,
+              ),
+            ),
+      );
+    } else if (isGeneratedImage) {
+      switch (status) {
+        case GenerationStatus.queued:
+          child = Center(
+            child: Icon(
+              Icons.hourglass_empty_rounded,
+              color: Colors.orangeAccent[400],
+              size: 32,
+            ),
+          );
+          break;
+        case GenerationStatus.submitting:
+          child = Center(
+            child: Icon(
+              Icons.cloud_upload_outlined,
+              color: Colors.blueAccent[400],
+              size: 32,
+            ),
+          );
+          break;
+        case GenerationStatus.polling:
+          child = Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(theme.primaryColor),
+              ),
+            ),
+          );
+          break;
+        case GenerationStatus
+            .completed: // Should be covered by path != null, but as a fallback
+          child = Center(
+            child: Icon(
+              Icons.check_circle_outline_rounded,
+              color: Colors.green[600],
+              size: 32,
+            ),
+          );
+          break;
+        default:
+          child = Center(
+            child: Icon(
+              Icons.image_outlined,
+              color: Colors.grey.shade400,
+              size: 32,
+            ),
+          );
+      }
+    } else {
+      child = Center(
+        child: Icon(
+          iconData ?? Icons.image_outlined,
+          color: Colors.grey.shade400,
+          size: 32,
+        ),
+      );
+    }
+
+    return Container(
+      width: 68,
+      height: 68,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300, width: 1),
+        color: Colors.grey.shade100,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(
+          11,
+        ), // slightly less than container for inset effect
+        child: child,
+      ),
+    );
+  }
+
   Widget _buildStatusWidget(BuildContext context) {
+    final theme = Theme.of(context);
+    IconData icon;
+    String label;
+    Color color;
+    Widget? leadingWidget;
+
     switch (request.status) {
       case GenerationStatus.queued:
-        return Row(
-          children: [
-            Icon(Icons.pending, size: 16, color: Colors.orange),
-            const SizedBox(width: 4),
-            Text(
-              'Pending',
-              style: TextStyle(color: Colors.orange, fontSize: 12),
-            ),
-          ],
-        );
+        icon = Icons.pending_outlined;
+        label = 'Pending';
+        color = Colors.orangeAccent[700]!;
+        leadingWidget = Icon(icon, size: 18, color: color);
+        break;
       case GenerationStatus.submitting:
-        return Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'Submitting...',
-              style: TextStyle(color: Colors.blue, fontSize: 12),
-            ),
-          ],
+        label = 'Submitting...';
+        color = Colors.blueAccent[700]!;
+        leadingWidget = SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
         );
+        break;
       case GenerationStatus.polling:
-        return Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'Generating...',
-              style: TextStyle(color: Colors.blue, fontSize: 12),
-            ),
-          ],
+        label = 'Generating...';
+        color = Colors.blueAccent[700]!;
+        leadingWidget = SizedBox(
+          width: 16,
+          height: 16,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(color),
+          ),
         );
+        break;
       case GenerationStatus.completed:
-        return Row(
-          children: [
-            Icon(Icons.check_circle, size: 16, color: Colors.green),
-            const SizedBox(width: 4),
-            Text(
-              'Completed',
-              style: TextStyle(color: Colors.green, fontSize: 12),
-            ),
-          ],
-        );
+        icon = Icons.check_circle_outline_rounded;
+        label = 'Completed';
+        color = Colors.green[700]!;
+        leadingWidget = Icon(icon, size: 18, color: color);
+        break;
       case GenerationStatus.failed:
-        return Row(
-          children: [
-            Icon(Icons.error, size: 16, color: Colors.red),
-            const SizedBox(width: 4),
-            Text(
-              request.error ?? 'Failed',
-              style: TextStyle(color: Colors.red, fontSize: 12),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        );
+        icon = Icons.error_outline_rounded;
+        label = request.error ?? 'Failed';
+        color = Colors.redAccent[700]!;
+        leadingWidget = Icon(icon, size: 18, color: color);
+        break;
     }
+
+    return Row(
+      children: [
+        if (leadingWidget != null) leadingWidget,
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    // Assuming ActionButton is styled appropriately elsewhere.
+    // Adding spacing for multiple buttons.
     switch (request.status) {
       case GenerationStatus.queued:
+      case GenerationStatus
+          .submitting: // Added submitting here for consistency if cancel is desired
       case GenerationStatus.polling:
         return ActionButton(
           onPressed: onRemove,
-          icon: Icons.close,
-          // label: 'Cancel',
+          icon: Icons.close_rounded,
           style: ActionButtonStyle.secondary,
+          tooltip: 'Cancel',
         );
 
       case GenerationStatus.completed:
-        return Row(
+        return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ActionButton(
               onPressed: onView,
-              icon: Icons.visibility,
-              // label: 'View',
+              icon: Icons.visibility_outlined,
               style: ActionButtonStyle.primary,
+              tooltip: 'View',
             ),
+            const SizedBox(height: 4),
             ActionButton(
               onPressed: onDownload,
-              icon: Icons.download,
-              // label: 'Download',
+              icon: Icons.download_outlined,
               style: ActionButtonStyle.primary,
+              tooltip: 'Download & Save',
             ),
+            const SizedBox(height: 4),
             ActionButton(
               onPressed: onRemove,
-              icon: Icons.close,
-              // label: 'Remove',
+              icon: Icons.delete_outline_rounded,
               style: ActionButtonStyle.secondary,
+              tooltip: 'Remove',
             ),
           ],
         );
 
       case GenerationStatus.failed:
-        return Row(
+        return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ActionButton(
               onPressed: onRetry,
-              icon: Icons.refresh,
-              // label: 'Retry',
+              icon: Icons.refresh_rounded,
               style: ActionButtonStyle.primary,
+              tooltip: 'Retry',
             ),
+            const SizedBox(height: 4),
             ActionButton(
               onPressed: onRemove,
-              icon: Icons.close,
-              // label: 'Remove',
+              icon: Icons.delete_outline_rounded,
               style: ActionButtonStyle.secondary,
+              tooltip: 'Remove',
             ),
           ],
         );
