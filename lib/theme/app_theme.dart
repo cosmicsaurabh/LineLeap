@@ -3,7 +3,23 @@ import 'package:flutter/material.dart';
 class AppTheme {
   static const double borderRadius = 24.0;
   static const double smallRadius = 12.0;
+
   static const double toolbarHeight = 80.0;
+
+  static const double spacing24 = 24.0;
+  static const double spacing20 = 20.0;
+  static const double spacing16 = 16.0;
+  static const double spacing12 = 12.0;
+  static const double spacing8 = 8.0;
+  static const double spacing4 = 4.0;
+  static const double spacing2 = 2.0;
+
+  static const double padding24 = 24.0;
+  static const double padding20 = 20.0;
+  static const double padding16 = 16.0;
+  static const double padding12 = 12.0;
+  static const double padding8 = 8.0;
+  static const double padding4 = 4.0;
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,

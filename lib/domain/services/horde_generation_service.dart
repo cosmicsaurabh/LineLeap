@@ -3,5 +3,6 @@ abstract class HordeGenerationService {
   Future<String> generateFromPrompt({
     required String prompt,
     required String scribblePath,
+    void Function(int)? onProgress,
   });
 }

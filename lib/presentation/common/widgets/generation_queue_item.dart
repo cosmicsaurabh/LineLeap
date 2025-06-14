@@ -25,20 +25,59 @@ class GenerationQueueItem extends StatelessWidget {
       child: Row(
         children: [
           // Scribble thumbnail
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.grey.shade300),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child:
-                  request.scribblePath != null
-                      ? Image.asset(request.scribblePath!, fit: BoxFit.cover)
-                      : const Icon(Icons.image, color: Colors.grey),
-            ),
+          Column(
+            children: [
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child:
+                      request.scribblePath != null
+                          ? Image.asset(
+                            request.scribblePath!,
+                            fit: BoxFit.cover,
+                          )
+                          : const Icon(Icons.image, color: Colors.grey),
+                ),
+              ),
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child:
+                      request.generatedPath != null
+                          ? Image.asset(
+                            request.generatedPath!,
+                            fit: BoxFit.cover,
+                          )
+                          : request.status == GenerationStatus.queued
+                          ? const Icon(
+                            Icons.hourglass_bottom,
+                            color: Colors.yellow,
+                          )
+                          : request.status == GenerationStatus.submitting
+                          ? const Icon(Icons.upload, color: Colors.grey)
+                          : request.status == GenerationStatus.polling
+                          ? const CircularProgressIndicator(strokeWidth: 2)
+                          : request.status == GenerationStatus.completed
+                          ? Image.asset(
+                            request.generatedPath!,
+                            fit: BoxFit.cover,
+                          )
+                          : const Icon(Icons.image, color: Colors.grey),
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 12),
 

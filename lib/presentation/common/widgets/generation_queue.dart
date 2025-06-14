@@ -1,7 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
+import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 import 'package:lineleap/presentation/common/widgets/generation_queue_item.dart';
+import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
 import 'package:provider/provider.dart';
 
 class GenerationQueueWidget extends StatelessWidget {
@@ -64,8 +68,29 @@ class GenerationQueueWidget extends StatelessWidget {
                       request: request,
                       onRemove: () => provider.removeFromQueue(request),
                       onRetry: () => _retryGeneration(context, request),
-                      onDownload: () => _downloadResult(context, request),
-                      onView: () => _viewResult(context, request),
+                      onDownload:
+                          request.generatedPath == null
+                              ? () {}
+                              : () => _saveHistory(context, request),
+                      onView:
+                          request.generatedPath == null
+                              ? () {}
+                              : () => _showImageDialog(
+                                1,
+                                context,
+                                ScribbleTransformation(
+                                  generatedImagePath: request.generatedPath!,
+                                  scribbleImagePath: request.scribblePath,
+                                  prompt: request.prompt,
+                                  timestamp:
+                                      request.createdAt?.toIso8601String() ??
+                                      "-",
+                                ),
+                                Provider.of<GalleryNotifier>(
+                                  context,
+                                  listen: false,
+                                ),
+                              ),
                     );
                   },
                 ),
@@ -78,21 +103,87 @@ class GenerationQueueWidget extends StatelessWidget {
   }
 
   void _retryGeneration(BuildContext context, GenerationRequest request) {
-    // Implement retry logic
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Retrying generation...')));
+
+    try {
+      final queueProvider = Provider.of<QueueStatusProvider>(
+        context,
+        listen: false,
+      );
+
+      queueProvider.retryGeneration(request);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to retry: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade600,
+        ),
+      );
+    }
   }
 
-  void _downloadResult(BuildContext context, GenerationRequest request) {
-    // Implement download logic
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Downloading...')));
+  void _saveHistory(BuildContext context, GenerationRequest request) async {
+    try {
+      final galleryNotifier = Provider.of<GalleryNotifier>(
+        context,
+        listen: false,
+      );
+      final queueProvider = Provider.of<QueueStatusProvider>(
+        context,
+        listen: false,
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Saving to History...')));
+
+      // Save to history
+      bool success = await galleryNotifier.saveToHistory(
+        scribblePath: request.scribblePath,
+        generatedPath: request.generatedPath!,
+        prompt: request.prompt,
+        timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+      );
+      if (success) {
+        queueProvider.removeFromQueue(request);
+      }
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Image saved to gallery'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.green.shade600,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save: $e'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red.shade600,
+        ),
+      );
+    }
   }
 
-  void _viewResult(BuildContext context, GenerationRequest request) {
-    // Implement view logic
-    Navigator.pushNamed(context, '/view_result', arguments: request);
+  void _showImageDialog(
+    int whichImage, // 0 for scribble, 1 for generated
+    BuildContext context,
+    ScribbleTransformation scribbleTransformation,
+    GalleryNotifier gallery,
+  ) {
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.1),
+      builder:
+          (context) => GalleryImageDialog(
+            scribbleTransformation: scribbleTransformation,
+            gallery: gallery,
+            whichImage: whichImage,
+          ),
+    );
   }
 }
