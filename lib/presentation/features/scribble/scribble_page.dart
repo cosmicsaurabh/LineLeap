@@ -84,6 +84,7 @@ class _ScribblePageState extends State<ScribblePage>
 
   bool _isQueueVisible = false;
   Timer? _queueVisibilityTimer;
+  bool _isQueueExpanded = false;
 
   @override
   void initState() {
@@ -110,7 +111,9 @@ class _ScribblePageState extends State<ScribblePage>
 
   void _startQueueTimer() {
     _queueVisibilityTimer?.cancel();
-    _queueVisibilityTimer = Timer(const Duration(seconds: 5), () {
+    if (_isQueueExpanded) return; // do nothing if they're looking at full view
+
+    _queueVisibilityTimer = Timer(const Duration(seconds: 50), () {
       if (mounted) {
         setState(() {
           _isQueueVisible = false;
@@ -174,24 +177,12 @@ class _ScribblePageState extends State<ScribblePage>
                   _isQueueVisible
                       ? GestureDetector(
                         onTap: _startQueueTimer, // Reset timer on tap
-                        onPanDown:
-                            (_) =>
-                                _startQueueTimer, // Reset on other interactions
-                        child: Material(
-                          elevation: 6.0,
-                          borderRadius: BorderRadius.circular(
-                            AppTheme.borderRadius,
-                          ),
-                          color: theme.cardColor,
-                          shadowColor: Colors.black.withOpacity(0.3),
-                          child: Container(
-                            constraints: BoxConstraints(
-                              // Max height to prevent it from taking too much space
-                              maxHeight:
-                                  MediaQuery.of(context).size.height * 0.35,
-                            ),
-                            child: _buildQueueOverlayWidget(context),
-                          ),
+                        // onPanDown:
+                        //     (_) =>
+                        //         _startQueueTimer, // Reset on other interactions
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                          child: _buildQueueOverlayWidget(context),
                         ),
                       )
                       : const SizedBox.shrink(),
@@ -320,6 +311,11 @@ class _ScribblePageState extends State<ScribblePage>
         }
         // The GenerationQueueWidget should ideally be scrollable if items exceed maxHeight
         return GenerationQueueWidget(
+          onExpansionChanged: (isExpanded) {
+            setState(() {
+              _isQueueExpanded = isExpanded;
+            });
+          },
           queueItems: provider.queueItems,
           refreshQueue: provider.refreshQueue,
           onRemove: (request) {
@@ -363,62 +359,6 @@ class _ScribblePageState extends State<ScribblePage>
               if (mounted && _isQueueVisible)
                 _startQueueTimer(); // Resume timer when dialog closes
             });
-          },
-        );
-      },
-    );
-  }
-
-  Widget QueueScreen(BuildContext context) {
-    final queueProvider = Provider.of<QueueStatusProvider>(
-      context,
-      listen: false,
-    );
-    final galleryNotifier = Provider.of<GalleryNotifier>(
-      context,
-      listen: false,
-    );
-    return Consumer<QueueStatusProvider>(
-      builder: (context, provider, child) {
-        if (provider.queueItems.isEmpty) {
-          return const SizedBox.shrink();
-        }
-        return GenerationQueueWidget(
-          queueItems: provider.queueItems,
-          refreshQueue: provider.refreshQueue,
-          onRemove: (request) {
-            provider.removeFromQueue(request);
-          },
-          onRetry: (request) {
-            provider.retryGeneration(request);
-          },
-          onDownload: (request) async {
-            bool success = await galleryNotifier.saveToHistory(
-              scribblePath: request.scribblePath,
-              generatedPath: request.generatedPath!,
-              prompt: request.prompt,
-              timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
-            );
-            if (success) {
-              queueProvider.removeFromQueue(request);
-            }
-          },
-          onView: (request) {
-            showDialog(
-              context: context,
-              barrierColor: Colors.black.withOpacity(0.1),
-              builder:
-                  (context) => GalleryImageDialog(
-                    scribbleTransformation: ScribbleTransformation(
-                      generatedImagePath: request.generatedPath!,
-                      scribbleImagePath: request.scribblePath,
-                      prompt: request.prompt,
-                      timestamp: request.createdAt?.toIso8601String() ?? "-",
-                    ),
-                    gallery: galleryNotifier,
-                    whichImage: 0,
-                  ),
-            );
           },
         );
       },
