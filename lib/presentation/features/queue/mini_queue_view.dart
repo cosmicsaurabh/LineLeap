@@ -25,48 +25,40 @@ class _MiniQueuePreviewState extends State<MiniQueuePreview> {
   Widget build(BuildContext context) {
     if (widget.queueItems.isEmpty) return const SizedBox.shrink();
 
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: GestureDetector(
-        onTap: widget.onExpand,
-        onVerticalDragUpdate: (details) {
-          if (details.primaryDelta! > 5 && widget.isExpanded) {
-            widget.onExpand();
-          }
-        },
-        child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 0.5,
+    return GestureDetector(
+      onTap: widget.onExpand,
+      onVerticalDragUpdate: (details) {
+        if (details.primaryDelta! > 5 && widget.isExpanded) {
+          widget.onExpand();
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white.withOpacity(0.2), width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  _buildPreviewHeader(),
-                  const SizedBox(height: 8),
-                  _buildQueueCardsStack(),
-                ],
-              ),
+          ],
+        ),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              children: [
+                _buildPreviewHeader(),
+                const SizedBox(height: 8),
+                _buildQueueCardsStack(),
+              ],
             ),
           ),
         ),

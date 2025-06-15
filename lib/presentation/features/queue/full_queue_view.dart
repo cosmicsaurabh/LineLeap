@@ -54,32 +54,34 @@ class _FullQueueViewState extends State<FullQueueView> {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                itemCount: widget.queueItems.length,
-                itemBuilder: (context, index) {
-                  return AnimatedBuilder(
-                    animation: _pageController,
-                    builder: (context, child) {
-                      double value = 1.0;
-                      if (_pageController.position.haveDimensions) {
-                        value = _pageController.page! - index;
-                        value = (1 - (value.abs() * 0.2)).clamp(0.8, 1.0);
-                      }
-                      return Center(
-                        child: Transform.scale(scale: value, child: child),
-                      );
-                    },
-                    child: _buildQueueCard(widget.queueItems[index]),
-                  );
-                },
+        Expanded(
+          child: Column(
+            children: [
+              _buildHeader(),
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: widget.queueItems.length,
+                  itemBuilder: (context, index) {
+                    return AnimatedBuilder(
+                      animation: _pageController,
+                      builder: (context, child) {
+                        double value = 1.0;
+                        if (_pageController.position.haveDimensions) {
+                          value = _pageController.page! - index;
+                          value = (1 - (value.abs() * 0.2)).clamp(0.8, 1.0);
+                        }
+                        return Center(
+                          child: Transform.scale(scale: value, child: child),
+                        );
+                      },
+                      child: _buildQueueCard(widget.queueItems[index]),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
