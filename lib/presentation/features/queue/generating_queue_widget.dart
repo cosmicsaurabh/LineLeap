@@ -30,29 +30,25 @@ class _GenerationQueueWidgetState extends State<GenerationQueueWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Wrap(
-        children: [
-          if (_isExpanded)
-            FullQueueView(
-              queueItems: widget.queueItems,
-              onCollapse: _toggleExpansion,
-              onRemove: widget.onRemove,
-              onRetry: widget.onRetry,
-              onDownload: widget.onDownload,
-              onView: widget.onView,
-            ),
-          if (!_isExpanded)
-            MiniQueuePreview(
-              queueItems: widget.queueItems,
-              onExpand: _toggleExpansion,
-              isExpanded: _isExpanded,
-            ),
-        ],
-      ),
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 200),
+      child:
+          _isExpanded
+              ? FullQueueView(
+                key: const ValueKey('full'),
+                queueItems: widget.queueItems,
+                onCollapse: _toggleExpansion,
+                onRemove: widget.onRemove,
+                onRetry: widget.onRetry,
+                onDownload: widget.onDownload,
+                onView: widget.onView,
+              )
+              : MiniQueuePreview(
+                key: const ValueKey('mini'),
+                queueItems: widget.queueItems,
+                onExpand: _toggleExpansion,
+                isExpanded: _isExpanded,
+              ),
     );
   }
 
