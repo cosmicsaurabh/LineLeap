@@ -52,11 +52,21 @@ class _FullQueueViewState extends State<FullQueueView> {
                 'Collapse',
                 widget.onCollapse,
                 'Expanded View',
-                _hasCompletedItems,
+                _hasCompletedAllItems,
                 'Save All',
-                () {},
+                () {
+                  widget.queueItems.map((item) {
+                    if (item.status == GenerationStatus.completed) {
+                      widget.onDownload(item);
+                    }
+                  }).toList();
+                },
                 'Clear All',
-                () {},
+                () {
+                  widget.queueItems.map((item) {
+                    widget.onRemove(item);
+                  }).toList();
+                },
               ),
               Expanded(
                 child: PageView.builder(
@@ -94,8 +104,8 @@ class _FullQueueViewState extends State<FullQueueView> {
     );
   }
 
-  bool get _hasCompletedItems {
-    return widget.queueItems.any(
+  bool get _hasCompletedAllItems {
+    return widget.queueItems.every(
       (item) => item.status == GenerationStatus.completed,
     );
   }
