@@ -10,6 +10,7 @@ class GenerationQueueWidget extends StatefulWidget {
   final Function(GenerationRequest) onDownload;
   final Function(GenerationRequest) onView;
   final VoidCallback refreshQueue;
+  final Function(bool) onExpansionChanged;
 
   const GenerationQueueWidget({
     Key? key,
@@ -19,6 +20,7 @@ class GenerationQueueWidget extends StatefulWidget {
     required this.onDownload,
     required this.onView,
     required this.refreshQueue,
+    required this.onExpansionChanged,
   }) : super(key: key);
 
   @override
@@ -27,6 +29,13 @@ class GenerationQueueWidget extends StatefulWidget {
 
 class _GenerationQueueWidgetState extends State<GenerationQueueWidget> {
   bool _isExpanded = false;
+
+  void _toggleExpansion() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+    });
+    widget.onExpansionChanged?.call(_isExpanded);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +59,5 @@ class _GenerationQueueWidgetState extends State<GenerationQueueWidget> {
                 isExpanded: _isExpanded,
               ),
     );
-  }
-
-  void _toggleExpansion() {
-    setState(() {
-      _isExpanded = !_isExpanded;
-    });
   }
 }
