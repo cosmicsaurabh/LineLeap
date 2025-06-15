@@ -1,14 +1,16 @@
-import 'dart:io';
+import 'dart:async';
 import 'dart:developer';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lineleap/domain/entities/scribble_transformation.dart';
+import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
+import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
+import 'package:lineleap/presentation/features/queue/generating_queue_widget.dart';
 import 'package:lineleap/theme/app_theme.dart';
-import 'package:lineleap/core/utils/image_utils.dart';
-import 'package:lineleap/domain/entities/generation_request.dart';
-import 'package:lineleap/presentation/features/queue/queue_screen.dart';
 import 'package:lineleap/presentation/features/scribble/drawing_canvas.dart';
 import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
 import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
@@ -80,6 +82,9 @@ class _ScribblePageState extends State<ScribblePage>
   String prompt = '';
   String selectedModel = 'Stable Diffusion';
 
+  bool _isQueueVisible = false;
+  Timer? _queueVisibilityTimer;
+
   @override
   void initState() {
     super.initState();
@@ -99,7 +104,23 @@ class _ScribblePageState extends State<ScribblePage>
     _notifier.dispose();
     _generateButtonController.dispose();
     _toolbarController.dispose();
+    _cancelQueueTimer(); // Cancel timer on dispose
     super.dispose();
+  }
+
+  void _startQueueTimer() {
+    _queueVisibilityTimer?.cancel();
+    _queueVisibilityTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        setState(() {
+          _isQueueVisible = false;
+        });
+      }
+    });
+  }
+
+  void _cancelQueueTimer() {
+    _queueVisibilityTimer?.cancel();
   }
 
   Future<void> _handleGenerate() async {
@@ -136,10 +157,46 @@ class _ScribblePageState extends State<ScribblePage>
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: _buildAppBar(theme, isDark, isCapturing),
-      body: Column(
+      body: Stack(
+        alignment: Alignment.center,
         children: [
-          _buildDrawingArea(theme, isDark),
-          _buildToolbar(theme, isDark),
+          Column(
+            children: [
+              _buildDrawingArea(theme, isDark),
+              _buildToolbar(theme, isDark),
+            ],
+          ),
+          Positioned(
+            child: AnimatedOpacity(
+              opacity: _isQueueVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
+              child:
+                  _isQueueVisible
+                      ? GestureDetector(
+                        onTap: _startQueueTimer, // Reset timer on tap
+                        onPanDown:
+                            (_) =>
+                                _startQueueTimer, // Reset on other interactions
+                        child: Material(
+                          elevation: 6.0,
+                          borderRadius: BorderRadius.circular(
+                            AppTheme.borderRadius,
+                          ),
+                          color: theme.cardColor,
+                          shadowColor: Colors.black.withOpacity(0.3),
+                          child: Container(
+                            constraints: BoxConstraints(
+                              // Max height to prevent it from taking too much space
+                              maxHeight:
+                                  MediaQuery.of(context).size.height * 0.35,
+                            ),
+                            child: _buildQueueOverlayWidget(context),
+                          ),
+                        ),
+                      )
+                      : const SizedBox.shrink(),
+            ),
+          ),
         ],
       ),
       // floatingActionButton: _buildFloatingActionButton(theme),
@@ -203,10 +260,14 @@ class _ScribblePageState extends State<ScribblePage>
         ActionButton(
           icon: CupertinoIcons.list_bullet,
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const QueueScreen()),
-            );
+            setState(() {
+              _isQueueVisible = !_isQueueVisible;
+              if (_isQueueVisible) {
+                _startQueueTimer(); // Start timer when queue is shown
+              } else {
+                _cancelQueueTimer(); // Cancel timer when queue is hidden
+              }
+            });
             HapticFeedback.selectionClick();
           },
           // label: 'View Queue',
@@ -214,6 +275,153 @@ class _ScribblePageState extends State<ScribblePage>
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+
+  Widget _buildQueueOverlayWidget(BuildContext context) {
+    final queueProvider = Provider.of<QueueStatusProvider>(
+      context,
+      listen:
+          false, // listen:false is fine as Consumer below will handle updates
+    );
+    final galleryNotifier = Provider.of<GalleryNotifier>(
+      context,
+      listen: false,
+    );
+
+    return Consumer<QueueStatusProvider>(
+      builder: (context, provider, child) {
+        if (provider.queueItems.isEmpty) {
+          // Optionally, you could show a "Queue is empty" message
+          // or make the overlay hide itself if it becomes empty.
+          // For now, it will show an empty container if queue becomes empty while visible.
+          // To auto-hide if it becomes empty:
+          if (_isQueueVisible && provider.queueItems.isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _isQueueVisible = false;
+                  _cancelQueueTimer();
+                });
+              }
+            });
+          }
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                "Generation queue is empty.",
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).disabledColor,
+                ),
+              ),
+            ),
+          );
+        }
+        // The GenerationQueueWidget should ideally be scrollable if items exceed maxHeight
+        return GenerationQueueWidget(
+          queueItems: provider.queueItems,
+          refreshQueue: provider.refreshQueue,
+          onRemove: (request) {
+            provider.removeFromQueue(request);
+            _startQueueTimer(); // Reset timer on interaction
+          },
+          onRetry: (request) {
+            provider.retryGeneration(request);
+            _startQueueTimer(); // Reset timer on interaction
+          },
+          onDownload: (request) async {
+            _cancelQueueTimer(); // Pause timer during async operation
+            bool success = await galleryNotifier.saveToHistory(
+              scribblePath: request.scribblePath,
+              generatedPath: request.generatedPath!,
+              prompt: request.prompt,
+              timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+            );
+            if (success) {
+              queueProvider.removeFromQueue(request);
+            }
+            if (mounted && _isQueueVisible) _startQueueTimer(); // Resume timer
+          },
+          onView: (request) {
+            _cancelQueueTimer(); // Pause timer while dialog is open
+            showDialog(
+              context: context,
+              barrierColor: Colors.black.withOpacity(0.1),
+              builder:
+                  (context) => GalleryImageDialog(
+                    scribbleTransformation: ScribbleTransformation(
+                      generatedImagePath: request.generatedPath!,
+                      scribbleImagePath: request.scribblePath,
+                      prompt: request.prompt,
+                      timestamp: request.createdAt?.toIso8601String() ?? "-",
+                    ),
+                    gallery: galleryNotifier,
+                    whichImage: 0,
+                  ),
+            ).then((_) {
+              if (mounted && _isQueueVisible)
+                _startQueueTimer(); // Resume timer when dialog closes
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget QueueScreen(BuildContext context) {
+    final queueProvider = Provider.of<QueueStatusProvider>(
+      context,
+      listen: false,
+    );
+    final galleryNotifier = Provider.of<GalleryNotifier>(
+      context,
+      listen: false,
+    );
+    return Consumer<QueueStatusProvider>(
+      builder: (context, provider, child) {
+        if (provider.queueItems.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return GenerationQueueWidget(
+          queueItems: provider.queueItems,
+          refreshQueue: provider.refreshQueue,
+          onRemove: (request) {
+            provider.removeFromQueue(request);
+          },
+          onRetry: (request) {
+            provider.retryGeneration(request);
+          },
+          onDownload: (request) async {
+            bool success = await galleryNotifier.saveToHistory(
+              scribblePath: request.scribblePath,
+              generatedPath: request.generatedPath!,
+              prompt: request.prompt,
+              timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+            );
+            if (success) {
+              queueProvider.removeFromQueue(request);
+            }
+          },
+          onView: (request) {
+            showDialog(
+              context: context,
+              barrierColor: Colors.black.withOpacity(0.1),
+              builder:
+                  (context) => GalleryImageDialog(
+                    scribbleTransformation: ScribbleTransformation(
+                      generatedImagePath: request.generatedPath!,
+                      scribbleImagePath: request.scribblePath,
+                      prompt: request.prompt,
+                      timestamp: request.createdAt?.toIso8601String() ?? "-",
+                    ),
+                    gallery: galleryNotifier,
+                    whichImage: 0,
+                  ),
+            );
+          },
+        );
+      },
     );
   }
 

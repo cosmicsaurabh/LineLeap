@@ -3,7 +3,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
-import 'package:lineleap/presentation/features/queue/queue_screen.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
