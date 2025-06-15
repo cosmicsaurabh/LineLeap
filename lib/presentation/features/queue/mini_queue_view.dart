@@ -48,10 +48,9 @@ class _MiniQueuePreviewState extends State<MiniQueuePreview>
           children: [
             const Icon(Icons.inbox, size: 72),
             const SizedBox(height: 16),
-            const Text("Queue is empty", style: TextStyle(fontSize: 18)),
-            ElevatedButton(
-              onPressed: widget.onExpand,
-              child: const Text("Start Generation"),
+            const Text(
+              "Hmm...Nothing in queue yet!",
+              style: TextStyle(fontSize: 18),
             ),
           ],
         ),
