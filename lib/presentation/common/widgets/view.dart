@@ -11,7 +11,11 @@ import 'package:lineleap/theme/app_theme.dart';
 
 // ------------mini queue view widgets----------------
 
-Widget buildCard(GenerationRequest request, {bool isTopCard = false}) {
+Widget buildCard(
+  BuildContext context,
+  GenerationRequest request, {
+  bool isTopCard = false,
+}) {
   return Container(
     width: 350,
     height: 100,
@@ -58,7 +62,7 @@ Widget buildCard(GenerationRequest request, {bool isTopCard = false}) {
                 children: [
                   buildThumbnail(request.scribblePath),
                   const SizedBox(width: 12),
-                  Expanded(child: buildPromptText(request)),
+                  Expanded(child: buildPromptText(context, request)),
                   const SizedBox(width: 12),
                   if (request.status == GenerationStatus.completed)
                     buildThumbnail(request.generatedPath)
@@ -104,20 +108,19 @@ Widget buildThumbnail(String? imagePath) {
   }
 }
 
-Widget buildPromptText(GenerationRequest request) {
+Widget buildPromptText(BuildContext context, GenerationRequest request) {
   return Container(
-    constraints: const BoxConstraints(maxWidth: 100),
+    constraints: const BoxConstraints(maxHeight: 120),
     padding: const EdgeInsets.all(8),
     decoration: BoxDecoration(
-      color: Colors.grey.withOpacity(0.8),
+      color: Colors.grey.withAlpha((0.8 * 255).toInt()),
       borderRadius: BorderRadius.circular(8),
     ),
     child: SingleChildScrollView(
-      //not working
       scrollDirection: Axis.vertical,
       child: Text(
         request.prompt,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        style: Theme.of(context).textTheme.bodyMedium,
       ),
     ),
   );
@@ -157,8 +160,8 @@ Widget getStatusIcon(GenerationRequest request) {
       );
     case GenerationStatus.queued:
       return const Icon(Icons.schedule);
-    default:
-      return const Icon(Icons.help_outline);
+    case GenerationStatus.completed:
+      return const Icon(Icons.check_circle);
   }
 }
 
@@ -196,7 +199,7 @@ Widget buildHeader(
         ActionButton(
           onPressed: onRightButton1Pressed,
           tooltip: rightButtonText1,
-          disabled: condition == true,
+          disabled: condition != true,
         ),
         ActionButton(
           onPressed: onRightButton2Pressed,
@@ -267,7 +270,7 @@ Widget buildQueueCard(
       children: [
         buildImageRow(request),
         const SizedBox(height: 16),
-        buildPromptSection(context, request),
+        buildPromptText(context, request),
         const SizedBox(height: 16),
         buildStatusSection(
           context,
@@ -312,23 +315,6 @@ Widget buildImage(String? imagePath) {
   }
 }
 
-Widget buildPromptSection(BuildContext context, GenerationRequest request) {
-  return Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      color: Colors.black.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Text(
-      request.prompt,
-      style: Theme.of(context).textTheme.bodyMedium,
-      maxLines: 3,
-      overflow: TextOverflow.ellipsis,
-    ),
-  );
-}
-
 Widget buildStatusSection(
   BuildContext context,
   GenerationRequest request,
@@ -337,94 +323,64 @@ Widget buildStatusSection(
   Function(GenerationRequest) onView,
   Function(GenerationRequest) onRemove,
 ) {
-  switch (request.status) {
-    case GenerationStatus.completed:
-      return Row(
-        children: [
-          getStatusIcon(request),
-          const SizedBox(height: 8),
-          ActionButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              onView(request);
-            },
-            tooltip: 'View',
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      getStatusIcon(request),
+      if (request.status == GenerationStatus.completed)
+        ActionButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            onView(request);
+          },
+          icon: Icons.visibility,
+          // tooltip: 'View',
+        ),
+      if (request.status == GenerationStatus.completed)
+        ActionButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            onDownload(request);
+          },
+          icon: Icons.download,
+          // tooltip: 'Download',
+        ),
+      if (request.status == GenerationStatus.failed)
+        ActionButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            onRetry(request);
+          },
+          icon: Icons.refresh,
+          // tooltip: 'Retry',
+        ),
+      if (request.status == GenerationStatus.polling ||
+          request.status == GenerationStatus.submitting ||
+          request.status == GenerationStatus.queued)
+        Text(
+          request.status == GenerationStatus.polling
+              ? 'Generating...'
+              : request.status == GenerationStatus.submitting
+              ? 'Submitting...'
+              : 'Queued',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color:
+                request.status == GenerationStatus.polling
+                    ? Theme.of(context).primaryColor
+                    : request.status == GenerationStatus.submitting
+                    ? Colors.orange
+                    : Colors.blue,
           ),
-          ActionButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              onDownload(request);
-            },
-            tooltip: 'Download',
-          ),
-          ActionButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              onRemove(request);
-            },
-            tooltip: 'Delete',
-          ),
-        ],
-      );
-    case GenerationStatus.failed:
-      return Row(
-        children: [
-          getStatusIcon(request),
-          ActionButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              onRetry(request);
-            },
-            tooltip: 'Retry',
-          ),
-          const SizedBox(height: 8),
-          ActionButton(
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              onRemove(request);
-            },
-            tooltip: 'Delete',
-          ),
-        ],
-      );
-    case GenerationStatus.polling:
-      return Row(
-        children: [
-          getStatusIcon(request),
-          const SizedBox(height: 8),
-          Text(
-            'Generating...',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).primaryColor,
-            ),
-          ),
-        ],
-      );
-    case GenerationStatus.submitting:
-      return Row(
-        children: [
-          getStatusIcon(request),
-          const SizedBox(height: 8),
-          Text(
-            'Submitting...',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.orange),
-          ),
-        ],
-      );
-    case GenerationStatus.queued:
-      return Row(
-        children: [
-          getStatusIcon(request),
-          const SizedBox(height: 8),
-          Text(
-            'Queued',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.blue),
-          ),
-        ],
-      );
-  }
+        ),
+
+      ActionButton(
+        onPressed: () {
+          HapticFeedback.lightImpact();
+          onRemove(request);
+        },
+        icon: Icons.delete,
+        // tooltip: 'Delete',
+      ),
+    ],
+  );
 }

@@ -66,7 +66,7 @@ class _MiniQueuePreviewState extends State<MiniQueuePreview>
             verticalThresholdPercentage,
           ) => GestureDetector(
             onTap: widget.onExpand,
-            child: buildCard(widget.queueItems[index]),
+            child: buildCard(context, widget.queueItems[index]),
           ),
 
       cardsCount: widget.queueItems.length,
