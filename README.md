@@ -12,7 +12,7 @@ Built with **Clean Architecture**, supports **light/dark/system themes**, and fe
 - **Color Picker:** Choose your pen color.
 - **Prompt Input:** Add a text prompt for AI image generation.
 - **AI Image Generation:** Uses [Stable Horde](https://stablehorde.net/) for sketch-to-image.
-- **Automatic Image Saving:** Generated images are saved to device storage, and their file paths are stored in Hive for fast gallery access.
+- **Generation Queue:** Enqueue and track multiple AI generation requests with live status indicators (queued, submitting, generating, completed, failed) and controls to retry, view, download, or delete.
 - **Gallery:** View all your generated images, loaded from file paths.
 - **Theme Selector:** Switch between light, dark, and system themes.
 - **Clean Architecture:** Domain, data, and presentation layers for maintainability and testability.
@@ -33,6 +33,20 @@ lib/
 - **Data:** Implements domain contracts, talks to APIs, handles persistence (Hive, file storage)
 - **Presentation:** UI, widgets, state management (Provider)
 - **Core:** App-wide utilities, theme, and services
+
+---
+
+## 🧰 Tech Highlights
+
+- **Clean Architecture** with strict separation of domain, data, presentation and core layers
+- **Dependency Injection** via GetIt (`injection_container.dart`)
+- **State Management** using Provider and ChangeNotifier (`GenerationProvider`, `GalleryNotifier`, `QueueStatusProvider`)
+- **Real-time Queue Processing** with polling, streams (`WatchGenerationRequestUseCase`) and auto-retry logic
+- **In-Memory Queue** backed by `GenerationQueueNotifier` for ultra-fast UI updates
+- **Haptic Feedback & Animations** on button taps and card swipes (`flutter_card_swiper`)
+- **Offline-First Storage**: Hive for metadata + file system for images via `ImageDeviceInteractionService`
+- **Modular, Testable Code** – each use-case and repository easily mocked for unit/integration tests
+- **CI-Ready** – add GitHub Actions for linting, formatting, analysis and test coverage
 
 ---
 
@@ -83,6 +97,7 @@ lib/
 - [flutter_colorpicker](https://pub.dev/packages/flutter_colorpicker)
 - [adaptive_dialog](https://pub.dev/packages/adaptive_dialog)
 - [http](https://pub.dev/packages/http)
+- [flutter_card_swiper](https://pub.dev/packages/flutter_card_swiper)
 
 ---
 

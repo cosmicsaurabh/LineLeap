@@ -345,7 +345,8 @@ Widget buildStatusSection(
           icon: Icons.download,
           // tooltip: 'Download',
         ),
-      if (request.status == GenerationStatus.failed)
+      if (request.status == GenerationStatus.failed ||
+          request.status == GenerationStatus.completed)
         ActionButton(
           onPressed: () {
             HapticFeedback.lightImpact();
