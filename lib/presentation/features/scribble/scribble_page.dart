@@ -282,33 +282,6 @@ class _ScribblePageState extends State<ScribblePage>
 
     return Consumer<QueueStatusProvider>(
       builder: (context, provider, child) {
-        if (provider.queueItems.isEmpty) {
-          // Optionally, you could show a "Queue is empty" message
-          // or make the overlay hide itself if it becomes empty.
-          // For now, it will show an empty container if queue becomes empty while visible.
-          // To auto-hide if it becomes empty:
-          if (_isQueueVisible && provider.queueItems.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() {
-                  _isQueueVisible = false;
-                  _cancelQueueTimer();
-                });
-              }
-            });
-          }
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Generation queue is empty.",
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).disabledColor,
-                ),
-              ),
-            ),
-          );
-        }
         // The GenerationQueueWidget should ideally be scrollable if items exceed maxHeight
         return GenerationQueueWidget(
           onExpansionChanged: (isExpanded) {
