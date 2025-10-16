@@ -36,7 +36,7 @@ class AppTheme {
       onError: Colors.white,
     ),
     scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
@@ -59,7 +59,7 @@ class AppTheme {
       onError: Colors.white,
     ),
     scaffoldBackgroundColor: const Color(0xFF1C1C1E),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(borderRadius),
