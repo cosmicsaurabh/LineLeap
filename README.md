@@ -50,6 +50,12 @@ lib/
 
 ---
 
+## 🗓️ Upcoming features
+- **Multimodal Support** Coming soon.
+
+
+---
+
 ## 🖼️ Screenshots
 
 | Light Mode                      | Dark Mode                     |
