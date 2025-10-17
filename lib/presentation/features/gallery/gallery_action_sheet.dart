@@ -125,7 +125,9 @@ class GalleryActionSheet extends StatelessWidget {
       final Uint8List bytes = await file.readAsBytes();
 
       // Save to gallery
-      _showNonInteractiveActionFeedback(context, 'Download started');
+      _showNonInteractiveActionFeedback(context, 'Downloading image...');
+
+      // image_gallery_saver_plus handles Android permissions internally
       final result = await ImageGallerySaverPlus.saveImage(
         bytes,
         quality: 100,
@@ -135,10 +137,17 @@ class GalleryActionSheet extends StatelessWidget {
       if (result['isSuccess'] == true || result['filePath'] != null) {
         _showInteractiveActionFeedback(context, 'Image saved to gallery!');
       } else {
-        _showNonInteractiveActionFeedback(context, 'Failed to save image.');
+        _showNonInteractiveActionFeedback(
+          context,
+          'Failed to save image. Please check permissions.',
+        );
       }
     } catch (e) {
-      _showNonInteractiveActionFeedback(context, 'Something went wrong');
+      log('Download error: $e');
+      _showNonInteractiveActionFeedback(
+        context,
+        'Error: Could not save image. Try enabling storage access in app settings.',
+      );
     }
   }
 
@@ -166,7 +175,11 @@ class GalleryActionSheet extends StatelessWidget {
         }
       }
     } catch (e) {
-      _showNonInteractiveActionFeedback(parentContext, 'Failed to share image');
+      log('Share error: $e');
+      _showNonInteractiveActionFeedback(
+        parentContext,
+        'Error sharing image. Please try again.',
+      );
     }
   }
 

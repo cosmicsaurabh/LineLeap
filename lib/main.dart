@@ -15,34 +15,49 @@ import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  //Hive initialization
 
-  final appDocumentDir = await getApplicationDocumentsDirectory();
-  await Hive.initFlutter(appDocumentDir.path);
-  Hive.registerAdapter(ScribbleTransformationHiveAdapter());
+  // Enhanced error handling for release mode
+  FlutterError.onError = (FlutterErrorDetails details) {
+    debugPrint('Flutter Error: ${details.exception}');
+    debugPrintStack(stackTrace: details.stack);
+  };
 
-  //initialize dependencies
-  await initDependencies();
+  try {
+    //Hive initialization
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+    await Hive.initFlutter(appDocumentDir.path);
+    Hive.registerAdapter(ScribbleTransformationHiveAdapter());
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider<ThemeNotifier>(
-          create: (_) => sl<ThemeNotifier>(),
-        ),
-        ChangeNotifierProvider<EnhancedScribbleNotifier>(
-          create: (_) => sl<EnhancedScribbleNotifier>(),
-        ),
-        ChangeNotifierProvider(create: (_) => sl<GalleryNotifier>()),
-        ChangeNotifierProvider(create: (_) => sl<GenerationProvider>()),
-        ChangeNotifierProvider<GenerationQueueNotifier>(
-          create: (_) => sl<GenerationQueueNotifier>(),
-        ),
-        ChangeNotifierProvider(create: (_) => sl<QueueStatusProvider>()),
-      ],
-      child: const MyApp(),
-    ),
-  );
+    //initialize dependencies
+    await initDependencies();
+
+    // Permission requests moved to when they're actually needed (in gallery actions)
+    // This prevents startup delays and potential issues in release mode
+
+    runApp(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ThemeNotifier>(
+            create: (_) => sl<ThemeNotifier>(),
+          ),
+          ChangeNotifierProvider<EnhancedScribbleNotifier>(
+            create: (_) => sl<EnhancedScribbleNotifier>(),
+          ),
+          ChangeNotifierProvider(create: (_) => sl<GalleryNotifier>()),
+          ChangeNotifierProvider(create: (_) => sl<GenerationProvider>()),
+          ChangeNotifierProvider<GenerationQueueNotifier>(
+            create: (_) => sl<GenerationQueueNotifier>(),
+          ),
+          ChangeNotifierProvider(create: (_) => sl<QueueStatusProvider>()),
+        ],
+        child: const MyApp(),
+      ),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('Error during app initialization: $e');
+    debugPrintStack(stackTrace: stackTrace);
+    runApp(const ErrorApp(error: 'Initialization failed'));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -55,6 +70,47 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: Provider.of<ThemeNotifier>(context).themeMode,
       home: const NavBar(),
+    );
+  }
+}
+
+class ErrorApp extends StatelessWidget {
+  final String error;
+
+  const ErrorApp({super.key, required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        backgroundColor: Colors.grey[900],
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
+                  'Error Loading App',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  error,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
