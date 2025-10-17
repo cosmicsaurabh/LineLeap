@@ -44,10 +44,26 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Required for sharing images via share_plus -->
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="image/*"/>
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND_MULTIPLE"/>
+            <data android:mimeType="image/*"/>
+        </intent>
     </queries>
 
+    <!-- Internet permission for AI API calls -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    
+    <!-- Photo and Video permissions for core functionality: saving and sharing generated images -->
+    <!-- For Android 13+ (API 33+): Use READ_MEDIA_IMAGES and READ_MEDIA_VIDEO instead of READ_EXTERNAL_STORAGE -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    
+    <!-- For Android 12 and below: Fall back to READ/WRITE_EXTERNAL_STORAGE -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 </manifest>
