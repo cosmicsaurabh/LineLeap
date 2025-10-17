@@ -12,17 +12,17 @@ class FullQueueView extends StatefulWidget {
   final Function(GenerationRequest) onView;
 
   const FullQueueView({
-    Key? key,
+    super.key,
     required this.queueItems,
     required this.onCollapse,
     required this.onRemove,
     required this.onRetry,
     required this.onDownload,
     required this.onView,
-  }) : super(key: key);
+  });
 
   @override
-  _FullQueueViewState createState() => _FullQueueViewState();
+  State<FullQueueView> createState() => _FullQueueViewState();
 }
 
 class _FullQueueViewState extends State<FullQueueView> {

@@ -36,7 +36,9 @@ class ThemeToggle extends StatelessWidget {
             color:
                 isSelected
                     ? Theme.of(context).colorScheme.onPrimary
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ),

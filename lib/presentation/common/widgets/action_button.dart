@@ -55,7 +55,7 @@ class ActionButton extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: disabled ? bgColor.withOpacity(0.5) : bgColor,
+            color: disabled ? bgColor.withValues(alpha: 0.5) : bgColor,
             borderRadius: BorderRadius.circular(16),
             border:
                 showBorder

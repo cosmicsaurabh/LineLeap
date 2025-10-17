@@ -138,18 +138,18 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.smallRadius),
-        ),
-      ),
-    );
-  }
+  // void _showErrorSnackBar(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(message),
+  //       backgroundColor: Colors.red.shade600,
+  //       behavior: SnackBarBehavior.floating,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(AppTheme.smallRadius),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -316,7 +316,7 @@ class _ScribblePageState extends State<ScribblePage>
             _cancelQueueTimer(); // Pause timer while dialog is open
             showDialog(
               context: context,
-              barrierColor: Colors.black.withOpacity(0.1),
+              barrierColor: Colors.black.withValues(alpha: 0.1),
               builder:
                   (context) => GalleryImageDialog(
                     scribbleTransformation: ScribbleTransformation(
@@ -329,8 +329,9 @@ class _ScribblePageState extends State<ScribblePage>
                     whichImage: 0,
                   ),
             ).then((_) {
-              if (mounted && _isQueueVisible)
-                _startQueueTimer(); // Resume timer when dialog closes
+              if (mounted && _isQueueVisible) {
+                _startQueueTimer();
+              } // Resume timer when dialog closes
             });
           },
         );
@@ -343,7 +344,9 @@ class _ScribblePageState extends State<ScribblePage>
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: 0.2),
+        ),
       ),
       child: IconButton(
         onPressed: () {
@@ -453,7 +456,7 @@ class _ScribblePageState extends State<ScribblePage>
           borderRadius: BorderRadius.circular(AppTheme.borderRadius),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
               blurRadius: 20,
               offset: const Offset(0, 4),
             ),
@@ -487,10 +490,12 @@ class _ScribblePageState extends State<ScribblePage>
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: BoxDecoration(
-                color: (isDark ? Colors.black : Colors.white).withOpacity(0.8),
+                color: (isDark ? Colors.black : Colors.white).withValues(
+                  alpha: 0.8,
+                ),
                 borderRadius: BorderRadius.circular(AppTheme.borderRadius),
                 border: Border.all(
-                  color: theme.colorScheme.outline.withOpacity(0.2),
+                  color: theme.colorScheme.outline.withValues(alpha: 0.2),
                 ),
               ),
               child: ScribbleToolbar(

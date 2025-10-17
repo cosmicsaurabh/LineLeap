@@ -10,14 +10,14 @@ class MiniQueuePreview extends StatefulWidget {
   final bool isExpanded;
 
   const MiniQueuePreview({
-    Key? key,
+    super.key,
     required this.queueItems,
     required this.onExpand,
     required this.isExpanded,
-  }) : super(key: key);
+  });
 
   @override
-  _MiniQueuePreviewState createState() => _MiniQueuePreviewState();
+  State<MiniQueuePreview> createState() => _MiniQueuePreviewState();
 }
 
 class _MiniQueuePreviewState extends State<MiniQueuePreview>
