@@ -25,8 +25,8 @@ class GlassContainer extends StatelessWidget {
     final bgColor =
         backgroundColor ??
         (isDarkMode
-            ? Colors.black.withOpacity(0.7)
-            : Colors.white.withOpacity(0.8));
+            ? Colors.black.withValues(alpha: 0.7)
+            : Colors.white.withValues(alpha: 0.8));
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),

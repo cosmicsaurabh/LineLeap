@@ -13,7 +13,7 @@ class GenerationQueueWidget extends StatefulWidget {
   final Function(bool) onExpansionChanged;
 
   const GenerationQueueWidget({
-    Key? key,
+    super.key,
     required this.queueItems,
     required this.onRemove,
     required this.onRetry,
@@ -21,10 +21,10 @@ class GenerationQueueWidget extends StatefulWidget {
     required this.onView,
     required this.refreshQueue,
     required this.onExpansionChanged,
-  }) : super(key: key);
+  });
 
   @override
-  _GenerationQueueWidgetState createState() => _GenerationQueueWidgetState();
+  State<GenerationQueueWidget> createState() => _GenerationQueueWidgetState();
 }
 
 class _GenerationQueueWidgetState extends State<GenerationQueueWidget> {
@@ -34,7 +34,7 @@ class _GenerationQueueWidgetState extends State<GenerationQueueWidget> {
     setState(() {
       _isExpanded = !_isExpanded;
     });
-    widget.onExpansionChanged?.call(_isExpanded);
+    widget.onExpansionChanged.call(_isExpanded);
   }
 
   @override

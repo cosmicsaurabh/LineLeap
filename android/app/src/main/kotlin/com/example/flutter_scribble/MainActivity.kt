@@ -1,4 +1,4 @@
-package com.example.lineleap
+package com.lineleapp
 
 import io.flutter.embedding.android.FlutterActivity
 

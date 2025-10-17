@@ -4,8 +4,7 @@ import 'package:flutter/services.dart';
 class QueueEmptyState extends StatelessWidget {
   final VoidCallback onStartNewGeneration;
 
-  const QueueEmptyState({Key? key, required this.onStartNewGeneration})
-    : super(key: key);
+  const QueueEmptyState({super.key, required this.onStartNewGeneration});
 
   @override
   Widget build(BuildContext context) {

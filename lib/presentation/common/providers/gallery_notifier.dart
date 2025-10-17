@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history_usecase.dart';
-import 'package:lineleap/domain/usecases/delete_scribbleTransformation_from_history_usecase.dart';
+import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history_usecase.dart';
 
 class GalleryNotifier extends ChangeNotifier {

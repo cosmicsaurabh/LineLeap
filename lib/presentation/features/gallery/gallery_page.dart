@@ -135,7 +135,7 @@ class _GalleryPageState extends State<GalleryPage> {
   ) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.1),
+      barrierColor: Colors.black.withValues(alpha: 0.1),
       builder:
           (context) => GalleryImageDialog(
             scribbleTransformation: scribbleTransformation,

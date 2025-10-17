@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/theme/app_theme.dart';
 
@@ -18,7 +17,7 @@ Widget buildActionButton(
               ? LinearGradient(
                 colors: [
                   theme.colorScheme.primary,
-                  theme.colorScheme.primary.withOpacity(0.8),
+                  theme.colorScheme.primary.withValues(alpha: 0.8),
                 ],
               )
               : null,
@@ -27,7 +26,9 @@ Widget buildActionButton(
       border:
           isPrimary
               ? null
-              : Border.all(color: theme.colorScheme.outline.withOpacity(0.3)),
+              : Border.all(
+                color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              ),
     ),
     child: Material(
       color: Colors.transparent,

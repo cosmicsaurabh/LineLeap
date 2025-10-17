@@ -66,10 +66,10 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
               color: (isDark
                       ? const Color.fromARGB(255, 30, 7, 7)
                       : Colors.white)
-                  .withOpacity(0.9),
+                  .withValues(alpha: 0.9),
               borderRadius: BorderRadius.circular(AppTheme.borderRadius),
               border: Border.all(
-                color: theme.colorScheme.outline.withOpacity(0.2),
+                color: theme.colorScheme.outline.withValues(alpha: 0.2),
               ),
             ),
             child: Column(
@@ -155,7 +155,7 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                 },
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     shape: BoxShape.circle,
                                   ),
                                   padding: EdgeInsets.all(6),
@@ -173,7 +173,7 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Icon(
@@ -218,7 +218,7 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: EdgeInsets.all(6),
@@ -264,7 +264,7 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                               },
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   shape: BoxShape.circle,
                                 ),
                                 padding: EdgeInsets.all(6),
@@ -289,7 +289,7 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -314,7 +314,9 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                           AppTheme.smallRadius,
                         ),
                         border: Border.all(
-                          color: theme.colorScheme.outline.withOpacity(0.2),
+                          color: theme.colorScheme.outline.withValues(
+                            alpha: 0.2,
+                          ),
                         ),
                       ),
                       child: Column(

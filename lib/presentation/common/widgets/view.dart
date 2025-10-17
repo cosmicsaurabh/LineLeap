@@ -28,7 +28,7 @@ Widget buildCard(
       borderRadius: BorderRadius.circular(16),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.2),
+          color: Colors.black.withValues(alpha: 0.2),
           blurRadius: 6,
           offset: const Offset(0, 3),
         ),
@@ -42,14 +42,14 @@ Widget buildCard(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Colors.white.withOpacity(0.3),
-                  Colors.white.withOpacity(0.1),
+                  Colors.white.withValues(alpha: 0.3),
+                  Colors.white.withValues(alpha: 0.1),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               border: Border.all(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),
@@ -113,7 +113,7 @@ Widget buildPromptText(BuildContext context, GenerationRequest request) {
     constraints: const BoxConstraints(maxHeight: 120),
     padding: const EdgeInsets.all(8),
     decoration: BoxDecoration(
-      color: Colors.grey.withAlpha((0.8 * 255).toInt()),
+      color: Colors.grey.withValues(alpha: 0.8),
       borderRadius: BorderRadius.circular(8),
     ),
     child: SingleChildScrollView(
@@ -255,12 +255,15 @@ Widget buildQueueCard(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.05)],
+        colors: [
+          Colors.white.withValues(alpha: 0.2),
+          Colors.white.withValues(alpha: 0.05),
+        ],
       ),
-      border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withOpacity(0.1),
+          color: Colors.black.withValues(alpha: 0.1),
           blurRadius: 20,
           offset: const Offset(0, 10),
         ),
