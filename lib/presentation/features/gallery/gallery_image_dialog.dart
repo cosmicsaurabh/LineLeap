@@ -8,6 +8,7 @@ import 'package:lineleap/theme/app_theme.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_action_sheet.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
+import 'package:lineleap/presentation/common/widgets/report_content_dialog.dart';
 
 class GalleryImageDialog extends StatefulWidget {
   final int whichImage; // 0 for scribble, 1 for generated
@@ -241,6 +242,12 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              _buildActionButton(
+                icon: CupertinoIcons.flag,
+                onPressed: () => _showReportDialog(context),
+                isDarkMode: isDarkMode,
+              ),
+              const SizedBox(width: 8),
               _buildActionButton(
                 icon: CupertinoIcons.ellipsis,
                 onPressed: () => _showActionMenu(context),
@@ -527,6 +534,23 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
               Navigator.of(context).pop();
             },
             index: widget.whichImage,
+          ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    final contentId =
+        widget.whichImage == 0
+            ? widget.scribbleTransformation.scribbleImagePath
+            : widget.scribbleTransformation.generatedImagePath;
+    final contentType = widget.whichImage == 0 ? 'scribble' : 'generated_image';
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => ReportContentDialog(
+            contentId: contentId,
+            contentType: contentType,
           ),
     );
   }

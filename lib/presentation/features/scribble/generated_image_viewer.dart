@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/theme/app_theme.dart';
 import 'package:lineleap/presentation/common/widgets/toolbar/action_button.dart';
+import 'package:lineleap/presentation/common/widgets/report_content_dialog.dart';
 
 class GeneratedImageViewer extends StatefulWidget {
   final Uint8List image;
@@ -46,6 +47,18 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
           borderRadius: BorderRadius.circular(AppTheme.smallRadius),
         ),
       ),
+    );
+  }
+
+  void _showReportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return ReportContentDialog(
+          contentId: 'generated_image_${DateTime.now().millisecondsSinceEpoch}',
+          contentType: 'generated_image',
+        );
+      },
     );
   }
 
@@ -352,6 +365,21 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Expanded(
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final showLabel = constraints.maxWidth > 100;
+                            return buildActionButton(
+                              context,
+                              label: showLabel ? 'Report' : null,
+                              icon: CupertinoIcons.flag,
+                              onPressed: () => _showReportDialog(context),
+                              isPrimary: false,
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {

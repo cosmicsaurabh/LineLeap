@@ -4,7 +4,7 @@ description: "LineLeap - AI-powered sketch and image generator."
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+5
+version: 1.0.1+6
 
 environment:
   sdk: ^3.7.0
@@ -30,6 +30,7 @@ dependencies:
   uuid: ^4.5.1
   get_it: ^8.0.3
   flutter_card_swiper: ^7.0.2
+  url_launcher: ^6.2.0
 
 dev_dependencies:
   flutter_test:

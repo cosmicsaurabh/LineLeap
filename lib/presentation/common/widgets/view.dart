@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
+import 'package:lineleap/presentation/common/widgets/report_content_dialog.dart';
 import 'package:lineleap/theme/app_theme.dart';
 
 // ------------mini queue view widgets----------------
@@ -338,6 +339,23 @@ Widget buildStatusSection(
           },
           icon: Icons.visibility,
           // tooltip: 'View',
+        ),
+      if (request.status == GenerationStatus.completed)
+        ActionButton(
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            // Show report dialog
+            showDialog(
+              context: context,
+              builder:
+                  (context) => ReportContentDialog(
+                    contentId: request.localId,
+                    contentType: 'generated_image',
+                  ),
+            );
+          },
+          icon: CupertinoIcons.flag,
+          // tooltip: 'Report',
         ),
       if (request.status == GenerationStatus.completed)
         ActionButton(
