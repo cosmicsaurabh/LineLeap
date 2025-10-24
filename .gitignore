@@ -45,3 +45,9 @@ app.*.map.json
 /android/app/release
 upload-keystore.jks
 key.properties
+PLAYSTORE_RESUBMISSION_GUIDE.md
+AI_CONTENT_POLICY_FIX_SUMMARY.md
+QUICK_START_FIX.md
+FIX_COMPLETION_REPORT.txt
+FILES_CHANGED_SUMMARY.md
+INDEX.md
