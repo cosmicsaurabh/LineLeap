@@ -108,12 +108,15 @@ class _GalleryPageState extends State<GalleryPage> {
           itemBuilder: (context, index) {
             ScribbleTransformation image =
                 gallery.scribbleTransformations[index];
-            return GalleryImageTile(
-              image: image,
-              onTap: () => _showImageDialog(1, context, image, gallery),
-              onScribbleTap: () {
-                _showImageDialog(0, context, image, gallery);
-              },
+            return _AnimatedGridItem(
+              index: index,
+              child: GalleryImageTile(
+                image: image,
+                onTap: () => _showImageDialog(1, context, image, gallery),
+                onScribbleTap: () {
+                  _showImageDialog(0, context, image, gallery);
+                },
+              ),
             );
           },
         );
@@ -142,6 +145,73 @@ class _GalleryPageState extends State<GalleryPage> {
             gallery: gallery,
             whichImage: whichImage,
           ),
+    );
+  }
+}
+
+class _AnimatedGridItem extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _AnimatedGridItem({
+    required this.index,
+    required this.child,
+  });
+
+  @override
+  State<_AnimatedGridItem> createState() => _AnimatedGridItemState();
+}
+
+class _AnimatedGridItemState extends State<_AnimatedGridItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+
+    // Stagger animation based on index
+    Future.delayed(
+      Duration(milliseconds: (widget.index * 50).clamp(0, 500)),
+      () {
+        if (mounted) {
+          _controller.forward();
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }
