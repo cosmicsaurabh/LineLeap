@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 enum ActionButtonStyle { primary, secondary, destructive }
 
-class ActionButton extends StatelessWidget {
+class ActionButton extends StatefulWidget {
   final IconData? icon;
   final String? tooltip;
   final VoidCallback onPressed;
@@ -22,6 +22,54 @@ class ActionButton extends StatelessWidget {
   });
 
   @override
+  State<ActionButton> createState() => _ActionButtonState();
+}
+
+class _ActionButtonState extends State<ActionButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _opacityAnimation;
+  bool _isHovered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails details) {
+    if (!widget.disabled) {
+      _controller.forward();
+    }
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -30,7 +78,7 @@ class ActionButton extends StatelessWidget {
     Color textColor;
     Color bgColor;
 
-    switch (style) {
+    switch (widget.style) {
       case ActionButtonStyle.primary:
         textColor = theme.colorScheme.onPrimary;
         bgColor = theme.colorScheme.primary;
@@ -49,40 +97,73 @@ class ActionButton extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: disabled ? null : onPressed,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: disabled ? bgColor.withValues(alpha: 0.5) : bgColor,
-            borderRadius: BorderRadius.circular(16),
-            border:
-                showBorder
-                    ? Border.all(
-                      color:
-                          isDarkMode
-                              ? CupertinoColors.systemGrey5.darkColor
-                              : CupertinoColors.systemGrey5.color,
-                      width: 0.5,
-                    )
-                    : null,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (icon != null) Icon(icon, color: textColor, size: 18),
-              if (icon != null && tooltip != null) const SizedBox(width: 8),
-              if (tooltip != null)
-                Text(
-                  tooltip!,
-                  style: TextStyle(
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTapDown: _onTapDown,
+          onTapUp: _onTapUp,
+          onTapCancel: _onTapCancel,
+          onTap: widget.disabled ? null : widget.onPressed,
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: _scaleAnimation.value,
+                child: Opacity(
+                  opacity: _opacityAnimation.value,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: widget.disabled
+                          ? bgColor.withValues(alpha: 0.5)
+                          : _isHovered
+                              ? bgColor.withValues(alpha: 0.9)
+                              : bgColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border:
+                          widget.showBorder
+                              ? Border.all(
+                                color:
+                                    isDarkMode
+                                        ? CupertinoColors.systemGrey5.darkColor
+                                        : CupertinoColors.systemGrey5.color,
+                                width: 0.5,
+                              )
+                              : null,
+                      boxShadow: _isHovered && !widget.disabled
+                          ? [
+                            BoxShadow(
+                              color: bgColor.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.icon != null)
+                          Icon(widget.icon, color: textColor, size: 18),
+                        if (widget.icon != null && widget.tooltip != null)
+                          const SizedBox(width: 8),
+                        if (widget.tooltip != null)
+                          Text(
+                            widget.tooltip!,
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
-            ],
+              );
+            },
           ),
         ),
       ),
