@@ -7,7 +7,7 @@ import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 
-class ScribbleToolbar extends StatelessWidget {
+class ScribbleToolbar extends StatefulWidget {
   final EnhancedScribbleNotifier notifier;
   final VoidCallback onPrompt;
   final VoidCallback onModelSelect;
@@ -20,17 +20,47 @@ class ScribbleToolbar extends StatelessWidget {
   });
 
   @override
+  State<ScribbleToolbar> createState() => _ScribbleToolbarState();
+}
+
+class _ScribbleToolbarState extends State<ScribbleToolbar>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    )..forward();
+
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: notifier,
+      listenable: widget.notifier,
       builder: (context, child) {
-        return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
+        return ScaleTransition(
+          scale: _scaleAnimation,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
                 // ActionButton(
                 //   icon: CupertinoIcons.square_list,
                 //   label: 'Queue',
@@ -46,14 +76,14 @@ class ScribbleToolbar extends StatelessWidget {
                 SizedBox(width: 8),
                 ActionButton(
                   icon: CupertinoIcons.arrow_uturn_left,
-                  onPressed: notifier.canUndo ? notifier.undo : () {},
+                  onPressed: widget.notifier.canUndo ? widget.notifier.undo : () {},
                   style: ActionButtonStyle.secondary,
                   showBorder: false,
                 ),
                 const SizedBox(width: 8),
                 ActionButton(
                   icon: CupertinoIcons.arrow_uturn_right,
-                  onPressed: notifier.canRedo ? notifier.redo : () {},
+                  onPressed: widget.notifier.canRedo ? widget.notifier.redo : () {},
                   style: ActionButtonStyle.secondary,
                   showBorder: false,
                 ),
@@ -67,7 +97,7 @@ class ScribbleToolbar extends StatelessWidget {
                 const SizedBox(width: 8),
                 ActionButton(
                   icon: CupertinoIcons.textformat,
-                  onPressed: onPrompt,
+                  onPressed: widget.onPrompt,
                   style: ActionButtonStyle.secondary,
                   showBorder: false,
                 ),
@@ -77,8 +107,8 @@ class ScribbleToolbar extends StatelessWidget {
                   onPressed:
                       () => showColorPickerDialog(
                         context: context,
-                        initialColor: notifier.state.selectedColor,
-                        onColorSelected: notifier.selectColor,
+                        initialColor: widget.notifier.state.selectedColor,
+                        onColorSelected: widget.notifier.selectColor,
                       ),
                   style: ActionButtonStyle.secondary,
                   showBorder: false,
@@ -89,20 +119,21 @@ class ScribbleToolbar extends StatelessWidget {
                   onPressed: () {
                     _showBrushOptions(context);
                   },
-                  icon: _getBrushIcon(notifier.state.brushStyle),
+                  icon: _getBrushIcon(widget.notifier.state.brushStyle),
 
                   style: ActionButtonStyle.secondary,
-                  tooltip: notifier.state.brushStyle.name,
+                  tooltip: widget.notifier.state.brushStyle.name,
                   showBorder: false,
                 ),
                 const SizedBox(width: 8),
                 ActionButton(
                   icon: CupertinoIcons.clear,
-                  onPressed: notifier.clear,
+                  onPressed: widget.notifier.clear,
                   style: ActionButtonStyle.secondary,
                   showBorder: false,
                 ),
               ],
+              ),
             ),
           ),
         );
@@ -135,7 +166,7 @@ class ScribbleToolbar extends StatelessWidget {
                 BrushStyle.values.map((style) {
                   return CupertinoActionSheetAction(
                     onPressed: () {
-                      notifier.selectBrushStyle(style);
+                      widget.notifier.selectBrushStyle(style);
                       Navigator.pop(context);
                       HapticFeedback.selectionClick();
                     },
