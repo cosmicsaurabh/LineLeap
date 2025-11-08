@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
 import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
@@ -18,7 +19,6 @@ import 'package:lineleap/presentation/features/scribble/scribble_toolbar.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 import 'package:lineleap/presentation/common/providers/theme_notifier.dart';
-import 'package:provider/provider.dart';
 
 enum BrushStyle {
   thin(2.0, 'Thin'),
@@ -78,6 +78,7 @@ class _ScribblePageState extends State<ScribblePage>
 
   late AnimationController _generateButtonController;
   late AnimationController _toolbarController;
+  late AnimationController _typingController;
 
   String prompt = '';
   String selectedModel = 'Stable Diffusion';
@@ -97,6 +98,10 @@ class _ScribblePageState extends State<ScribblePage>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+    _typingController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
     _toolbarController.forward();
   }
 
@@ -105,6 +110,7 @@ class _ScribblePageState extends State<ScribblePage>
     _notifier.dispose();
     _generateButtonController.dispose();
     _toolbarController.dispose();
+    _typingController.dispose();
     _cancelQueueTimer(); // Cancel timer on dispose
     super.dispose();
   }
@@ -203,23 +209,32 @@ class _ScribblePageState extends State<ScribblePage>
     return AppBar(
       backgroundColor: theme.scaffoldBackgroundColor,
       elevation: 0,
-      title: Row(
-        children: [
-          Icon(
-            CupertinoIcons.scribble,
-            color: theme.colorScheme.primary,
-            size: 28,
-          ),
-          if (MediaQuery.of(context).size.width > 360) const SizedBox(width: 8),
-          if (MediaQuery.of(context).size.width > 360)
-            Text(
-              'LineLeap',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurface,
-              ),
+      title: GestureDetector(
+        onTap: () {
+          _typingController.reset();
+          _typingController.forward();
+          HapticFeedback.lightImpact();
+        },
+        child: Row(
+          children: [
+            Icon(
+              CupertinoIcons.scribble,
+              color: theme.colorScheme.primary,
+              size: 28,
             ),
-        ],
+            if (MediaQuery.of(context).size.width > 360)
+              const SizedBox(width: 8),
+            if (MediaQuery.of(context).size.width > 360)
+              _TypingText(
+                text: 'LineLeap',
+                controller: _typingController,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+          ],
+        ),
       ),
       actions: [
         _buildThemeToggle(theme, isDark),
@@ -554,6 +569,36 @@ class _ScribblePageState extends State<ScribblePage>
   //             GeneratedImageViewer(image: generatedImage!, prompt: prompt),
   //   );
   // }
+}
+
+class _TypingText extends StatefulWidget {
+  final String text;
+  final AnimationController controller;
+  final TextStyle? style;
+
+  const _TypingText({required this.text, required this.controller, this.style});
+
+  @override
+  State<_TypingText> createState() => _TypingTextState();
+}
+
+class _TypingTextState extends State<_TypingText> {
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (context, child) {
+        final progress = widget.controller.value;
+        final charCount = (progress * widget.text.length).floor();
+        final displayedText = widget.text.substring(
+          0,
+          charCount.clamp(0, widget.text.length),
+        );
+
+        return Text(displayedText, style: widget.style);
+      },
+    );
+  }
 }
 
 // Usage Example and Integration

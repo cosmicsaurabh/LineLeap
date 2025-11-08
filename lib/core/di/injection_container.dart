@@ -37,7 +37,7 @@ final GetIt sl = GetIt.instance;
 
 Future<void> initDependencies() async {
   // External
-  final box = sl.registerSingleton<Box<ScribbleTransformationHive>>(
+  sl.registerSingleton<Box<ScribbleTransformationHive>>(
     await Hive.openBox<ScribbleTransformationHive>('gallery_history'),
   );
   sl.registerSingleton<AIHordeAPI>(AIHordeAPI());
