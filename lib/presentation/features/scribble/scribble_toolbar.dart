@@ -127,6 +127,19 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
                 ),
                 const SizedBox(width: 8),
                 ActionButton(
+                  icon: CupertinoIcons.arrow_left_right,
+                  onPressed: () {
+                    widget.notifier.toggleMirrorMode();
+                    HapticFeedback.selectionClick();
+                  },
+                  style: widget.notifier.state.isMirrorMode
+                      ? ActionButtonStyle.primary
+                      : ActionButtonStyle.secondary,
+                  showBorder: false,
+                  tooltip: widget.notifier.state.isMirrorMode ? 'Mirror: On' : 'Mirror: Off',
+                ),
+                const SizedBox(width: 8),
+                ActionButton(
                   icon: CupertinoIcons.clear,
                   onPressed: widget.notifier.clear,
                   style: ActionButtonStyle.secondary,

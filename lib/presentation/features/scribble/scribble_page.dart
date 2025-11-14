@@ -38,6 +38,7 @@ class DrawingState {
   final BrushStyle brushStyle;
   final List<List<Stroke>> history;
   final int historyIndex;
+  final bool isMirrorMode;
 
   const DrawingState({
     this.strokes = const [],
@@ -45,6 +46,7 @@ class DrawingState {
     this.brushStyle = BrushStyle.medium,
     this.history = const [],
     this.historyIndex = -1,
+    this.isMirrorMode = false,
   });
 
   DrawingState copyWith({
@@ -53,6 +55,7 @@ class DrawingState {
     BrushStyle? brushStyle,
     List<List<Stroke>>? history,
     int? historyIndex,
+    bool? isMirrorMode,
   }) {
     return DrawingState(
       strokes: strokes ?? this.strokes,
@@ -60,6 +63,7 @@ class DrawingState {
       brushStyle: brushStyle ?? this.brushStyle,
       history: history ?? this.history,
       historyIndex: historyIndex ?? this.historyIndex,
+      isMirrorMode: isMirrorMode ?? this.isMirrorMode,
     );
   }
 }
