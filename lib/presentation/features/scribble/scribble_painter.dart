@@ -4,11 +4,44 @@ import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 
 class EnhancedScribblePainter extends CustomPainter {
   final List<Stroke> strokes;
+  final bool isMirrorMode;
+  final double canvasWidth;
 
-  EnhancedScribblePainter(this.strokes);
+  EnhancedScribblePainter(
+    this.strokes, {
+    this.isMirrorMode = false,
+    this.canvasWidth = 0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Draw the mirror line if mirror mode is active
+    if (isMirrorMode && canvasWidth > 0) {
+      final centerX = canvasWidth / 2;
+      final linePaint =
+          Paint()
+            ..color = const Color(
+              0x80007AFF,
+            ) // Semi-transparent blue (iOS primary color)
+            ..strokeWidth = 1.5
+            ..style = PaintingStyle.stroke;
+
+      // Draw a dashed vertical line
+      const dashHeight = 8.0;
+      const dashSpace = 4.0;
+      double currentY = 0;
+
+      while (currentY < size.height) {
+        canvas.drawLine(
+          Offset(centerX, currentY),
+          Offset(centerX, (currentY + dashHeight).clamp(0.0, size.height)),
+          linePaint,
+        );
+        currentY += dashHeight + dashSpace;
+      }
+    }
+
+    // Draw all strokes
     for (final stroke in strokes) {
       final paint =
           Paint()
@@ -16,7 +49,7 @@ class EnhancedScribblePainter extends CustomPainter {
             ..strokeWidth = stroke.width
             ..strokeCap = StrokeCap.round
             ..strokeJoin = StrokeJoin.round
-            ..style = PaintingStyle.stroke; // Add this line
+            ..style = PaintingStyle.stroke;
 
       if (stroke.style == BrushStyle.dotted) {
         _drawDottedStroke(canvas, stroke, paint);
@@ -62,6 +95,8 @@ class EnhancedScribblePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(EnhancedScribblePainter oldDelegate) {
-    return strokes != oldDelegate.strokes;
+    return strokes != oldDelegate.strokes ||
+        isMirrorMode != oldDelegate.isMirrorMode ||
+        canvasWidth != oldDelegate.canvasWidth;
   }
 }
