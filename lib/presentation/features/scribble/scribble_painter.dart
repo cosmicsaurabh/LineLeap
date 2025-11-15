@@ -4,40 +4,55 @@ import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 
 class EnhancedScribblePainter extends CustomPainter {
   final List<Stroke> strokes;
-  final bool isMirrorMode;
+  final MirrorMode mirrorMode;
   final double canvasWidth;
+  final double canvasHeight;
 
   EnhancedScribblePainter(
     this.strokes, {
-    this.isMirrorMode = false,
+    this.mirrorMode = MirrorMode.none,
     this.canvasWidth = 0,
+    this.canvasHeight = 0,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw the mirror line if mirror mode is active
-    if (isMirrorMode && canvasWidth > 0) {
-      final centerX = canvasWidth / 2;
-      final linePaint =
-          Paint()
-            ..color = const Color(
-              0x80007AFF,
-            ) // Semi-transparent blue (iOS primary color)
-            ..strokeWidth = 1.5
-            ..style = PaintingStyle.stroke;
+    // Draw mirror lines if mirror mode is active
+    if (mirrorMode.isActive && canvasWidth > 0 && canvasHeight > 0) {
+      final linePaint = Paint()
+        ..color = const Color(0x80007AFF) // Semi-transparent blue (iOS primary color)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
 
-      // Draw a dashed vertical line
-      const dashHeight = 8.0;
+      const dashLength = 8.0;
       const dashSpace = 4.0;
-      double currentY = 0;
 
-      while (currentY < size.height) {
-        canvas.drawLine(
-          Offset(centerX, currentY),
-          Offset(centerX, (currentY + dashHeight).clamp(0.0, size.height)),
-          linePaint,
-        );
-        currentY += dashHeight + dashSpace;
+      // Draw vertical mirror line (if vertical or both)
+      if (mirrorMode.hasVertical) {
+        final centerX = canvasWidth / 2;
+        double currentY = 0;
+        while (currentY < size.height) {
+          canvas.drawLine(
+            Offset(centerX, currentY),
+            Offset(centerX, (currentY + dashLength).clamp(0.0, size.height)),
+            linePaint,
+          );
+          currentY += dashLength + dashSpace;
+        }
+      }
+
+      // Draw horizontal mirror line (if horizontal or both)
+      if (mirrorMode.hasHorizontal) {
+        final centerY = canvasHeight / 2;
+        double currentX = 0;
+        while (currentX < size.width) {
+          canvas.drawLine(
+            Offset(currentX, centerY),
+            Offset((currentX + dashLength).clamp(0.0, size.width), centerY),
+            linePaint,
+          );
+          currentX += dashLength + dashSpace;
+        }
       }
     }
 
@@ -96,7 +111,8 @@ class EnhancedScribblePainter extends CustomPainter {
   @override
   bool shouldRepaint(EnhancedScribblePainter oldDelegate) {
     return strokes != oldDelegate.strokes ||
-        isMirrorMode != oldDelegate.isMirrorMode ||
-        canvasWidth != oldDelegate.canvasWidth;
+        mirrorMode != oldDelegate.mirrorMode ||
+        canvasWidth != oldDelegate.canvasWidth ||
+        canvasHeight != oldDelegate.canvasHeight;
   }
 }

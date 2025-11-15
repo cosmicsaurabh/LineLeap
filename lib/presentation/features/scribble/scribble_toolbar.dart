@@ -127,16 +127,16 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
                 ),
                 const SizedBox(width: 8),
                 ActionButton(
-                  icon: CupertinoIcons.arrow_left_right,
+                  icon: _getMirrorIcon(widget.notifier.state.mirrorMode),
                   onPressed: () {
                     widget.notifier.toggleMirrorMode();
                     HapticFeedback.selectionClick();
                   },
-                  style: widget.notifier.state.isMirrorMode
+                  style: widget.notifier.state.mirrorMode.isActive
                       ? ActionButtonStyle.primary
                       : ActionButtonStyle.secondary,
                   showBorder: false,
-                  tooltip: widget.notifier.state.isMirrorMode ? 'Mirror: On' : 'Mirror: Off',
+                  tooltip: _getMirrorTooltip(widget.notifier.state.mirrorMode),
                 ),
                 const SizedBox(width: 8),
                 ActionButton(
@@ -166,6 +166,32 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
         return Icons.format_paint;
       case BrushStyle.dotted:
         return Icons.more_horiz;
+    }
+  }
+
+  IconData _getMirrorIcon(MirrorMode mode) {
+    switch (mode) {
+      case MirrorMode.none:
+        return CupertinoIcons.arrow_left_right;
+      case MirrorMode.vertical:
+        return CupertinoIcons.arrow_left_right;
+      case MirrorMode.horizontal:
+        return CupertinoIcons.arrow_up_down;
+      case MirrorMode.both:
+        return Icons.grid_4x4; // Use Material icon for both mode
+    }
+  }
+
+  String _getMirrorTooltip(MirrorMode mode) {
+    switch (mode) {
+      case MirrorMode.none:
+        return 'Mirror: Off';
+      case MirrorMode.vertical:
+        return 'Mirror: Vertical';
+      case MirrorMode.horizontal:
+        return 'Mirror: Horizontal';
+      case MirrorMode.both:
+        return 'Mirror: Both';
     }
   }
 

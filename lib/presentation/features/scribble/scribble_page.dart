@@ -32,13 +32,24 @@ enum BrushStyle {
   final String name;
 }
 
+enum MirrorMode {
+  none,
+  vertical,
+  horizontal,
+  both;
+
+  bool get hasVertical => this == vertical || this == both;
+  bool get hasHorizontal => this == horizontal || this == both;
+  bool get isActive => this != none;
+}
+
 class DrawingState {
   final List<Stroke> strokes;
   final Color selectedColor;
   final BrushStyle brushStyle;
   final List<List<Stroke>> history;
   final int historyIndex;
-  final bool isMirrorMode;
+  final MirrorMode mirrorMode;
 
   const DrawingState({
     this.strokes = const [],
@@ -46,7 +57,7 @@ class DrawingState {
     this.brushStyle = BrushStyle.medium,
     this.history = const [],
     this.historyIndex = -1,
-    this.isMirrorMode = false,
+    this.mirrorMode = MirrorMode.none,
   });
 
   DrawingState copyWith({
@@ -55,7 +66,7 @@ class DrawingState {
     BrushStyle? brushStyle,
     List<List<Stroke>>? history,
     int? historyIndex,
-    bool? isMirrorMode,
+    MirrorMode? mirrorMode,
   }) {
     return DrawingState(
       strokes: strokes ?? this.strokes,
@@ -63,7 +74,7 @@ class DrawingState {
       brushStyle: brushStyle ?? this.brushStyle,
       history: history ?? this.history,
       historyIndex: historyIndex ?? this.historyIndex,
-      isMirrorMode: isMirrorMode ?? this.isMirrorMode,
+      mirrorMode: mirrorMode ?? this.mirrorMode,
     );
   }
 }

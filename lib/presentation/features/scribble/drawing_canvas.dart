@@ -32,13 +32,22 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final canvasWidth = constraints.maxWidth;
+        final canvasHeight = constraints.maxHeight;
         return GestureDetector(
           onPanStart: (details) {
-            widget.notifier.startStroke(details.localPosition, canvasWidth: canvasWidth);
+            widget.notifier.startStroke(
+              details.localPosition,
+              canvasWidth: canvasWidth,
+              canvasHeight: canvasHeight,
+            );
             HapticFeedback.selectionClick();
           },
           onPanUpdate: (details) {
-            widget.notifier.appendPoint(details.localPosition, canvasWidth: canvasWidth);
+            widget.notifier.appendPoint(
+              details.localPosition,
+              canvasWidth: canvasWidth,
+              canvasHeight: canvasHeight,
+            );
           },
           onPanEnd: (details) {
             widget.notifier.endStroke();
@@ -46,8 +55,9 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
           child: CustomPaint(
             painter: EnhancedScribblePainter(
               widget.notifier.state.strokes,
-              isMirrorMode: widget.notifier.state.isMirrorMode,
+              mirrorMode: widget.notifier.state.mirrorMode,
               canvasWidth: canvasWidth,
+              canvasHeight: canvasHeight,
             ),
             size: Size.infinite,
           ),
