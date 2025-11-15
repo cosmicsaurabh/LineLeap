@@ -5,9 +5,11 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   DrawingState _state = const DrawingState();
   DrawingState get state => _state;
   
-  // Track the index of the original stroke when in mirror mode
-  // This helps us identify which stroke to mirror when appending points
-  int? _mirrorPairStartIndex;
+  // Track the indices of strokes when in mirror mode
+  // For vertical/horizontal: [original, mirrored]
+  // For both: [original, vertical, horizontal, both]
+  int? _mirrorStartIndex;
+  int _mirrorStrokeCount = 0;
 
   bool get canUndo => _state.historyIndex > 0;
   bool get canRedo => _state.historyIndex < _state.history.length - 1;
@@ -23,13 +25,21 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void toggleMirrorMode() {
-    _state = _state.copyWith(isMirrorMode: !_state.isMirrorMode);
-    // Clear mirror pair tracking when toggling mirror mode
-    _mirrorPairStartIndex = null;
+    // Cycle through: none -> vertical -> horizontal -> both -> none
+    final nextMode = switch (_state.mirrorMode) {
+      MirrorMode.none => MirrorMode.vertical,
+      MirrorMode.vertical => MirrorMode.horizontal,
+      MirrorMode.horizontal => MirrorMode.both,
+      MirrorMode.both => MirrorMode.none,
+    };
+    _state = _state.copyWith(mirrorMode: nextMode);
+    // Clear mirror tracking when toggling mirror mode
+    _mirrorStartIndex = null;
+    _mirrorStrokeCount = 0;
     notifyListeners();
   }
 
-  void startStroke(Offset point, {double? canvasWidth}) {
+  void startStroke(Offset point, {double? canvasWidth, double? canvasHeight}) {
     final newStroke = Stroke(
       points: [point],
       color: _state.selectedColor,
@@ -39,57 +49,116 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
 
     List<Stroke> strokesToAdd = [newStroke];
     
-    // If mirror mode is active and we have canvas width, create mirrored stroke
-    if (_state.isMirrorMode && canvasWidth != null) {
+    // If mirror mode is active, create mirrored strokes
+    if (_state.mirrorMode.isActive && canvasWidth != null && canvasHeight != null) {
       final centerX = canvasWidth / 2;
-      final mirroredX = centerX * 2 - point.dx;
-      final mirroredPoint = Offset(mirroredX, point.dy);
+      final centerY = canvasHeight / 2;
       
-      final mirroredStroke = Stroke(
-        points: [mirroredPoint],
-        color: _state.selectedColor,
-        width: _state.brushStyle.width,
-        style: _state.brushStyle,
-      );
-      strokesToAdd.add(mirroredStroke);
-      // Track the index of the original stroke (before adding the pair)
-      _mirrorPairStartIndex = _state.strokes.length;
+      // Track where we start adding mirrored strokes
+      _mirrorStartIndex = _state.strokes.length;
+      
+      if (_state.mirrorMode == MirrorMode.vertical || _state.mirrorMode == MirrorMode.both) {
+        // Vertical mirror: mirror across vertical center line
+        final mirroredX = centerX * 2 - point.dx;
+        final verticalMirror = Stroke(
+          points: [Offset(mirroredX, point.dy)],
+          color: _state.selectedColor,
+          width: _state.brushStyle.width,
+          style: _state.brushStyle,
+        );
+        strokesToAdd.add(verticalMirror);
+      }
+      
+      if (_state.mirrorMode == MirrorMode.horizontal || _state.mirrorMode == MirrorMode.both) {
+        // Horizontal mirror: mirror across horizontal center line
+        final mirroredY = centerY * 2 - point.dy;
+        final horizontalMirror = Stroke(
+          points: [Offset(point.dx, mirroredY)],
+          color: _state.selectedColor,
+          width: _state.brushStyle.width,
+          style: _state.brushStyle,
+        );
+        strokesToAdd.add(horizontalMirror);
+      }
+      
+      if (_state.mirrorMode == MirrorMode.both) {
+        // Both: mirror across both axes (diagonal mirror)
+        final mirroredX = centerX * 2 - point.dx;
+        final mirroredY = centerY * 2 - point.dy;
+        final bothMirror = Stroke(
+          points: [Offset(mirroredX, mirroredY)],
+          color: _state.selectedColor,
+          width: _state.brushStyle.width,
+          style: _state.brushStyle,
+        );
+        strokesToAdd.add(bothMirror);
+      }
+      
+      _mirrorStrokeCount = strokesToAdd.length - 1; // Number of mirrored strokes
     } else {
-      _mirrorPairStartIndex = null;
+      _mirrorStartIndex = null;
+      _mirrorStrokeCount = 0;
     }
 
     final newStrokes = [..._state.strokes, ...strokesToAdd];
     _saveToHistory(newStrokes);
   }
 
-  void appendPoint(Offset point, {double? canvasWidth}) {
+  void appendPoint(Offset point, {double? canvasWidth, double? canvasHeight}) {
     if (_state.strokes.isEmpty) return;
 
-    // In mirror mode, we have pairs of strokes (original + mirrored)
-    // We need to update both the original stroke and its mirror
-    if (_state.isMirrorMode && 
+    // In mirror mode, update all mirrored strokes
+    if (_state.mirrorMode.isActive && 
         canvasWidth != null && 
-        _mirrorPairStartIndex != null &&
-        _mirrorPairStartIndex! < _state.strokes.length - 1) {
+        canvasHeight != null &&
+        _mirrorStartIndex != null &&
+        _mirrorStartIndex! + _mirrorStrokeCount < _state.strokes.length) {
       final centerX = canvasWidth / 2;
-      final mirroredX = centerX * 2 - point.dx;
-      final mirroredPoint = Offset(mirroredX, point.dy);
+      final centerY = canvasHeight / 2;
       
-      // Update both the original stroke and its mirror
-      final originalStroke = _state.strokes[_mirrorPairStartIndex!];
-      final mirroredStroke = _state.strokes[_mirrorPairStartIndex! + 1];
+      final newStrokes = List<Stroke>.from(_state.strokes);
       
-      final updatedOriginalStroke = originalStroke.copyWith(
+      // Update original stroke
+      final originalStroke = _state.strokes[_mirrorStartIndex!];
+      newStrokes[_mirrorStartIndex!] = originalStroke.copyWith(
         points: [...originalStroke.points, point],
       );
       
-      final updatedMirroredStroke = mirroredStroke.copyWith(
-        points: [...mirroredStroke.points, mirroredPoint],
-      );
-
-      final newStrokes = List<Stroke>.from(_state.strokes);
-      newStrokes[_mirrorPairStartIndex!] = updatedOriginalStroke;
-      newStrokes[_mirrorPairStartIndex! + 1] = updatedMirroredStroke;
+      int strokeIndex = _mirrorStartIndex! + 1;
+      
+      // Update vertical mirror (if applicable)
+      if (_state.mirrorMode.hasVertical) {
+        final mirroredX = centerX * 2 - point.dx;
+        final verticalMirrorPoint = Offset(mirroredX, point.dy);
+        final verticalStroke = _state.strokes[strokeIndex];
+        newStrokes[strokeIndex] = verticalStroke.copyWith(
+          points: [...verticalStroke.points, verticalMirrorPoint],
+        );
+        strokeIndex++;
+      }
+      
+      // Update horizontal mirror (if applicable)
+      // For "both" mode, horizontal comes after vertical, before diagonal
+      if (_state.mirrorMode.hasHorizontal) {
+        final mirroredY = centerY * 2 - point.dy;
+        final horizontalMirrorPoint = Offset(point.dx, mirroredY);
+        final horizontalStroke = _state.strokes[strokeIndex];
+        newStrokes[strokeIndex] = horizontalStroke.copyWith(
+          points: [...horizontalStroke.points, horizontalMirrorPoint],
+        );
+        strokeIndex++;
+      }
+      
+      // Update diagonal mirror (only if both mode)
+      if (_state.mirrorMode == MirrorMode.both) {
+        final mirroredX = centerX * 2 - point.dx;
+        final mirroredY = centerY * 2 - point.dy;
+        final bothMirrorPoint = Offset(mirroredX, mirroredY);
+        final bothStroke = _state.strokes[strokeIndex];
+        newStrokes[strokeIndex] = bothStroke.copyWith(
+          points: [...bothStroke.points, bothMirrorPoint],
+        );
+      }
 
       _state = _state.copyWith(strokes: newStrokes);
       notifyListeners();
@@ -112,8 +181,9 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
 
   void endStroke() {
     // Stroke is already saved in history from startStroke
-    // Clear the mirror pair tracking when stroke ends
-    _mirrorPairStartIndex = null;
+    // Clear the mirror tracking when stroke ends
+    _mirrorStartIndex = null;
+    _mirrorStrokeCount = 0;
   }
 
   void undo() {
