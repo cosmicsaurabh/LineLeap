@@ -39,6 +39,14 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
     notifyListeners();
   }
 
+  void selectMirrorMode(MirrorMode mode) {
+    if (_state.mirrorMode == mode) return;
+    _state = _state.copyWith(mirrorMode: mode);
+    _mirrorStartIndex = null;
+    _mirrorStrokeCount = 0;
+    notifyListeners();
+  }
+
   void startStroke(Offset point, {double? canvasWidth, double? canvasHeight}) {
     final newStroke = Stroke(
       points: [point],

@@ -49,6 +49,7 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListenableBuilder(
       listenable: widget.notifier,
       builder: (context, child) {
@@ -57,101 +58,207 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                // ActionButton(
-                //   icon: CupertinoIcons.square_list,
-                //   label: 'Queue',
-                //   onPressed:
-                //       () => Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //           builder: (context) => const QueueScreen(),
-                //         ),
-                //       ),
-                //   style: ActionButtonStyle.primary,
-                // ),
-                SizedBox(width: 8),
-                ActionButton(
-                  icon: CupertinoIcons.arrow_uturn_left,
-                  onPressed: widget.notifier.canUndo ? widget.notifier.undo : () {},
-                  style: ActionButtonStyle.secondary,
-                  showBorder: false,
-                ),
-                const SizedBox(width: 8),
-                ActionButton(
-                  icon: CupertinoIcons.arrow_uturn_right,
-                  onPressed: widget.notifier.canRedo ? widget.notifier.redo : () {},
-                  style: ActionButtonStyle.secondary,
-                  showBorder: false,
-                ),
-                // const SizedBox(width: 8),
-                // ActionButton(
-                //   onPressed: onModelSelect,
-                //   icon: CupertinoIcons.square_list,
-                //   label: 'Models',
-                //   style: ActionButtonStyle.primary,
-                // ),
-                const SizedBox(width: 8),
-                ActionButton(
-                  icon: CupertinoIcons.textformat,
-                  onPressed: widget.onPrompt,
-                  style: ActionButtonStyle.secondary,
-                  showBorder: false,
-                ),
-                const SizedBox(width: 8),
-                ActionButton(
-                  icon: CupertinoIcons.color_filter,
-                  onPressed:
-                      () => showColorPickerDialog(
-                        context: context,
-                        initialColor: widget.notifier.state.selectedColor,
-                        onColorSelected: widget.notifier.selectColor,
-                      ),
-                  style: ActionButtonStyle.secondary,
-                  showBorder: false,
-                ),
-
-                const SizedBox(width: 8),
-                ActionButton(
-                  onPressed: () {
-                    _showBrushOptions(context);
-                  },
-                  icon: _getBrushIcon(widget.notifier.state.brushStyle),
-
-                  style: ActionButtonStyle.secondary,
-                  tooltip: widget.notifier.state.brushStyle.name,
-                  showBorder: false,
-                ),
-                const SizedBox(width: 8),
-                ActionButton(
-                  icon: _getMirrorIcon(widget.notifier.state.mirrorMode),
-                  onPressed: () {
-                    widget.notifier.toggleMirrorMode();
-                    HapticFeedback.selectionClick();
-                  },
-                  style: widget.notifier.state.mirrorMode.isActive
-                      ? ActionButtonStyle.primary
-                      : ActionButtonStyle.secondary,
-                  showBorder: false,
-                  tooltip: _getMirrorTooltip(widget.notifier.state.mirrorMode),
-                ),
-                const SizedBox(width: 8),
-                ActionButton(
-                  icon: CupertinoIcons.clear,
-                  onPressed: widget.notifier.clear,
-                  style: ActionButtonStyle.secondary,
-                  showBorder: false,
-                ),
-              ],
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: _withSpacing(_buildToolbarGroups(theme)),
             ),
           ),
         );
       },
     );
+  }
+
+  List<Widget> _buildToolbarGroups(ThemeData theme) {
+    return [
+      _buildHistoryGroup(),
+      _buildCanvasGroup(),
+      _buildCreativeGroup(),
+      _buildSymmetryGroup(theme),
+    ];
+  }
+
+  Widget _buildHistoryGroup() {
+    return _ToolbarGroup(
+      icon: CupertinoIcons.time,
+      label: 'History',
+      children: [
+        _buildUndoButton(),
+        _buildRedoButton(),
+        _buildClearButton(),
+      ],
+    );
+  }
+
+  Widget _buildCanvasGroup() {
+    return _ToolbarGroup(
+      icon: CupertinoIcons.paintbrush,
+      label: 'Canvas',
+      children: [
+        _buildBrushButton(),
+        _buildColorButton(),
+      ],
+    );
+  }
+
+  Widget _buildCreativeGroup() {
+    return _ToolbarGroup(
+      icon: CupertinoIcons.sparkles,
+      label: 'Creative',
+      children: [
+        _buildPromptButton(),
+        _buildModelButton(),
+      ],
+    );
+  }
+
+  Widget _buildSymmetryGroup(ThemeData theme) {
+    return _ToolbarGroup(
+      icon: CupertinoIcons.square_split_2x2,
+      label: 'Symmetry',
+      children: [
+        _buildMirrorSelector(theme),
+      ],
+    );
+  }
+
+  Widget _buildUndoButton() {
+    return Tooltip(
+      message: 'Undo',
+      child: ActionButton(
+        icon: CupertinoIcons.arrow_uturn_left,
+        onPressed: widget.notifier.undo,
+        style: ActionButtonStyle.secondary,
+        showBorder: false,
+        disabled: !widget.notifier.canUndo,
+      ),
+    );
+  }
+
+  Widget _buildRedoButton() {
+    return Tooltip(
+      message: 'Redo',
+      child: ActionButton(
+        icon: CupertinoIcons.arrow_uturn_right,
+        onPressed: widget.notifier.redo,
+        style: ActionButtonStyle.secondary,
+        showBorder: false,
+        disabled: !widget.notifier.canRedo,
+      ),
+    );
+  }
+
+  Widget _buildClearButton() {
+    return Tooltip(
+      message: 'Clear canvas',
+      child: ActionButton(
+        icon: CupertinoIcons.clear,
+        onPressed: widget.notifier.clear,
+        style: ActionButtonStyle.destructive,
+        showBorder: false,
+      ),
+    );
+  }
+
+  Widget _buildBrushButton() {
+    return Tooltip(
+      message: widget.notifier.state.brushStyle.name,
+      child: ActionButton(
+        onPressed: () => _showBrushOptions(context),
+        icon: _getBrushIcon(widget.notifier.state.brushStyle),
+        style: ActionButtonStyle.secondary,
+        showBorder: false,
+      ),
+    );
+  }
+
+  Widget _buildColorButton() {
+    final selectedColor = widget.notifier.state.selectedColor;
+    return Tooltip(
+      message: 'Color',
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          ActionButton(
+            icon: CupertinoIcons.color_filter,
+            onPressed: () => showColorPickerDialog(
+              context: context,
+              initialColor: selectedColor,
+              onColorSelected: widget.notifier.selectColor,
+            ),
+            style: ActionButtonStyle.secondary,
+            showBorder: false,
+          ),
+          Positioned(
+            top: -2,
+            right: -2,
+            child: _ColorBadge(color: selectedColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPromptButton() {
+    return Tooltip(
+      message: 'Open prompt',
+      child: ActionButton(
+        icon: CupertinoIcons.textformat,
+        onPressed: widget.onPrompt,
+        style: ActionButtonStyle.primary,
+        showBorder: false,
+      ),
+    );
+  }
+
+  Widget _buildModelButton() {
+    return Tooltip(
+      message: 'Select model',
+      child: ActionButton(
+        icon: CupertinoIcons.square_list,
+        onPressed: widget.onModelSelect,
+        style: ActionButtonStyle.secondary,
+        showBorder: false,
+      ),
+    );
+  }
+
+  Widget _buildMirrorSelector(ThemeData theme) {
+    final mirrorMode = widget.notifier.state.mirrorMode;
+    return Tooltip(
+      message: _getMirrorTooltip(mirrorMode),
+      child: SizedBox(
+        width: 220,
+        child: CupertinoSlidingSegmentedControl<MirrorMode>(
+          groupValue: mirrorMode,
+          backgroundColor: theme.colorScheme.surface.withValues(alpha: 0.4),
+          thumbColor: theme.colorScheme.primary.withValues(alpha: 0.9),
+          children: const {
+            MirrorMode.none: Icon(CupertinoIcons.xmark),
+            MirrorMode.vertical: Icon(CupertinoIcons.arrow_left_right),
+            MirrorMode.horizontal: Icon(CupertinoIcons.arrow_up_down),
+            MirrorMode.both: Icon(Icons.grid_4x4),
+          },
+          onValueChanged: (mode) {
+            if (mode == null) return;
+            widget.notifier.selectMirrorMode(mode);
+            HapticFeedback.selectionClick();
+          },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _withSpacing(List<Widget> widgets, {double spacing = 12}) {
+    if (widgets.isEmpty) return widgets;
+    final spaced = <Widget>[];
+    for (var i = 0; i < widgets.length; i++) {
+      spaced.add(widgets[i]);
+      if (i != widgets.length - 1) {
+        spaced.add(SizedBox(width: spacing));
+      }
+    }
+    return spaced;
   }
 
   IconData _getBrushIcon(BrushStyle style) {
@@ -224,6 +331,88 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
               child: const Text('Cancel'),
             ),
           ),
+    );
+  }
+}
+
+class _ToolbarGroup extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final List<Widget> children;
+
+  const _ToolbarGroup({
+    required this.icon,
+    required this.label,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor = theme.colorScheme.outline.withValues(alpha: 0.25);
+    final background =
+        theme.colorScheme.surface.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.7);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor, width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (children.isNotEmpty) const SizedBox(width: 12),
+          ..._intersperse(children),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _intersperse(List<Widget> widgets) {
+    if (widgets.isEmpty) return widgets;
+    final result = <Widget>[];
+    for (var i = 0; i < widgets.length; i++) {
+      result.add(widgets[i]);
+      if (i != widgets.length - 1) {
+        result.add(const SizedBox(width: 8));
+      }
+    }
+    return result;
+  }
+}
+
+class _ColorBadge extends StatelessWidget {
+  final Color color;
+
+  const _ColorBadge({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: const SizedBox(width: 16, height: 16),
     );
   }
 }
