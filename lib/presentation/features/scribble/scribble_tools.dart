@@ -1,16 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-enum ScribbleToolType {
-  undo,
-  redo,
-  brush,
-  color,
-  mirror,
-  clear,
-  prompt,
-  modelSelect,
-}
+import 'package:lineleap/core/config/tool_item.dart';
 
 class ScribbleToolConfig {
   final ScribbleToolType type;

@@ -4,6 +4,11 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lineleap/core/config/brush.dart';
+import 'package:lineleap/core/config/mirrot_mode.dart';
+import 'package:lineleap/core/config/tool_item.dart';
+import 'package:lineleap/presentation/common/widgets/theme_selector/theme_selector.dart';
+import 'package:lineleap/presentation/features/typing_text/typing_text.dart';
 import 'package:provider/provider.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
@@ -22,65 +27,6 @@ import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart'
     as color_dialog;
 import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-enum BrushStyle {
-  thin(2.0, 'Thin'),
-  medium(4.0, 'Medium'),
-  thick(8.0, 'Thick'),
-  xtraThick(12.0, 'Extra Thick'),
-  dotted(3.0, 'Dotted');
-
-  const BrushStyle(this.width, this.name);
-  final double width;
-  final String name;
-}
-
-enum MirrorMode {
-  none,
-  vertical,
-  horizontal,
-  both;
-
-  bool get hasVertical => this == vertical || this == both;
-  bool get hasHorizontal => this == horizontal || this == both;
-  bool get isActive => this != none;
-}
-
-class DrawingState {
-  final List<Stroke> strokes;
-  final Color selectedColor;
-  final BrushStyle brushStyle;
-  final List<List<Stroke>> history;
-  final int historyIndex;
-  final MirrorMode mirrorMode;
-
-  const DrawingState({
-    this.strokes = const [],
-    this.selectedColor = Colors.grey,
-    this.brushStyle = BrushStyle.medium,
-    this.history = const [],
-    this.historyIndex = -1,
-    this.mirrorMode = MirrorMode.none,
-  });
-
-  DrawingState copyWith({
-    List<Stroke>? strokes,
-    Color? selectedColor,
-    BrushStyle? brushStyle,
-    List<List<Stroke>>? history,
-    int? historyIndex,
-    MirrorMode? mirrorMode,
-  }) {
-    return DrawingState(
-      strokes: strokes ?? this.strokes,
-      selectedColor: selectedColor ?? this.selectedColor,
-      brushStyle: brushStyle ?? this.brushStyle,
-      history: history ?? this.history,
-      historyIndex: historyIndex ?? this.historyIndex,
-      mirrorMode: mirrorMode ?? this.mirrorMode,
-    );
-  }
-}
 
 class ScribblePage extends StatefulWidget {
   const ScribblePage({super.key});
@@ -203,19 +149,6 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  // void _showErrorSnackBar(String message) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Text(message),
-  //       backgroundColor: Colors.red.shade600,
-  //       behavior: SnackBarBehavior.floating,
-  //       shape: RoundedRectangleBorder(
-  //         borderRadius: BorderRadius.circular(AppTheme.smallRadius),
-  //       ),
-  //     ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -280,7 +213,7 @@ class _ScribblePageState extends State<ScribblePage>
             if (MediaQuery.of(context).size.width > 360)
               const SizedBox(width: 8),
             if (MediaQuery.of(context).size.width > 360)
-              _TypingText(
+              TypingText(
                 text: 'LineLeap',
                 controller: _typingController,
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -292,7 +225,7 @@ class _ScribblePageState extends State<ScribblePage>
         ),
       ),
       actions: [
-        _buildThemeToggle(theme, isDark),
+        buildThemeToggle(theme, isDark, context),
         const SizedBox(width: 8),
         // _buildGenerateButton(theme),
         ActionButton(
@@ -408,114 +341,6 @@ class _ScribblePageState extends State<ScribblePage>
       },
     );
   }
-
-  Widget _buildThemeToggle(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: theme.colorScheme.outline.withValues(alpha: 0.2),
-        ),
-      ),
-      child: IconButton(
-        onPressed: () {
-          context.read<ThemeNotifier>().setThemeMode(
-            isDark ? ThemeMode.light : ThemeMode.dark,
-          );
-          HapticFeedback.selectionClick();
-        },
-        icon: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Icon(
-            isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
-            key: ValueKey(isDark),
-            color: theme.colorScheme.primary,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Widget _buildGenerateButton(ThemeData theme) {
-  //   return AnimatedBuilder(
-  //     animation: _generateButtonController,
-  //     builder: (context, child) {
-  //       return Transform.scale(
-  //         scale: 1.0 - (_generateButtonController.value * 0.1),
-  //         child: Container(
-  //           decoration: BoxDecoration(
-  //             gradient: LinearGradient(
-  //               colors: [
-  //                 theme.colorScheme.primary,
-  //                 theme.colorScheme.primary.withOpacity(0.8),
-  //               ],
-  //             ),
-  //             borderRadius: BorderRadius.circular(20),
-  //             boxShadow: [
-  //               BoxShadow(
-  //                 color: theme.colorScheme.primary.withOpacity(0.3),
-  //                 blurRadius: 8,
-  //                 offset: const Offset(0, 2),
-  //               ),
-  //             ],
-  //           ),
-  //           child: Material(
-  //             color: Colors.transparent,
-  //             child: InkWell(
-  //               borderRadius: BorderRadius.circular(20),
-  //               onTap:
-  //                   isCapturing
-  //                       ? null
-  //                       : () {
-  //                         _generateButtonController.forward().then((_) {
-  //                           _generateButtonController.reverse();
-  //                         });
-  //                         _handleGenerate();
-  //                       },
-  //               child: Padding(
-  //                 padding: const EdgeInsets.symmetric(
-  //                   horizontal: 16,
-  //                   vertical: 12,
-  //                 ),
-  //                 child: Row(
-  //                   mainAxisSize: MainAxisSize.min,
-  //                   children: [
-  //                     if (isCapturing)
-  //                       SizedBox(
-  //                         width: 16,
-  //                         height: 16,
-  //                         child: CircularProgressIndicator(
-  //                           strokeWidth: 2,
-  //                           valueColor: AlwaysStoppedAnimation(
-  //                             theme.colorScheme.onPrimary,
-  //                           ),
-  //                         ),
-  //                       )
-  //                     else
-  //                       Icon(
-  //                         CupertinoIcons.sparkles,
-  //                         size: 16,
-  //                         color: theme.colorScheme.onPrimary,
-  //                       ),
-  //                     const SizedBox(width: 8),
-  //                     Text(
-  //                       isCapturing ? 'Generating...' : 'Generate',
-  //                       style: TextStyle(
-  //                         color: theme.colorScheme.onPrimary,
-  //                         fontWeight: FontWeight.w600,
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 
   Widget _buildDrawingArea(ThemeData theme, bool isDark) {
     return Expanded(
@@ -1087,16 +912,6 @@ class _ScribblePageState extends State<ScribblePage>
     HapticFeedback.selectionClick();
   }
 
-  // Widget? _buildFloatingActionButton(ThemeData theme) {
-  //   if (generatedImage == null) return null;
-
-  //   return FloatingActionButton(
-  //     onPressed: _showGeneratedImageDialog,
-  //     backgroundColor: theme.colorScheme.secondary,
-  //     child: Icon(CupertinoIcons.photo, color: theme.colorScheme.onSecondary),
-  //   );
-  // }
-
   Future<void> _showPromptDialog() async {
     final result = await showCupertinoDialog<String>(
       context: context,
@@ -1119,35 +934,5 @@ class _ScribblePageState extends State<ScribblePage>
       setState(() => selectedModel = result);
       HapticFeedback.selectionClick();
     }
-  }
-}
-
-class _TypingText extends StatefulWidget {
-  final String text;
-  final AnimationController controller;
-  final TextStyle? style;
-
-  const _TypingText({required this.text, required this.controller, this.style});
-
-  @override
-  State<_TypingText> createState() => _TypingTextState();
-}
-
-class _TypingTextState extends State<_TypingText> {
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.controller,
-      builder: (context, child) {
-        final progress = widget.controller.value;
-        final charCount = (progress * widget.text.length).floor();
-        final displayedText = widget.text.substring(
-          0,
-          charCount.clamp(0, widget.text.length),
-        );
-
-        return Text(displayedText, style: widget.style);
-      },
-    );
   }
 }
