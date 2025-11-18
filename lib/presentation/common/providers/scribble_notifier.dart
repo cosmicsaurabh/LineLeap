@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 
 class EnhancedScribbleNotifier extends ChangeNotifier {
   DrawingState _state = const DrawingState();
   DrawingState get state => _state;
-  
+
+  // Pinned tools
+  List<ScribbleToolType> _pinnedTools = List<ScribbleToolType>.from(
+    defaultPinnedTools,
+  );
+
+  List<ScribbleToolType> get pinnedTools => List.unmodifiable(_pinnedTools);
+
   // Track the indices of strokes when in mirror mode
   // For vertical/horizontal: [original, mirrored]
   // For both: [original, vertical, horizontal, both]
@@ -13,6 +21,11 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
 
   bool get canUndo => _state.historyIndex > 0;
   bool get canRedo => _state.historyIndex < _state.history.length - 1;
+
+  void setPinnedTools(List<ScribbleToolType> tools) {
+    _pinnedTools = List<ScribbleToolType>.from(tools);
+    notifyListeners();
+  }
 
   void selectColor(Color color) {
     _state = _state.copyWith(selectedColor: color);
@@ -56,16 +69,19 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
     );
 
     List<Stroke> strokesToAdd = [newStroke];
-    
+
     // If mirror mode is active, create mirrored strokes
-    if (_state.mirrorMode.isActive && canvasWidth != null && canvasHeight != null) {
+    if (_state.mirrorMode.isActive &&
+        canvasWidth != null &&
+        canvasHeight != null) {
       final centerX = canvasWidth / 2;
       final centerY = canvasHeight / 2;
-      
+
       // Track where we start adding mirrored strokes
       _mirrorStartIndex = _state.strokes.length;
-      
-      if (_state.mirrorMode == MirrorMode.vertical || _state.mirrorMode == MirrorMode.both) {
+
+      if (_state.mirrorMode == MirrorMode.vertical ||
+          _state.mirrorMode == MirrorMode.both) {
         // Vertical mirror: mirror across vertical center line
         final mirroredX = centerX * 2 - point.dx;
         final verticalMirror = Stroke(
@@ -76,8 +92,9 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
         );
         strokesToAdd.add(verticalMirror);
       }
-      
-      if (_state.mirrorMode == MirrorMode.horizontal || _state.mirrorMode == MirrorMode.both) {
+
+      if (_state.mirrorMode == MirrorMode.horizontal ||
+          _state.mirrorMode == MirrorMode.both) {
         // Horizontal mirror: mirror across horizontal center line
         final mirroredY = centerY * 2 - point.dy;
         final horizontalMirror = Stroke(
@@ -88,7 +105,7 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
         );
         strokesToAdd.add(horizontalMirror);
       }
-      
+
       if (_state.mirrorMode == MirrorMode.both) {
         // Both: mirror across both axes (diagonal mirror)
         final mirroredX = centerX * 2 - point.dx;
@@ -101,8 +118,9 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
         );
         strokesToAdd.add(bothMirror);
       }
-      
-      _mirrorStrokeCount = strokesToAdd.length - 1; // Number of mirrored strokes
+
+      _mirrorStrokeCount =
+          strokesToAdd.length - 1; // Number of mirrored strokes
     } else {
       _mirrorStartIndex = null;
       _mirrorStrokeCount = 0;
@@ -116,24 +134,24 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
     if (_state.strokes.isEmpty) return;
 
     // In mirror mode, update all mirrored strokes
-    if (_state.mirrorMode.isActive && 
-        canvasWidth != null && 
+    if (_state.mirrorMode.isActive &&
+        canvasWidth != null &&
         canvasHeight != null &&
         _mirrorStartIndex != null &&
         _mirrorStartIndex! + _mirrorStrokeCount < _state.strokes.length) {
       final centerX = canvasWidth / 2;
       final centerY = canvasHeight / 2;
-      
+
       final newStrokes = List<Stroke>.from(_state.strokes);
-      
+
       // Update original stroke
       final originalStroke = _state.strokes[_mirrorStartIndex!];
       newStrokes[_mirrorStartIndex!] = originalStroke.copyWith(
         points: [...originalStroke.points, point],
       );
-      
+
       int strokeIndex = _mirrorStartIndex! + 1;
-      
+
       // Update vertical mirror (if applicable)
       if (_state.mirrorMode.hasVertical) {
         final mirroredX = centerX * 2 - point.dx;
@@ -144,7 +162,7 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
         );
         strokeIndex++;
       }
-      
+
       // Update horizontal mirror (if applicable)
       // For "both" mode, horizontal comes after vertical, before diagonal
       if (_state.mirrorMode.hasHorizontal) {
@@ -156,7 +174,7 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
         );
         strokeIndex++;
       }
-      
+
       // Update diagonal mirror (only if both mode)
       if (_state.mirrorMode == MirrorMode.both) {
         final mirroredX = centerX * 2 - point.dx;
