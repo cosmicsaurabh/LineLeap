@@ -6,17 +6,20 @@ import 'package:lineleap/presentation/common/widgets/action_button.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 
 class ScribbleToolbar extends StatefulWidget {
   final EnhancedScribbleNotifier notifier;
   final VoidCallback onPrompt;
   final VoidCallback onModelSelect;
+  final ValueChanged<List<ScribbleToolType>> onPinnedToolsChanged;
 
   const ScribbleToolbar({
     super.key,
     required this.notifier,
     required this.onPrompt,
     required this.onModelSelect,
+    required this.onPinnedToolsChanged,
   });
 
   @override
@@ -36,9 +39,10 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
       vsync: this,
     )..forward();
 
-    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.95,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
   }
 
   @override
@@ -75,6 +79,7 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
       _buildCanvasGroup(),
       _buildCreativeGroup(),
       _buildSymmetryGroup(theme),
+      _buildCustomizeGroup(theme),
     ];
   }
 
@@ -82,11 +87,7 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
     return _ToolbarGroup(
       icon: CupertinoIcons.time,
       label: 'History',
-      children: [
-        _buildUndoButton(),
-        _buildRedoButton(),
-        _buildClearButton(),
-      ],
+      children: [_buildUndoButton(), _buildRedoButton(), _buildClearButton()],
     );
   }
 
@@ -94,10 +95,7 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
     return _ToolbarGroup(
       icon: CupertinoIcons.paintbrush,
       label: 'Canvas',
-      children: [
-        _buildBrushButton(),
-        _buildColorButton(),
-      ],
+      children: [_buildBrushButton(), _buildColorButton()],
     );
   }
 
@@ -105,10 +103,7 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
     return _ToolbarGroup(
       icon: CupertinoIcons.sparkles,
       label: 'Creative',
-      children: [
-        _buildPromptButton(),
-        _buildModelButton(),
-      ],
+      children: [_buildPromptButton(), _buildModelButton()],
     );
   }
 
@@ -116,8 +111,26 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
     return _ToolbarGroup(
       icon: CupertinoIcons.square_split_2x2,
       label: 'Symmetry',
+      children: [_buildMirrorSelector(theme)],
+    );
+  }
+
+  Widget _buildCustomizeGroup(ThemeData theme) {
+    return _ToolbarGroup(
+      icon: CupertinoIcons.slider_horizontal_3,
+      label: 'Pinned',
       children: [
-        _buildMirrorSelector(theme),
+        Tooltip(
+          message: 'Customize pinned tools',
+          child: ActionButton(
+            icon: CupertinoIcons.pin,
+            onPressed: () {
+              _showCustomizePinnedToolsSheet(context, theme);
+            },
+            style: ActionButtonStyle.secondary,
+            showBorder: false,
+          ),
+        ),
       ],
     );
   }
@@ -181,11 +194,12 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
         children: [
           ActionButton(
             icon: CupertinoIcons.color_filter,
-            onPressed: () => showColorPickerDialog(
-              context: context,
-              initialColor: selectedColor,
-              onColorSelected: widget.notifier.selectColor,
-            ),
+            onPressed:
+                () => showColorPickerDialog(
+                  context: context,
+                  initialColor: selectedColor,
+                  onColorSelected: widget.notifier.selectColor,
+                ),
             style: ActionButtonStyle.secondary,
             showBorder: false,
           ),
@@ -276,19 +290,6 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
     }
   }
 
-  IconData _getMirrorIcon(MirrorMode mode) {
-    switch (mode) {
-      case MirrorMode.none:
-        return CupertinoIcons.arrow_left_right;
-      case MirrorMode.vertical:
-        return CupertinoIcons.arrow_left_right;
-      case MirrorMode.horizontal:
-        return CupertinoIcons.arrow_up_down;
-      case MirrorMode.both:
-        return Icons.grid_4x4; // Use Material icon for both mode
-    }
-  }
-
   String _getMirrorTooltip(MirrorMode mode) {
     switch (mode) {
       case MirrorMode.none:
@@ -333,6 +334,81 @@ class _ScribbleToolbarState extends State<ScribbleToolbar>
           ),
     );
   }
+
+  void _showCustomizePinnedToolsSheet(BuildContext context, ThemeData theme) {
+    final allTools = ScribbleToolType.values.toList();
+    final currentPinned = widget.notifier.pinnedTools;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) {
+        return Container(
+          color: theme.scaffoldBackgroundColor,
+          child: SafeArea(
+            top: false,
+            child: CupertinoActionSheet(
+              title: const Text('Pinned tools'),
+              message: const Text('Choose which tools stay on the canvas.'),
+              actions: [
+                for (final type in allTools)
+                  _buildPinToggleRow(
+                    ctx,
+                    type,
+                    isPinned: currentPinned.contains(type),
+                  ),
+                CupertinoActionSheetAction(
+                  onPressed: () {
+                    widget.onPinnedToolsChanged(
+                      List<ScribbleToolType>.from(defaultPinnedTools),
+                    );
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Reset to defaults'),
+                ),
+              ],
+              cancelButton: CupertinoActionSheetAction(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Done'),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPinToggleRow(
+    BuildContext context,
+    ScribbleToolType type, {
+    required bool isPinned,
+  }) {
+    final config = scribbleToolRegistry[type]!;
+    return CupertinoActionSheetAction(
+      onPressed: () {
+        final current = widget.notifier.pinnedTools.toList();
+        if (isPinned) {
+          current.remove(type);
+        } else {
+          current.add(type);
+        }
+        widget.onPinnedToolsChanged(current);
+        HapticFeedback.selectionClick();
+      },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(config.icon),
+          const SizedBox(width: 8),
+          Text(config.label),
+          const SizedBox(width: 12),
+          Icon(
+            isPinned ? CupertinoIcons.pin_fill : CupertinoIcons.pin,
+            size: 18,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ToolbarGroup extends StatelessWidget {
@@ -350,8 +426,9 @@ class _ToolbarGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final borderColor = theme.colorScheme.outline.withValues(alpha: 0.25);
-    final background =
-        theme.colorScheme.surface.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.7);
+    final background = theme.colorScheme.surface.withValues(
+      alpha: theme.brightness == Brightness.dark ? 0.3 : 0.7,
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -406,10 +483,7 @@ class _ColorBadge extends StatelessWidget {
         color: color,
         border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 4,
-          ),
+          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
         ],
       ),
       child: const SizedBox(width: 16, height: 16),
