@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:lineleap/presentation/features/scribble/scribble_page.dart';
+import 'package:lineleap/core/config/brush.dart';
+import 'package:lineleap/core/config/mirrot_mode.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 
 class EnhancedScribblePainter extends CustomPainter {
@@ -19,10 +20,13 @@ class EnhancedScribblePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Draw mirror lines if mirror mode is active
     if (mirrorMode.isActive && canvasWidth > 0 && canvasHeight > 0) {
-      final linePaint = Paint()
-        ..color = const Color(0x80007AFF) // Semi-transparent blue (iOS primary color)
-        ..strokeWidth = 1.5
-        ..style = PaintingStyle.stroke;
+      final linePaint =
+          Paint()
+            ..color = const Color(
+              0x80007AFF,
+            ) // Semi-transparent blue (iOS primary color)
+            ..strokeWidth = 1.5
+            ..style = PaintingStyle.stroke;
 
       const dashLength = 8.0;
       const dashSpace = 4.0;

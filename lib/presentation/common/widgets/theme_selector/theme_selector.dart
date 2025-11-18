@@ -1,44 +1,33 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:lineleap/presentation/common/providers/theme_notifier.dart';
 import 'package:provider/provider.dart';
-import '../../providers/theme_notifier.dart';
-import 'theme_toggle.dart';
 
-class ThemeSelector extends StatelessWidget {
-  const ThemeSelector({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final themeNotifier = Provider.of<ThemeNotifier>(context);
-
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(20),
+Widget buildThemeToggle(ThemeData theme, bool isDark, BuildContext context) {
+  return Container(
+    decoration: BoxDecoration(
+      color: theme.colorScheme.surface,
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: theme.colorScheme.outline.withValues(alpha: 0.2),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ThemeToggle(
-            icon: Icons.wb_sunny,
-            tooltip: "Light",
-            isSelected: themeNotifier.themeMode == ThemeMode.light,
-            onTap: () => themeNotifier.setThemeMode(ThemeMode.light),
-          ),
-          ThemeToggle(
-            icon: Icons.phone_android,
-            tooltip: "System",
-            isSelected: themeNotifier.themeMode == ThemeMode.system,
-            onTap: () => themeNotifier.setThemeMode(ThemeMode.system),
-          ),
-          ThemeToggle(
-            icon: Icons.nightlight_round,
-            tooltip: "Dark",
-            isSelected: themeNotifier.themeMode == ThemeMode.dark,
-            onTap: () => themeNotifier.setThemeMode(ThemeMode.dark),
-          ),
-        ],
+    ),
+    child: IconButton(
+      onPressed: () {
+        context.read<ThemeNotifier>().setThemeMode(
+          isDark ? ThemeMode.light : ThemeMode.dark,
+        );
+        HapticFeedback.selectionClick();
+      },
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: Icon(
+          isDark ? CupertinoIcons.sun_max : CupertinoIcons.moon,
+          key: ValueKey(isDark),
+          color: theme.colorScheme.primary,
+        ),
       ),
-    );
-  }
+    ),
+  );
 }
