@@ -6,6 +6,7 @@ import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart'
     as color_dialog;
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
+import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
 
 class PinnedToolbarOverlay extends StatelessWidget {
@@ -25,12 +26,50 @@ class PinnedToolbarOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final responsive = ResponsiveLayoutHelper(context);
+    final toolbarPosition = responsive.getToolbarPosition();
+    
     return ListenableBuilder(
       listenable: notifier,
       builder: (context, child) {
         final pinned = notifier.pinnedTools;
         final hasPinned = pinned.isNotEmpty;
 
+        // In landscape/low height, use horizontal layout at bottom
+        if (toolbarPosition == ToolbarPosition.bottom) {
+          return Positioned(
+            left: 0,
+            right: 0,
+            bottom: 4,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (hasPinned) ...[
+                      for (final type in pinned) ...[
+                        _buildPinnedToolButton(context, theme, type),
+                        if (type != pinned.last) const SizedBox(width: 8),
+                      ],
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 0.5,
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    _buildMorePinnedButton(),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Default: vertical layout on right side
         return Positioned(
           right: 4,
           top: 12,
@@ -148,32 +187,55 @@ class PinnedToolbarOverlay extends StatelessWidget {
   }
 
   void _showBrushOptions(BuildContext context) {
+    final responsive = ResponsiveLayoutHelper(context);
+    final maxHeight = MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
+    final fontSize = responsive.getFontSize(baseSize: 16);
+    final iconSize = responsive.getIconSize(baseSize: 20);
+
     showCupertinoModalPopup(
       context: context,
       builder:
-          (context) => CupertinoActionSheet(
-            title: const Text('Select Brush Style'),
-            actions:
-                BrushStyle.values.map((style) {
-                  return CupertinoActionSheetAction(
-                    onPressed: () {
-                      notifier.selectBrushStyle(style);
-                      Navigator.pop(context);
-                      HapticFeedback.selectionClick();
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(_getBrushIcon(style)),
-                        const SizedBox(width: 8),
-                        Text(style.name),
-                      ],
-                    ),
-                  );
-                }).toList(),
-            cancelButton: CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+          (context) => ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: CupertinoActionSheet(
+              title: Text(
+                'Select Brush Style',
+                style: TextStyle(fontSize: fontSize + 2),
+              ),
+              actions:
+                  BrushStyle.values.map((style) {
+                    return CupertinoActionSheetAction(
+                      onPressed: () {
+                        notifier.selectBrushStyle(style);
+                        Navigator.pop(context);
+                        HapticFeedback.selectionClick();
+                      },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _getBrushIcon(style),
+                            size: iconSize,
+                          ),
+                          SizedBox(width: responsive.isSmallScreen ? 6 : 8),
+                          Flexible(
+                            child: Text(
+                              style.name,
+                              style: TextStyle(fontSize: fontSize),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+              cancelButton: CupertinoActionSheetAction(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(fontSize: fontSize),
+                ),
+              ),
             ),
           ),
     );

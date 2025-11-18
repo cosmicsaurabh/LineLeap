@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/core/config/mirrot_mode.dart';
 import 'package:lineleap/core/config/tool_item.dart';
+import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 
 Future<void> showPinnedToolsSheet({
@@ -13,6 +14,8 @@ Future<void> showPinnedToolsSheet({
   required ValueChanged<MirrorMode> onMirrorModeChanged,
 }) async {
   final theme = Theme.of(context);
+  final responsive = ResponsiveLayoutHelper(context);
+  final maxHeight = MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
 
   await showCupertinoModalPopup(
     context: context,
@@ -25,6 +28,10 @@ Future<void> showPinnedToolsSheet({
           Widget buildPinChip(ScribbleToolType type) {
             final config = scribbleToolRegistry[type]!;
             final isPinned = localPinned.contains(type);
+            final localResponsive = ResponsiveLayoutHelper(ctx);
+            final iconSize = localResponsive.getIconSize(baseSize: 18);
+            final fontSize = localResponsive.getFontSize(baseSize: 12);
+            final padding = localResponsive.isSmallScreen ? 6.0 : 10.0;
 
             return Expanded(
               child: GestureDetector(
@@ -41,9 +48,9 @@ Future<void> showPinnedToolsSheet({
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 8,
+                  padding: EdgeInsets.symmetric(
+                    vertical: padding,
+                    horizontal: localResponsive.isSmallScreen ? 6 : 8,
                   ),
                   decoration: BoxDecoration(
                     color:
@@ -67,26 +74,31 @@ Future<void> showPinnedToolsSheet({
                     children: [
                       Icon(
                         config.icon,
-                        size: 18,
+                        size: iconSize,
                         color:
                             isPinned
                                 ? theme.colorScheme.primary
                                 : theme.colorScheme.onSurfaceVariant,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        config.label,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color:
-                              isPinned
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurface,
+                      SizedBox(width: localResponsive.isSmallScreen ? 4 : 6),
+                      if (!localResponsive.isVerySmallScreen)
+                        Flexible(
+                          child: Text(
+                            config.label,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color:
+                                  isPinned
+                                      ? theme.colorScheme.primary
+                                      : theme.colorScheme.onSurface,
+                              fontSize: fontSize,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: localResponsive.isSmallScreen ? 2 : 4),
                       Icon(
                         isPinned ? CupertinoIcons.pin_fill : CupertinoIcons.pin,
-                        size: 14,
+                        size: iconSize * 0.7,
                         color:
                             isPinned
                                 ? theme.colorScheme.primary
@@ -104,6 +116,10 @@ Future<void> showPinnedToolsSheet({
             required IconData icon,
           }) {
             final isActive = localMirror == mode;
+            final localResponsive = ResponsiveLayoutHelper(ctx);
+            final iconSize = localResponsive.getIconSize(baseSize: 18);
+            final padding = localResponsive.isSmallScreen ? 6.0 : 8.0;
+
             return Expanded(
               child: GestureDetector(
                 onTap: () {
@@ -115,9 +131,9 @@ Future<void> showPinnedToolsSheet({
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 8,
-                    horizontal: 8,
+                  padding: EdgeInsets.symmetric(
+                    vertical: padding,
+                    horizontal: padding,
                   ),
                   decoration: BoxDecoration(
                     color:
@@ -138,7 +154,7 @@ Future<void> showPinnedToolsSheet({
                   child: Center(
                     child: Icon(
                       icon,
-                      size: 18,
+                      size: iconSize,
                       color:
                           isActive
                               ? theme.colorScheme.primary
@@ -150,114 +166,137 @@ Future<void> showPinnedToolsSheet({
             );
           }
 
-          return Container(
-            color: theme.scaffoldBackgroundColor,
-            child: SafeArea(
-              top: false,
-              child: CupertinoActionSheet(
-                title: const Text('Pinned tools'),
-                message: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Choose which tools stay on the canvas.'),
-                    const SizedBox(height: 12),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Mirror mode',
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+          final localResponsive = ResponsiveLayoutHelper(ctx);
+          final fontSize = localResponsive.getFontSize(baseSize: 12);
+          final padding = localResponsive.isSmallScreen ? 8.0 : 12.0;
+          final spacing = localResponsive.isSmallScreen ? 6.0 : 8.0;
+
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxHeight),
+            child: Container(
+              color: theme.scaffoldBackgroundColor,
+              child: SafeArea(
+                top: false,
+                child: CupertinoActionSheet(
+                  title: Text(
+                    'Pinned tools',
+                    style: TextStyle(fontSize: fontSize + 2),
+                  ),
+                  message: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Choose which tools stay on the canvas.',
+                        style: TextStyle(fontSize: fontSize),
+                      ),
+                      SizedBox(height: spacing),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Mirror mode',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: fontSize,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: spacing),
+                      Row(
+                        children: [
+                          buildMirrorButton(
+                            mode: MirrorMode.vertical,
+                            icon: CupertinoIcons.arrow_left_right,
+                          ),
+                          SizedBox(width: spacing),
+                          buildMirrorButton(
+                            mode: MirrorMode.horizontal,
+                            icon: CupertinoIcons.arrow_up_down,
+                          ),
+                          SizedBox(width: spacing),
+                          buildMirrorButton(
+                            mode: MirrorMode.both,
+                            icon: Icons.grid_4x4,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: padding,
+                        vertical: 4,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Row 1: undo, redo, clear
+                            Row(
+                              children: [
+                                buildPinChip(ScribbleToolType.undo),
+                                SizedBox(width: spacing),
+                                buildPinChip(ScribbleToolType.redo),
+                                SizedBox(width: spacing),
+                                buildPinChip(ScribbleToolType.clear),
+                              ],
+                            ),
+                            SizedBox(height: spacing),
+                            // Row 2: brush, color
+                            Row(
+                              children: [
+                                buildPinChip(ScribbleToolType.brush),
+                                SizedBox(width: spacing),
+                                buildPinChip(ScribbleToolType.color),
+                                const Spacer(),
+                              ],
+                            ),
+                            SizedBox(height: spacing),
+                            // Row 3: mirror tool
+                            Row(
+                              children: [
+                                buildPinChip(ScribbleToolType.mirror),
+                                const Spacer(),
+                              ],
+                            ),
+                            SizedBox(height: spacing),
+                            // Row 4: prompt, model
+                            Row(
+                              children: [
+                                buildPinChip(ScribbleToolType.prompt),
+                                SizedBox(width: spacing),
+                                buildPinChip(ScribbleToolType.model),
+                                const Spacer(),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        buildMirrorButton(
-                          mode: MirrorMode.vertical,
-                          icon: CupertinoIcons.arrow_left_right,
-                        ),
-                        const SizedBox(width: 8),
-                        buildMirrorButton(
-                          mode: MirrorMode.horizontal,
-                          icon: CupertinoIcons.arrow_up_down,
-                        ),
-                        const SizedBox(width: 8),
-                        buildMirrorButton(
-                          mode: MirrorMode.both,
-                          icon: Icons.grid_4x4,
-                        ),
-                      ],
+                    CupertinoActionSheetAction(
+                      onPressed: () {
+                        final defaults = List<ScribbleToolType>.from(
+                          defaultPinnedTools,
+                        );
+                        setState(() {
+                          localPinned = defaults;
+                        });
+                        onPinnedToolsChanged(defaults);
+                        Navigator.pop(ctx);
+                      },
+                      child: Text(
+                        'Reset to defaults',
+                        style: TextStyle(fontSize: fontSize),
+                      ),
                     ),
                   ],
-                ),
-                actions: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Row 1: undo, redo, clear
-                        Row(
-                          children: [
-                            buildPinChip(ScribbleToolType.undo),
-                            const SizedBox(width: 8),
-                            buildPinChip(ScribbleToolType.redo),
-                            const SizedBox(width: 8),
-                            buildPinChip(ScribbleToolType.clear),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Row 2: brush, color
-                        Row(
-                          children: [
-                            buildPinChip(ScribbleToolType.brush),
-                            const SizedBox(width: 8),
-                            buildPinChip(ScribbleToolType.color),
-                            const Spacer(),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Row 3: mirror tool
-                        Row(
-                          children: [
-                            buildPinChip(ScribbleToolType.mirror),
-                            const Spacer(),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Row 4: prompt, model
-                        Row(
-                          children: [
-                            buildPinChip(ScribbleToolType.prompt),
-                            const SizedBox(width: 8),
-                            buildPinChip(ScribbleToolType.model),
-                            const Spacer(),
-                          ],
-                        ),
-                      ],
+                  cancelButton: CupertinoActionSheetAction(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      'Done',
+                      style: TextStyle(fontSize: fontSize),
                     ),
                   ),
-                  CupertinoActionSheetAction(
-                    onPressed: () {
-                      final defaults = List<ScribbleToolType>.from(
-                        defaultPinnedTools,
-                      );
-                      setState(() {
-                        localPinned = defaults;
-                      });
-                      onPinnedToolsChanged(defaults);
-                      Navigator.pop(ctx);
-                    },
-                    child: const Text('Reset to defaults'),
-                  ),
-                ],
-                cancelButton: CupertinoActionSheetAction(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('Done'),
                 ),
               ),
             ),

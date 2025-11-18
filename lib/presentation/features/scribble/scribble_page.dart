@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/presentation/common/widgets/theme_selector/theme_selector.dart';
+import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/typing_text/typing_text.dart';
 import 'package:provider/provider.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
@@ -145,34 +146,47 @@ class _ScribblePageState extends State<ScribblePage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bool isCapturing = context.watch<GenerationProvider>().isCapturing;
+    final responsive = ResponsiveLayoutHelper(context);
+    final shouldUseVerticalAppBar = responsive.shouldUseVerticalAppBar();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: _buildAppBar(theme, isDark, isCapturing),
-      body: Stack(
+      appBar:
+          shouldUseVerticalAppBar
+              ? null
+              : _buildAppBar(theme, isDark, isCapturing),
+      body: Row(
         children: [
-          ScribbleDrawingArea(
-            notifier: _notifier,
-            paintKey: _paintKey,
-            theme: theme,
-            isDark: isDark,
-          ),
-          PinnedToolbarOverlay(
-            notifier: _notifier,
-            onPrompt: _showPromptDialog,
-            onModelSelect: _showModelSelector,
-            onShowPinnedToolsSheet: _showPinnedToolsSheet,
-          ),
-          QueueOverlayWidget(
-            isVisible: _isQueueVisible,
-            isExpanded: _isQueueExpanded,
-            onExpansionChanged: (expanded) {
-              setState(() {
-                _isQueueExpanded = expanded;
-              });
-            },
-            onTimerReset: _startQueueTimer,
-            onTimerCancel: _cancelQueueTimer,
+          if (shouldUseVerticalAppBar)
+            _buildVerticalAppBar(context, theme, isDark, isCapturing),
+          Expanded(
+            child: Stack(
+              children: [
+                ScribbleDrawingArea(
+                  notifier: _notifier,
+                  paintKey: _paintKey,
+                  theme: theme,
+                  isDark: isDark,
+                ),
+                PinnedToolbarOverlay(
+                  notifier: _notifier,
+                  onPrompt: _showPromptDialog,
+                  onModelSelect: _showModelSelector,
+                  onShowPinnedToolsSheet: _showPinnedToolsSheet,
+                ),
+                QueueOverlayWidget(
+                  isVisible: _isQueueVisible,
+                  isExpanded: _isQueueExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _isQueueExpanded = expanded;
+                    });
+                  },
+                  onTimerReset: _startQueueTimer,
+                  onTimerCancel: _cancelQueueTimer,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -184,6 +198,8 @@ class _ScribblePageState extends State<ScribblePage>
     bool isDark,
     bool isCapturing,
   ) {
+    final responsive = ResponsiveLayoutHelper(context);
+
     return AppBar(
       backgroundColor: theme.scaffoldBackgroundColor,
       elevation: 0,
@@ -198,7 +214,7 @@ class _ScribblePageState extends State<ScribblePage>
             Icon(
               CupertinoIcons.scribble,
               color: theme.colorScheme.primary,
-              size: 28,
+              size: responsive.getIconSize(baseSize: 28),
             ),
             if (MediaQuery.of(context).size.width > 360)
               const SizedBox(width: 8),
@@ -209,6 +225,7 @@ class _ScribblePageState extends State<ScribblePage>
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
+                  fontSize: responsive.getFontSize(baseSize: 20),
                 ),
               ),
           ],
@@ -217,7 +234,6 @@ class _ScribblePageState extends State<ScribblePage>
       actions: [
         buildThemeToggle(theme, isDark, context),
         const SizedBox(width: 8),
-        // _buildGenerateButton(theme),
         ActionButton(
           icon: isCapturing ? CupertinoIcons.stop : CupertinoIcons.add,
           onPressed:
@@ -237,8 +253,6 @@ class _ScribblePageState extends State<ScribblePage>
               isCapturing
                   ? ActionButtonStyle.secondary
                   : ActionButtonStyle.primary,
-
-          // label: 'Clear Canvas',
         ),
         const SizedBox(width: 8),
         ActionButton(
@@ -247,18 +261,88 @@ class _ScribblePageState extends State<ScribblePage>
             setState(() {
               _isQueueVisible = !_isQueueVisible;
               if (_isQueueVisible) {
-                _startQueueTimer(); // Start timer when queue is shown
+                _startQueueTimer();
               } else {
-                _cancelQueueTimer(); // Cancel timer when queue is hidden
+                _cancelQueueTimer();
               }
             });
             HapticFeedback.selectionClick();
           },
-          // label: 'View Queue',
           style: ActionButtonStyle.secondary,
         ),
         const SizedBox(width: 8),
       ],
+    );
+  }
+
+  Widget _buildVerticalAppBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    bool isCapturing,
+  ) {
+    final responsive = ResponsiveLayoutHelper(context);
+
+    return Container(
+      width: responsive.isSmallScreen ? 56 : 72,
+      color: theme.scaffoldBackgroundColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              _typingController.reset();
+              _typingController.forward();
+              HapticFeedback.lightImpact();
+            },
+            child: Icon(
+              CupertinoIcons.scribble,
+              color: theme.colorScheme.primary,
+              size: responsive.getIconSize(baseSize: 28),
+            ),
+          ),
+          const SizedBox(height: 16),
+          buildThemeToggle(theme, isDark, context),
+          const SizedBox(height: 8),
+          ActionButton(
+            icon: isCapturing ? CupertinoIcons.stop : CupertinoIcons.add,
+            onPressed:
+                isCapturing
+                    ? () {
+                      log('Generate button pressed while loading');
+                    }
+                    : () {
+                      log('Generate button pressed while not loading');
+                      _generateButtonController.forward().then((_) {
+                        _generateButtonController.reverse();
+                      });
+                      _handleGenerate();
+                      HapticFeedback.selectionClick();
+                    },
+            style:
+                isCapturing
+                    ? ActionButtonStyle.secondary
+                    : ActionButtonStyle.primary,
+          ),
+          const SizedBox(height: 8),
+          ActionButton(
+            icon: CupertinoIcons.list_bullet,
+            onPressed: () {
+              setState(() {
+                _isQueueVisible = !_isQueueVisible;
+                if (_isQueueVisible) {
+                  _startQueueTimer();
+                } else {
+                  _cancelQueueTimer();
+                }
+              });
+              HapticFeedback.selectionClick();
+            },
+            style: ActionButtonStyle.secondary,
+          ),
+        ],
+      ),
     );
   }
 
