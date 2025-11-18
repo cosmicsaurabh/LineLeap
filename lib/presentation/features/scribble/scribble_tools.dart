@@ -69,9 +69,9 @@ const Map<ScribbleToolType, ScribbleToolConfig> scribbleToolRegistry =
         label: 'Prompt',
         tooltip: 'Open prompt input',
       ),
-      ScribbleToolType.modelSelect: ScribbleToolConfig(
-        type: ScribbleToolType.modelSelect,
-        id: 'model_select',
+      ScribbleToolType.model: ScribbleToolConfig(
+        type: ScribbleToolType.model,
+        id: 'model',
         icon: CupertinoIcons.square_list,
         label: 'Model',
         tooltip: 'Select model',

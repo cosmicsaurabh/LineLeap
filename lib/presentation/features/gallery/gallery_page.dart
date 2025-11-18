@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
+import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_tile.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
@@ -26,6 +27,9 @@ class _GalleryPageState extends State<GalleryPage> {
   Widget build(BuildContext context) {
     final gallery = context.watch<GalleryNotifier>();
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final responsive = ResponsiveLayoutHelper(context);
+    final shouldUseVerticalAppBar = responsive.shouldUseVerticalAppBar();
 
     if (gallery.isLoading) {
       return Center(
@@ -61,12 +65,20 @@ class _GalleryPageState extends State<GalleryPage> {
     }
 
     return Scaffold(
-      appBar: _buildAppBar(Theme.of(context), isDarkMode),
-      body: _buildResponsiveGrid(gallery, isDarkMode),
+      appBar: shouldUseVerticalAppBar ? null : _buildAppBar(theme, isDarkMode),
+      body: Row(
+        children: [
+          if (shouldUseVerticalAppBar) _buildVerticalAppBar(context, theme, isDarkMode),
+          Expanded(
+            child: _buildResponsiveGrid(gallery, isDarkMode),
+          ),
+        ],
+      ),
     );
   }
 
   PreferredSizeWidget _buildAppBar(ThemeData theme, bool isDark) {
+    final responsive = ResponsiveLayoutHelper(context);
     return AppBar(
       backgroundColor: theme.scaffoldBackgroundColor,
       elevation: 0,
@@ -75,7 +87,7 @@ class _GalleryPageState extends State<GalleryPage> {
           Icon(
             CupertinoIcons.scribble,
             color: theme.colorScheme.primary,
-            size: 28,
+            size: responsive.getIconSize(baseSize: 28),
           ),
           if (MediaQuery.of(context).size.width > 360) const SizedBox(width: 8),
           if (MediaQuery.of(context).size.width > 360)
@@ -84,8 +96,32 @@ class _GalleryPageState extends State<GalleryPage> {
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurface,
+                fontSize: responsive.getFontSize(baseSize: 20),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerticalAppBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final responsive = ResponsiveLayoutHelper(context);
+    return Container(
+      width: responsive.isSmallScreen ? 56 : 72,
+      color: theme.scaffoldBackgroundColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Icon(
+            CupertinoIcons.scribble,
+            color: theme.colorScheme.primary,
+            size: responsive.getIconSize(baseSize: 28),
+          ),
         ],
       ),
     );

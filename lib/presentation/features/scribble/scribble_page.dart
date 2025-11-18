@@ -1,30 +1,22 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lineleap/core/config/brush.dart';
-import 'package:lineleap/core/config/mirrot_mode.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/presentation/common/widgets/theme_selector/theme_selector.dart';
+import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/typing_text/typing_text.dart';
 import 'package:provider/provider.dart';
-import 'package:lineleap/domain/entities/scribble_transformation.dart';
-import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
-import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
-import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
-import 'package:lineleap/presentation/features/queue/generating_queue_widget.dart';
-import 'package:lineleap/theme/app_theme.dart';
-import 'package:lineleap/presentation/features/scribble/drawing_canvas.dart';
-import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
-import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
-import 'package:lineleap/presentation/common/providers/theme_notifier.dart';
-import 'package:lineleap/presentation/common/dialogs/color_picker_dialog.dart'
-    as color_dialog;
+import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
+import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
+import 'package:lineleap/presentation/features/scribble/pinned_toolbar_overlay.dart';
+import 'package:lineleap/presentation/features/scribble/pinned_tools_sheet.dart';
+import 'package:lineleap/presentation/features/scribble/queue_overlay_widget.dart';
+import 'package:lineleap/presentation/features/scribble/scribble_drawing_area.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -154,38 +146,50 @@ class _ScribblePageState extends State<ScribblePage>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bool isCapturing = context.watch<GenerationProvider>().isCapturing;
+    final responsive = ResponsiveLayoutHelper(context);
+    final shouldUseVerticalAppBar = responsive.shouldUseVerticalAppBar();
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: _buildAppBar(theme, isDark, isCapturing),
-      body: Stack(
-        alignment: Alignment.center,
+      appBar:
+          shouldUseVerticalAppBar
+              ? null
+              : _buildAppBar(theme, isDark, isCapturing),
+      body: Row(
         children: [
-          Column(children: [_buildDrawingArea(theme, isDark)]),
-          _buildPinnedToolsOverlay(theme),
-          Positioned(
-            child: AnimatedOpacity(
-              opacity: _isQueueVisible ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 300),
-              child:
-                  _isQueueVisible
-                      ? GestureDetector(
-                        onTap: _startQueueTimer, // Reset timer on tap
-                        // onPanDown:
-                        //     (_) =>
-                        //         _startQueueTimer, // Reset on other interactions
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                          child: _buildQueueOverlayWidget(context),
-                        ),
-                      )
-                      : const SizedBox.shrink(),
+          if (shouldUseVerticalAppBar)
+            _buildVerticalAppBar(context, theme, isDark, isCapturing),
+          Expanded(
+            child: Stack(
+              children: [
+                ScribbleDrawingArea(
+                  notifier: _notifier,
+                  paintKey: _paintKey,
+                  theme: theme,
+                  isDark: isDark,
+                ),
+                PinnedToolbarOverlay(
+                  notifier: _notifier,
+                  onPrompt: _showPromptDialog,
+                  onModelSelect: _showModelSelector,
+                  onShowPinnedToolsSheet: _showPinnedToolsSheet,
+                ),
+                QueueOverlayWidget(
+                  isVisible: _isQueueVisible,
+                  isExpanded: _isQueueExpanded,
+                  onExpansionChanged: (expanded) {
+                    setState(() {
+                      _isQueueExpanded = expanded;
+                    });
+                  },
+                  onTimerReset: _startQueueTimer,
+                  onTimerCancel: _cancelQueueTimer,
+                ),
+              ],
             ),
           ),
         ],
       ),
-      // floatingActionButton: _buildFloatingActionButton(theme),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -194,6 +198,8 @@ class _ScribblePageState extends State<ScribblePage>
     bool isDark,
     bool isCapturing,
   ) {
+    final responsive = ResponsiveLayoutHelper(context);
+
     return AppBar(
       backgroundColor: theme.scaffoldBackgroundColor,
       elevation: 0,
@@ -208,7 +214,7 @@ class _ScribblePageState extends State<ScribblePage>
             Icon(
               CupertinoIcons.scribble,
               color: theme.colorScheme.primary,
-              size: 28,
+              size: responsive.getIconSize(baseSize: 28),
             ),
             if (MediaQuery.of(context).size.width > 360)
               const SizedBox(width: 8),
@@ -219,6 +225,7 @@ class _ScribblePageState extends State<ScribblePage>
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: theme.colorScheme.onSurface,
+                  fontSize: responsive.getFontSize(baseSize: 20),
                 ),
               ),
           ],
@@ -227,7 +234,6 @@ class _ScribblePageState extends State<ScribblePage>
       actions: [
         buildThemeToggle(theme, isDark, context),
         const SizedBox(width: 8),
-        // _buildGenerateButton(theme),
         ActionButton(
           icon: isCapturing ? CupertinoIcons.stop : CupertinoIcons.add,
           onPressed:
@@ -247,8 +253,6 @@ class _ScribblePageState extends State<ScribblePage>
               isCapturing
                   ? ActionButtonStyle.secondary
                   : ActionButtonStyle.primary,
-
-          // label: 'Clear Canvas',
         ),
         const SizedBox(width: 8),
         ActionButton(
@@ -257,14 +261,13 @@ class _ScribblePageState extends State<ScribblePage>
             setState(() {
               _isQueueVisible = !_isQueueVisible;
               if (_isQueueVisible) {
-                _startQueueTimer(); // Start timer when queue is shown
+                _startQueueTimer();
               } else {
-                _cancelQueueTimer(); // Cancel timer when queue is hidden
+                _cancelQueueTimer();
               }
             });
             HapticFeedback.selectionClick();
           },
-          // label: 'View Queue',
           style: ActionButtonStyle.secondary,
         ),
         const SizedBox(width: 8),
@@ -272,644 +275,85 @@ class _ScribblePageState extends State<ScribblePage>
     );
   }
 
-  Widget _buildQueueOverlayWidget(BuildContext context) {
-    final queueProvider = Provider.of<QueueStatusProvider>(
-      context,
-      listen:
-          false, // listen:false is fine as Consumer below will handle updates
-    );
-    final galleryNotifier = Provider.of<GalleryNotifier>(
-      context,
-      listen: false,
-    );
+  Widget _buildVerticalAppBar(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    bool isCapturing,
+  ) {
+    final responsive = ResponsiveLayoutHelper(context);
 
-    return Consumer<QueueStatusProvider>(
-      builder: (context, provider, child) {
-        // The GenerationQueueWidget should ideally be scrollable if items exceed maxHeight
-        return GenerationQueueWidget(
-          onExpansionChanged: (isExpanded) {
-            setState(() {
-              _isQueueExpanded = isExpanded;
-            });
-          },
-          queueItems: provider.queueItems,
-          refreshQueue: provider.refreshQueue,
-          onRemove: (request) {
-            provider.removeFromQueue(request);
-            _startQueueTimer(); // Reset timer on interaction
-          },
-          onRetry: (request) {
-            provider.retryGeneration(request);
-            _startQueueTimer(); // Reset timer on interaction
-          },
-          onDownload: (request) async {
-            _cancelQueueTimer(); // Pause timer during async operation
-            bool success = await galleryNotifier.saveToHistory(
-              scribblePath: request.scribblePath,
-              generatedPath: request.generatedPath!,
-              prompt: request.prompt,
-              timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
-            );
-            if (success) {
-              queueProvider.removeFromQueue(request);
-            }
-            if (mounted && _isQueueVisible) _startQueueTimer(); // Resume timer
-          },
-          onView: (request) {
-            _cancelQueueTimer(); // Pause timer while dialog is open
-            showDialog(
-              context: context,
-              barrierColor: Colors.black.withValues(alpha: 0.1),
-              builder:
-                  (context) => GalleryImageDialog(
-                    scribbleTransformation: ScribbleTransformation(
-                      generatedImagePath: request.generatedPath!,
-                      scribbleImagePath: request.scribblePath,
-                      prompt: request.prompt,
-                      timestamp: request.createdAt?.toIso8601String() ?? "-",
-                    ),
-                    gallery: galleryNotifier,
-                    whichImage: 0,
-                  ),
-            ).then((_) {
-              if (mounted && _isQueueVisible) {
-                _startQueueTimer();
-              } // Resume timer when dialog closes
-            });
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildDrawingArea(ThemeData theme, bool isDark) {
-    return Expanded(
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF2C2C2E) : Colors.white,
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 4),
+    return Container(
+      width: responsive.isSmallScreen ? 56 : 72,
+      color: theme.scaffoldBackgroundColor,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              _typingController.reset();
+              _typingController.forward();
+              HapticFeedback.lightImpact();
+            },
+            child: Icon(
+              CupertinoIcons.scribble,
+              color: theme.colorScheme.primary,
+              size: responsive.getIconSize(baseSize: 28),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-          child: RepaintBoundary(
-            key: _paintKey,
-            child: DrawingCanvas(notifier: _notifier),
           ),
-        ),
+          const SizedBox(height: 16),
+          buildThemeToggle(theme, isDark, context),
+          const SizedBox(height: 8),
+          ActionButton(
+            icon: isCapturing ? CupertinoIcons.stop : CupertinoIcons.add,
+            onPressed:
+                isCapturing
+                    ? () {
+                      log('Generate button pressed while loading');
+                    }
+                    : () {
+                      log('Generate button pressed while not loading');
+                      _generateButtonController.forward().then((_) {
+                        _generateButtonController.reverse();
+                      });
+                      _handleGenerate();
+                      HapticFeedback.selectionClick();
+                    },
+            style:
+                isCapturing
+                    ? ActionButtonStyle.secondary
+                    : ActionButtonStyle.primary,
+          ),
+          const SizedBox(height: 8),
+          ActionButton(
+            icon: CupertinoIcons.list_bullet,
+            onPressed: () {
+              setState(() {
+                _isQueueVisible = !_isQueueVisible;
+                if (_isQueueVisible) {
+                  _startQueueTimer();
+                } else {
+                  _cancelQueueTimer();
+                }
+              });
+              HapticFeedback.selectionClick();
+            },
+            style: ActionButtonStyle.secondary,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildPinnedToolsOverlay(ThemeData theme) {
-    return ListenableBuilder(
-      listenable: _notifier,
-      builder: (context, child) {
-        final pinned = _notifier.pinnedTools;
-        final hasPinned = pinned.isNotEmpty;
-
-        return Positioned(
-          right: 4,
-          top: 12,
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (hasPinned) ...[
-                  for (final type in pinned) ...[
-                    _buildPinnedToolButton(type),
-                    if (type != pinned.last) const SizedBox(height: 8),
-                  ],
-                  const SizedBox(height: 6),
-                  Container(
-                    height: 0.5,
-                    margin: const EdgeInsets.symmetric(horizontal: 12),
-                    color: theme.colorScheme.outline.withValues(alpha: 0.2),
-                  ),
-                  const SizedBox(height: 6),
-                ],
-                _buildMorePinnedButton(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPinnedToolButton(ScribbleToolType type) {
-    switch (type) {
-      case ScribbleToolType.undo:
-        return ActionButton(
-          icon: CupertinoIcons.arrow_uturn_left,
-          onPressed: _notifier.undo,
-          style: ActionButtonStyle.secondary,
-          showBorder: false,
-          disabled: !_notifier.canUndo,
-        );
-      case ScribbleToolType.redo:
-        return ActionButton(
-          icon: CupertinoIcons.arrow_uturn_right,
-          onPressed: _notifier.redo,
-          style: ActionButtonStyle.secondary,
-          showBorder: false,
-          disabled: !_notifier.canRedo,
-        );
-      case ScribbleToolType.brush:
-        return ActionButton(
-          icon: CupertinoIcons.paintbrush,
-          onPressed: () => _showBrushOptions(context),
-          style: ActionButtonStyle.secondary,
-          showBorder: false,
-        );
-      case ScribbleToolType.color:
-        return ActionButton(
-          icon: CupertinoIcons.color_filter,
-          onPressed: () => _showColorPickerDialog(context),
-          style: ActionButtonStyle.secondary,
-          showBorder: false,
-        );
-      case ScribbleToolType.mirror:
-        return ActionButton(
-          icon: CupertinoIcons.square_split_2x2,
-          onPressed: () => _cycleMirrorMode(),
-          style:
-              _notifier.state.mirrorMode.isActive
-                  ? ActionButtonStyle.primary
-                  : ActionButtonStyle.secondary,
-          showBorder: false,
-        );
-      case ScribbleToolType.clear:
-        return ActionButton(
-          icon: CupertinoIcons.clear,
-          onPressed: _notifier.clear,
-          style: ActionButtonStyle.destructive,
-          showBorder: false,
-        );
-      case ScribbleToolType.prompt:
-        return ActionButton(
-          icon: CupertinoIcons.textformat,
-          onPressed: _showPromptDialog,
-          style: ActionButtonStyle.primary,
-          showBorder: false,
-        );
-      case ScribbleToolType.modelSelect:
-        return ActionButton(
-          icon: CupertinoIcons.square_list,
-          onPressed: _showModelSelector,
-          style: ActionButtonStyle.secondary,
-          showBorder: false,
-        );
-    }
-  }
-
-  Widget _buildMorePinnedButton() {
-    return ActionButton(
-      icon: CupertinoIcons.ellipsis,
-      onPressed: _showPinnedToolsSheet,
-      style: ActionButtonStyle.secondary,
-      showBorder: false,
-    );
-  }
-
   void _showPinnedToolsSheet() {
-    final theme = Theme.of(context);
-
-    showCupertinoModalPopup(
+    showPinnedToolsSheet(
       context: context,
-      builder: (ctx) {
-        var localPinned = List<ScribbleToolType>.from(_notifier.pinnedTools);
-        var localMirror = _notifier.state.mirrorMode;
-
-        return StatefulBuilder(
-          builder: (context, setState) {
-            Widget _buildPinChip({
-              required ScribbleToolType type,
-              required List<ScribbleToolType> localPinned,
-              required void Function(void Function()) setState,
-            }) {
-              final config = scribbleToolRegistry[type]!;
-              final isPinned = localPinned.contains(type);
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      if (isPinned) {
-                        localPinned.remove(type);
-                      } else {
-                        localPinned.add(type);
-                      }
-                    });
-                    updatePinnedTools(localPinned);
-                    HapticFeedback.selectionClick();
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isPinned
-                              ? theme.colorScheme.primary.withValues(
-                                alpha: 0.12,
-                              )
-                              : theme.colorScheme.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color:
-                            isPinned
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.outline.withValues(
-                                  alpha: 0.3,
-                                ),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          config.icon,
-                          size: 18,
-                          color:
-                              isPinned
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          config.label,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color:
-                                isPinned
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          isPinned
-                              ? CupertinoIcons.pin_fill
-                              : CupertinoIcons.pin,
-                          size: 14,
-                          color:
-                              isPinned
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }
-
-            return Container(
-              color: theme.scaffoldBackgroundColor,
-              child: SafeArea(
-                top: false,
-                child: CupertinoActionSheet(
-                  title: const Text('Pinned tools'),
-                  message: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Choose which tools stay on the canvas.'),
-                      const SizedBox(height: 12),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          'Mirror mode',
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  localMirror = MirrorMode.vertical;
-                                });
-                                _notifier.selectMirrorMode(MirrorMode.vertical);
-                                HapticFeedback.selectionClick();
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      localMirror == MirrorMode.vertical
-                                          ? theme.colorScheme.primary
-                                              .withValues(alpha: 0.15)
-                                          : theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color:
-                                        localMirror == MirrorMode.vertical
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.outline
-                                                .withValues(alpha: 0.3),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    CupertinoIcons.arrow_left_right,
-                                    size: 18,
-                                    color:
-                                        localMirror == MirrorMode.vertical
-                                            ? theme.colorScheme.primary
-                                            : theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  localMirror = MirrorMode.horizontal;
-                                });
-                                _notifier.selectMirrorMode(
-                                  MirrorMode.horizontal,
-                                );
-                                HapticFeedback.selectionClick();
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      localMirror == MirrorMode.horizontal
-                                          ? theme.colorScheme.primary
-                                              .withValues(alpha: 0.15)
-                                          : theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color:
-                                        localMirror == MirrorMode.horizontal
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.outline
-                                                .withValues(alpha: 0.3),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    CupertinoIcons.arrow_up_down,
-                                    size: 18,
-                                    color:
-                                        localMirror == MirrorMode.horizontal
-                                            ? theme.colorScheme.primary
-                                            : theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  localMirror = MirrorMode.both;
-                                });
-                                _notifier.selectMirrorMode(MirrorMode.both);
-                                HapticFeedback.selectionClick();
-                              },
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color:
-                                      localMirror == MirrorMode.both
-                                          ? theme.colorScheme.primary
-                                              .withValues(alpha: 0.15)
-                                          : theme.colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color:
-                                        localMirror == MirrorMode.both
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.outline
-                                                .withValues(alpha: 0.3),
-                                    width: 0.8,
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    Icons.grid_4x4,
-                                    size: 18,
-                                    color:
-                                        localMirror == MirrorMode.both
-                                            ? theme.colorScheme.primary
-                                            : theme
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // Row 1: undo, redo, clear
-                          Row(
-                            children: [
-                              _buildPinChip(
-                                type: ScribbleToolType.undo,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildPinChip(
-                                type: ScribbleToolType.redo,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildPinChip(
-                                type: ScribbleToolType.clear,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          // Row 2: brush, color
-                          Row(
-                            children: [
-                              _buildPinChip(
-                                type: ScribbleToolType.brush,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildPinChip(
-                                type: ScribbleToolType.color,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const Spacer(),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          // Row 3: mirror tool
-                          Row(
-                            children: [
-                              _buildPinChip(
-                                type: ScribbleToolType.mirror,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const Spacer(),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          // Row 4: prompt, model
-                          Row(
-                            children: [
-                              _buildPinChip(
-                                type: ScribbleToolType.prompt,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const SizedBox(width: 8),
-                              _buildPinChip(
-                                type: ScribbleToolType.modelSelect,
-                                localPinned: localPinned,
-                                setState: setState,
-                              ),
-                              const Spacer(),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    CupertinoActionSheetAction(
-                      onPressed: () {
-                        setState(() {
-                          localPinned = List<ScribbleToolType>.from(
-                            defaultPinnedTools,
-                          );
-                        });
-                        updatePinnedTools(localPinned);
-                        Navigator.pop(ctx);
-                      },
-                      child: const Text('Reset to defaults'),
-                    ),
-                  ],
-                  cancelButton: CupertinoActionSheetAction(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: const Text('Done'),
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      },
+      pinnedTools: _notifier.pinnedTools,
+      mirrorMode: _notifier.state.mirrorMode,
+      onPinnedToolsChanged: updatePinnedTools,
+      onMirrorModeChanged: _notifier.selectMirrorMode,
     );
-  }
-
-  void _showColorPickerDialog(BuildContext context) {
-    color_dialog.showColorPickerDialog(
-      context: context,
-      initialColor: _notifier.state.selectedColor,
-      onColorSelected: _notifier.selectColor,
-    );
-  }
-
-  void _showBrushOptions(BuildContext context) {
-    showCupertinoModalPopup(
-      context: context,
-      builder:
-          (context) => CupertinoActionSheet(
-            title: const Text('Select Brush Style'),
-            actions:
-                BrushStyle.values.map((style) {
-                  return CupertinoActionSheetAction(
-                    onPressed: () {
-                      _notifier.selectBrushStyle(style);
-                      Navigator.pop(context);
-                      HapticFeedback.selectionClick();
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(_getBrushIcon(style)),
-                        const SizedBox(width: 8),
-                        Text(style.name),
-                      ],
-                    ),
-                  );
-                }).toList(),
-            cancelButton: CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-          ),
-    );
-  }
-
-  IconData _getBrushIcon(BrushStyle style) {
-    switch (style) {
-      case BrushStyle.thin:
-        return CupertinoIcons.pencil;
-      case BrushStyle.medium:
-        return CupertinoIcons.paintbrush;
-      case BrushStyle.thick:
-        return CupertinoIcons.paintbrush_fill;
-      case BrushStyle.xtraThick:
-        return Icons.format_paint;
-      case BrushStyle.dotted:
-        return Icons.more_horiz;
-    }
-  }
-
-  void _cycleMirrorMode() {
-    _notifier.toggleMirrorMode();
-    HapticFeedback.selectionClick();
   }
 
   Future<void> _showPromptDialog() async {
