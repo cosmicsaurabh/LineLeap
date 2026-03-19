@@ -1,22 +1,39 @@
 import 'dart:async';
 
 import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
+import 'package:lineleap/data/datasources/local/generation_queue_local_datasource.dart';
 import '../../domain/entities/generation_request.dart';
 import '../../domain/repositories/generation_queue_repository.dart';
 
 class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
-  // In-memory queue notifier
   final GenerationQueueNotifier _queueNotifier;
+  final GenerationQueueLocalDatasource _localDatasource;
 
   GenerationQueueRepositoryImpl(
     this._queueNotifier,
-    // [this._storageService]
+    this._localDatasource,
   );
+
+  /// Load persisted queue into memory and recover stuck requests
+  Future<void> restoreQueue() async {
+    final persisted = await _localDatasource.loadAll();
+    for (final request in persisted) {
+      // Reset stuck submitting/polling requests back to queued
+      if (request.status == GenerationStatus.submitting ||
+          request.status == GenerationStatus.polling) {
+        final recovered = request.copyWith(status: GenerationStatus.queued);
+        await _localDatasource.saveRequest(recovered);
+        await _queueNotifier.addRequest(recovered);
+      } else {
+        await _queueNotifier.addRequest(request);
+      }
+    }
+  }
 
   @override
   Future<void> enqueueRequest(GenerationRequest request) async {
-    // Add to in-memory queue
     await _queueNotifier.addRequest(request);
+    await _localDatasource.saveRequest(request);
   }
 
   @override
@@ -38,29 +55,27 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
   @override
   Future<void> updateRequest(GenerationRequest request) async {
     await _queueNotifier.updateRequest(request);
+    await _localDatasource.saveRequest(request);
   }
 
   @override
   Future<void> removeRequest(String localId) async {
     await _queueNotifier.removeRequest(localId);
+    await _localDatasource.removeRequest(localId);
   }
 
   @override
   Stream<List<GenerationRequest>> observeQueuedRequests() {
-    // Create a StreamController to emit queue updates
     final controller = StreamController<List<GenerationRequest>>.broadcast();
 
-    // Add the current queue immediately
     controller.add(_queueNotifier.queue);
 
-    // Add a listener to the notifier to emit updates when the queue changes
     void listener() {
       controller.add(_queueNotifier.queue);
     }
 
     _queueNotifier.addListener(listener);
 
-    // Clean up when the stream is no longer needed
     controller.onCancel = () {
       _queueNotifier.removeListener(listener);
       controller.close();

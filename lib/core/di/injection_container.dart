@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:lineleap/core/service/image_device_interaction_service.dart';
 import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
+import 'package:lineleap/data/datasources/local/generation_queue_local_datasource.dart';
 import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/data/remote/ai_horde_api.dart';
 import 'package:lineleap/data/repositories/history_repository_impl.dart';
@@ -42,6 +43,9 @@ Future<void> initDependencies() async {
   );
   sl.registerSingleton<AIHordeAPI>(AIHordeAPI());
   sl.registerSingleton<GenerationQueueNotifier>(GenerationQueueNotifier());
+  sl.registerSingleton<GenerationQueueLocalDatasource>(
+    GenerationQueueLocalDatasource(),
+  );
 
   // Services
   sl.registerLazySingleton<ImageDeviceInteractionService>(
@@ -63,7 +67,10 @@ Future<void> initDependencies() async {
     ),
   );
   sl.registerLazySingleton<GenerationQueueRepository>(
-    () => GenerationQueueRepositoryImpl(sl<GenerationQueueNotifier>()),
+    () => GenerationQueueRepositoryImpl(
+      sl<GenerationQueueNotifier>(),
+      sl<GenerationQueueLocalDatasource>(),
+    ),
   );
   sl.registerLazySingleton<ImageSaveLoadDeleteRepository>(
     () =>
@@ -103,6 +110,7 @@ Future<void> initDependencies() async {
     () => ProcessGenerationQueueUseCase(
       generationQueueRepository: sl(),
       hordeGenerationService: sl(),
+      queueNotifier: sl(),
     ),
   );
   sl.registerLazySingleton(
@@ -133,4 +141,9 @@ Future<void> initDependencies() async {
   sl.registerFactory(
     () => QueueStatusProvider(getQueueUseCase: sl(), processQueueUseCase: sl()),
   );
+
+  // Restore persisted queue and start event-driven processing
+  final queueRepo = sl<GenerationQueueRepository>() as GenerationQueueRepositoryImpl;
+  await queueRepo.restoreQueue();
+  sl<ProcessGenerationQueueUseCase>().startListening();
 }

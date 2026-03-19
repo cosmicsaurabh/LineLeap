@@ -36,10 +36,7 @@ class GenerationProvider extends ChangeNotifier {
        _processUseCase = processUseCase,
        _queueRepository = queueRepository,
        _saveImageUseCase = saveImageUseCase,
-       _watchRequestUseCase = watchRequestUseCase {
-    // Start the queue processor
-    _processUseCase.startProcessingQueue();
-  }
+       _watchRequestUseCase = watchRequestUseCase;
 
   String? get currentGenerationId => _currentGenerationId;
   String? get error => _error;
