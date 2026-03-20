@@ -161,6 +161,7 @@ class _ScribblePageState extends State<ScribblePage>
             _buildVerticalAppBar(context, theme, isDark, isCapturing),
           Expanded(
             child: Stack(
+              fit: StackFit.expand,
               children: [
                 ScribbleDrawingArea(
                   notifier: _notifier,
