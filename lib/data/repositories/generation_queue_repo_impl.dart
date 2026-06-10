@@ -9,10 +9,7 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
   final GenerationQueueNotifier _queueNotifier;
   final GenerationQueueLocalDatasource _localDatasource;
 
-  GenerationQueueRepositoryImpl(
-    this._queueNotifier,
-    this._localDatasource,
-  );
+  GenerationQueueRepositoryImpl(this._queueNotifier, this._localDatasource);
 
   /// Load persisted queue into memory and recover stuck requests
   Future<void> restoreQueue() async {

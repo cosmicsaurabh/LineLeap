@@ -1,7 +1,7 @@
-import 'package:lineleap/data/repositories/image_save_load_delete_repository_impl.dart';
+import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
 
 class DeleteImagebytesFromPathUseCase {
-  final ImageSaveLoadDeleteRepositoryImpl imageSaveLoadDeleteRepository;
+  final ImageSaveLoadDeleteRepository imageSaveLoadDeleteRepository;
 
   DeleteImagebytesFromPathUseCase({
     required this.imageSaveLoadDeleteRepository,

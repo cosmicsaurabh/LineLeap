@@ -222,8 +222,11 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                   nextScale = 10;
                                 }
                                 double scaleFactor = nextScale / _currentScale;
-                                _transformationController.value.scale(
+                                _transformationController.value.scaleByDouble(
                                   scaleFactor,
+                                  scaleFactor,
+                                  1,
+                                  1,
                                 );
                                 setState(() {
                                   _currentScale = nextScale;
@@ -268,8 +271,11 @@ class _GeneratedImageViewerState extends State<GeneratedImageViewer> {
                                   nextScale = 1;
                                 }
                                 double scaleFactor = nextScale / _currentScale;
-                                _transformationController.value.scale(
+                                _transformationController.value.scaleByDouble(
                                   scaleFactor,
+                                  scaleFactor,
+                                  1,
+                                  1,
                                 );
                                 setState(() {
                                   _currentScale = nextScale;

@@ -111,6 +111,7 @@ class GalleryActionSheet extends StatelessWidget {
   }
 
   void _handleDownload(BuildContext context, int index) async {
+    final feedbackContext = parentContext;
     Navigator.of(context).pop();
     try {
       File? file;
@@ -122,11 +123,12 @@ class GalleryActionSheet extends StatelessWidget {
         file = File(image.generatedImagePath);
       }
 
+      _showNonInteractiveActionFeedback(
+        feedbackContext,
+        'Downloading image...',
+      );
+
       final Uint8List bytes = await file.readAsBytes();
-
-      // Save to gallery
-      _showNonInteractiveActionFeedback(context, 'Downloading image...');
-
       // image_gallery_saver_plus handles Android permissions internally
       final result = await ImageGallerySaverPlus.saveImage(
         bytes,
@@ -134,24 +136,31 @@ class GalleryActionSheet extends StatelessWidget {
         name: "scribble_${DateTime.now().millisecondsSinceEpoch}",
       );
 
+      if (!feedbackContext.mounted) return;
+
       if (result['isSuccess'] == true || result['filePath'] != null) {
-        _showInteractiveActionFeedback(context, 'Image saved to gallery!');
+        _showInteractiveActionFeedback(
+          feedbackContext,
+          'Image saved to gallery!',
+        );
       } else {
         _showNonInteractiveActionFeedback(
-          context,
+          feedbackContext,
           'Failed to save image. Please check permissions.',
         );
       }
     } catch (e) {
       log('Download error: $e');
+      if (!feedbackContext.mounted) return;
       _showNonInteractiveActionFeedback(
-        context,
+        feedbackContext,
         'Error: Could not save image. Try enabling storage access in app settings.',
       );
     }
   }
 
   void _handleShare(BuildContext context, int index) async {
+    final feedbackContext = parentContext;
     Navigator.of(context).pop();
     try {
       File? file;
@@ -159,43 +168,49 @@ class GalleryActionSheet extends StatelessWidget {
         // If the image is a scribble, use the scribble file path
         file = File(image.scribbleImagePath);
         if (await file.exists()) {
-          await Share.shareXFiles([
-            XFile(file.path),
-          ], text: 'Check out my scribble!');
+          await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(file.path)],
+              text: 'Check out my scribble!',
+            ),
+          );
         } else {
-          _showNonInteractiveActionFeedback(parentContext, 'File not found');
+          if (!feedbackContext.mounted) return;
+          _showNonInteractiveActionFeedback(feedbackContext, 'File not found');
         }
       } else {
         // If the image is a generated image, use the generated file path
         file = File(image.generatedImagePath);
         if (await file.exists()) {
-          await Share.shareXFiles([XFile(file.path)], text: image.prompt);
+          await SharePlus.instance.share(
+            ShareParams(files: [XFile(file.path)], text: image.prompt),
+          );
         } else {
-          _showNonInteractiveActionFeedback(parentContext, 'File not found');
+          if (!feedbackContext.mounted) return;
+          _showNonInteractiveActionFeedback(feedbackContext, 'File not found');
         }
       }
     } catch (e) {
       log('Share error: $e');
+      if (!feedbackContext.mounted) return;
       _showNonInteractiveActionFeedback(
-        parentContext,
+        feedbackContext,
         'Error sharing image. Please try again.',
       );
     }
   }
 
   void _handleScribble(BuildContext context) {
-    // Navigator.of(context).pop();
     onActionComplete();
-    // TODO: Navigate to scribble editor
-    _showNonInteractiveActionFeedback(context, 'Coming soon');
+    if (!parentContext.mounted) return;
+    _showNonInteractiveActionFeedback(parentContext, 'Coming soon');
   }
 
   void _handleDelete(BuildContext context) async {
-    final navigator = Navigator.of(context);
-
-    navigator.pop();
+    final feedbackContext = parentContext;
+    Navigator.of(context).pop();
     final shouldDelete = await showCupertinoDialog<bool>(
-      context: context,
+      context: feedbackContext,
       builder:
           (context) => CupertinoAlertDialog(
             title: const Text('Delete Image'),
@@ -216,14 +231,21 @@ class GalleryActionSheet extends StatelessWidget {
           ),
     );
 
+    if (!feedbackContext.mounted) return;
+
     if (shouldDelete == true) {
-      navigator.pop();
       try {
-        gallery.deleteImage(image);
-        _showNonInteractiveActionFeedback(context, 'Image deleted');
+        await gallery.deleteImage(image);
+        if (!feedbackContext.mounted) return;
+        Navigator.of(feedbackContext).pop();
+        _showNonInteractiveActionFeedback(feedbackContext, 'Image deleted');
       } catch (e) {
         log('Failed to delete image: $e');
-        _showNonInteractiveActionFeedback(context, 'Failed to delete image');
+        if (!feedbackContext.mounted) return;
+        _showNonInteractiveActionFeedback(
+          feedbackContext,
+          'Failed to delete image',
+        );
       }
     }
   }

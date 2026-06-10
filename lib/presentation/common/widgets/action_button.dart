@@ -40,13 +40,15 @@ class _ActionButtonState extends State<ActionButton>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.85).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _opacityAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.85,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -114,11 +116,15 @@ class _ActionButtonState extends State<ActionButton>
                   opacity: _opacityAnimation.value,
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
-                      color: widget.disabled
-                          ? bgColor.withValues(alpha: 0.5)
-                          : _isHovered
+                      color:
+                          widget.disabled
+                              ? bgColor.withValues(alpha: 0.5)
+                              : _isHovered
                               ? bgColor.withValues(alpha: 0.9)
                               : bgColor,
                       borderRadius: BorderRadius.circular(16),
@@ -132,15 +138,16 @@ class _ActionButtonState extends State<ActionButton>
                                 width: 0.5,
                               )
                               : null,
-                      boxShadow: _isHovered && !widget.disabled
-                          ? [
-                            BoxShadow(
-                              color: bgColor.withValues(alpha: 0.4),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ]
-                          : null,
+                      boxShadow:
+                          _isHovered && !widget.disabled
+                              ? [
+                                BoxShadow(
+                                  color: bgColor.withValues(alpha: 0.4),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                              : null,
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,

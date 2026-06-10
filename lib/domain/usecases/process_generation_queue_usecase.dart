@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:lineleap/data/datasources/in_memory/generation_queue_notifier.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
 
 import '../entities/generation_request.dart';
@@ -9,23 +8,25 @@ import '../repositories/generation_queue_repository.dart';
 class ProcessGenerationQueueUseCase {
   final GenerationQueueRepository generationQueueRepository;
   final HordeGenerationService hordeGenerationService;
-  final GenerationQueueNotifier _queueNotifier;
   bool _isProcessing = false;
+  StreamSubscription<List<GenerationRequest>>? _queueSubscription;
 
   ProcessGenerationQueueUseCase({
     required this.generationQueueRepository,
     required this.hordeGenerationService,
-    required GenerationQueueNotifier queueNotifier,
-  }) : _queueNotifier = queueNotifier;
+  });
 
   /// Start listening for queue changes and process automatically
   void startListening() {
-    _queueNotifier.addListener(_onQueueChanged);
-    // Process any items already in the queue (e.g. recovered from persistence)
-    _onQueueChanged();
-  }
+    if (_queueSubscription != null) {
+      return;
+    }
 
-  void _onQueueChanged() {
+    _queueSubscription = generationQueueRepository
+        .observeQueuedRequests()
+        .listen((_) => processQueue());
+
+    // Process any items already in the queue (e.g. recovered from persistence)
     processQueue();
   }
 
@@ -119,7 +120,8 @@ class ProcessGenerationQueueUseCase {
     }
   }
 
-  void dispose() {
-    _queueNotifier.removeListener(_onQueueChanged);
+  Future<void> dispose() async {
+    await _queueSubscription?.cancel();
+    _queueSubscription = null;
   }
 }

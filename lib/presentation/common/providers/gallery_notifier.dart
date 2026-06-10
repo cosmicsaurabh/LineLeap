@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
-import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history_usecase.dart';
+import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
-import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history_usecase.dart';
+import 'package:lineleap/domain/usecases/save_scribble_transformation_to_history_usecase.dart';
 
 class GalleryNotifier extends ChangeNotifier {
   // Use cases (Gallery operations like loading, saving, deleting whole ScribbleTransformation Objects)
@@ -49,7 +49,7 @@ class GalleryNotifier extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = 'Failed to save image r45454to gallery';
+      _error = 'Failed to save image to gallery';
       notifyListeners();
       return false;
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 
 class ScribbleToolConfig {

@@ -68,10 +68,9 @@ class _GalleryPageState extends State<GalleryPage> {
       appBar: shouldUseVerticalAppBar ? null : _buildAppBar(theme, isDarkMode),
       body: Row(
         children: [
-          if (shouldUseVerticalAppBar) _buildVerticalAppBar(context, theme, isDarkMode),
-          Expanded(
-            child: _buildResponsiveGrid(gallery, isDarkMode),
-          ),
+          if (shouldUseVerticalAppBar)
+            _buildVerticalAppBar(context, theme, isDarkMode),
+          Expanded(child: _buildResponsiveGrid(gallery, isDarkMode)),
         ],
       ),
     );

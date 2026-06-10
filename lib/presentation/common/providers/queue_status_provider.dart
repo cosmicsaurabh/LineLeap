@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
 import '../../../domain/entities/generation_request.dart';
@@ -8,6 +10,7 @@ class QueueStatusProvider extends ChangeNotifier {
   final ProcessGenerationQueueUseCase _processQueueUseCase;
   List<GenerationRequest> _queueItems = [];
   bool _isLoading = false;
+  StreamSubscription<List<GenerationRequest>>? _queueSubscription;
 
   QueueStatusProvider({
     required GetGenerationQueueUseCase getQueueUseCase,
@@ -21,7 +24,7 @@ class QueueStatusProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   void _initStream() {
-    _getQueueUseCase.observe().listen((items) {
+    _queueSubscription = _getQueueUseCase.observe().listen((items) {
       _queueItems = items;
       notifyListeners();
     });
@@ -52,5 +55,11 @@ class QueueStatusProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('Error retrying generation: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _queueSubscription?.cancel();
+    super.dispose();
   }
 }

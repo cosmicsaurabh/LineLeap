@@ -238,7 +238,7 @@ Thank you for helping us maintain a safe community.
                     ),
                   ),
                 );
-              }).toList(),
+              }),
               const SizedBox(height: 20),
 
               // Comment field

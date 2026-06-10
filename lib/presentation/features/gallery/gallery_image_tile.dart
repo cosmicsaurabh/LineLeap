@@ -37,13 +37,15 @@ class _GalleryImageTileState extends State<GalleryImageTile>
       vsync: this,
     );
 
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
 
-    _opacityAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _opacityAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -82,10 +84,14 @@ class _GalleryImageTileState extends State<GalleryImageTile>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: isDarkMode
-                            ? Colors.black.withOpacity(_isHovered ? 0.5 : 0.3)
-                            : Colors.black.withOpacity(
-                                _isHovered ? 0.15 : 0.08),
+                        color:
+                            isDarkMode
+                                ? Colors.black.withValues(
+                                  alpha: _isHovered ? 0.5 : 0.3,
+                                )
+                                : Colors.black.withValues(
+                                  alpha: _isHovered ? 0.15 : 0.08,
+                                ),
                         blurRadius: _isHovered ? 20 : 12,
                         offset: Offset(0, _isHovered ? 8 : 4),
                       ),
@@ -98,7 +104,9 @@ class _GalleryImageTileState extends State<GalleryImageTile>
                         // Main generated image
                         Opacity(
                           opacity: _opacityAnimation.value,
-                          child: _buildImageWidget(widget.image.generatedImagePath),
+                          child: _buildImageWidget(
+                            widget.image.generatedImagePath,
+                          ),
                         ),
 
                         // Scribble preview in corner with its own tap handler
@@ -114,29 +122,34 @@ class _GalleryImageTileState extends State<GalleryImageTile>
                               width: _isHovered ? 70 : 60,
                               height: _isHovered ? 70 : 60,
                               decoration: BoxDecoration(
-                                color: isDarkMode
-                                    ? Colors.black.withOpacity(0.65)
-                                    : Colors.white.withOpacity(0.65),
+                                color:
+                                    isDarkMode
+                                        ? Colors.black.withValues(alpha: 0.65)
+                                        : Colors.white.withValues(alpha: 0.65),
                                 backgroundBlendMode: BlendMode.luminosity,
                                 border: Border.all(
                                   color: Colors.white,
                                   width: _isHovered ? 3 : 2,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
-                                boxShadow: _isHovered
-                                    ? [
-                                      BoxShadow(
-                                        color: Colors.white.withOpacity(0.3),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ]
-                                    : null,
+                                boxShadow:
+                                    _isHovered
+                                        ? [
+                                          BoxShadow(
+                                            color: Colors.white.withValues(
+                                              alpha: 0.3,
+                                            ),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                        : null,
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(6),
                                 child: _buildImageWidget(
-                                    widget.image.scribbleImagePath),
+                                  widget.image.scribbleImagePath,
+                                ),
                               ),
                             ),
                           ),
@@ -178,7 +191,7 @@ class _GalleryImageTileState extends State<GalleryImageTile>
   Widget _buildImageWidget(String filePath) {
     // Otherwise load from file
     return Hero(
-      tag: 'generated_image_${filePath}',
+      tag: 'generated_image_$filePath',
       child: Image.file(
         File(filePath),
         fit: BoxFit.cover,
