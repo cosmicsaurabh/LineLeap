@@ -43,6 +43,7 @@ class QueueStatusProvider extends ChangeNotifier {
   }
 
   Future<void> removeFromQueue(GenerationRequest request) async {
+    await _processQueueUseCase.cancelRequestById(request.localId);
     await _getQueueUseCase.removeFromQueue(request);
     // Optionally refresh the queue after removal
     await refreshQueue();

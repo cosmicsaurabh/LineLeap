@@ -1,4 +1,11 @@
-enum GenerationStatus { queued, submitting, polling, completed, failed }
+enum GenerationStatus {
+  queued,
+  submitting,
+  polling,
+  completed,
+  failed,
+  cancelled,
+}
 
 class GenerationRequest {
   final String localId; // UUID
@@ -31,6 +38,7 @@ class GenerationRequest {
     String? generatedPath,
     GenerationStatus? status,
     String? error,
+    bool clearError = false,
     DateTime? completedAt,
     DateTime? createdAt,
   }) {
@@ -41,7 +49,7 @@ class GenerationRequest {
       generationId: generationId ?? this.generationId,
       generatedPath: generatedPath ?? this.generatedPath,
       status: status ?? this.status,
-      error: error ?? this.error,
+      error: clearError ? null : error ?? this.error,
       completedAt: completedAt ?? this.completedAt,
       createdAt: createdAt ?? this.createdAt,
     );

@@ -8,25 +8,37 @@ class WatchGenerationRequestUseCase {
   WatchGenerationRequestUseCase({required this.generationQueueRepository});
 
   Stream<GenerationRequest?> call(String requestId) async* {
-    const maxAttempts = 60;
-    int attempts = 0;
+    final initialRequest = await generationQueueRepository.getRequestById(
+      requestId,
+    );
+    yield initialRequest;
 
-    while (attempts < maxAttempts) {
-      attempts++;
+    if (_isTerminal(initialRequest)) {
+      return;
+    }
 
-      // Wait before checking status
-      await Future.delayed(const Duration(seconds: 2));
-
-      final request = await generationQueueRepository.getRequestById(requestId);
+    await for (final requests
+        in generationQueueRepository.observeQueuedRequests()) {
+      GenerationRequest? request;
+      for (final item in requests) {
+        if (item.localId == requestId) {
+          request = item;
+          break;
+        }
+      }
 
       yield request;
 
-      // Stop watching if request is complete, failed, or doesn't exist
-      if (request?.status == GenerationStatus.completed ||
-          request?.status == GenerationStatus.failed ||
-          request == null) {
+      if (_isTerminal(request)) {
         break;
       }
     }
+  }
+
+  bool _isTerminal(GenerationRequest? request) {
+    return request == null ||
+        request.status == GenerationStatus.completed ||
+        request.status == GenerationStatus.failed ||
+        request.status == GenerationStatus.cancelled;
   }
 }

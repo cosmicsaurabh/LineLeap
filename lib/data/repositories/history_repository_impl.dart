@@ -39,10 +39,10 @@ class HistoryRepositoryImpl implements HistoryRepository {
 
     // Delete the actual image files from device storage
     try {
-      _imageDeviceInteractionService.deleteImageFromDevice(
+      await _imageDeviceInteractionService.deleteImageFromDevice(
         scribbleTransformation.generatedImagePath,
       );
-      _imageDeviceInteractionService.deleteImageFromDevice(
+      await _imageDeviceInteractionService.deleteImageFromDevice(
         scribbleTransformation.scribbleImagePath,
       );
       log('Image files deleted successfully');

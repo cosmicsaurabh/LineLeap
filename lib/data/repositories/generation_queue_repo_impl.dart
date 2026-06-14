@@ -63,20 +63,20 @@ class GenerationQueueRepositoryImpl implements GenerationQueueRepository {
 
   @override
   Stream<List<GenerationRequest>> observeQueuedRequests() {
-    final controller = StreamController<List<GenerationRequest>>.broadcast();
-
-    controller.add(_queueNotifier.queue);
-
+    late StreamController<List<GenerationRequest>> controller;
     void listener() {
       controller.add(_queueNotifier.queue);
     }
 
-    _queueNotifier.addListener(listener);
-
-    controller.onCancel = () {
-      _queueNotifier.removeListener(listener);
-      controller.close();
-    };
+    controller = StreamController<List<GenerationRequest>>.broadcast(
+      onListen: () {
+        controller.add(_queueNotifier.queue);
+        _queueNotifier.addListener(listener);
+      },
+      onCancel: () {
+        _queueNotifier.removeListener(listener);
+      },
+    );
 
     return controller.stream;
   }

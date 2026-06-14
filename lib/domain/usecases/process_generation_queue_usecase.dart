@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:lineleap/domain/entities/generation_cancellation_token.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
 
 import '../entities/generation_request.dart';
@@ -9,6 +10,8 @@ class ProcessGenerationQueueUseCase {
   final GenerationQueueRepository generationQueueRepository;
   final HordeGenerationService hordeGenerationService;
   bool _isProcessing = false;
+  String? _activeRequestId;
+  GenerationCancellationToken? _activeCancellationToken;
   StreamSubscription<List<GenerationRequest>>? _queueSubscription;
 
   ProcessGenerationQueueUseCase({
@@ -56,27 +59,47 @@ class ProcessGenerationQueueUseCase {
       // Update status to submitting
       var updatingRequest = nextRequest.copyWith(
         status: GenerationStatus.submitting,
+        clearError: true,
       );
       await generationQueueRepository.updateRequest(updatingRequest);
+
+      final cancellationToken = GenerationCancellationToken();
+      _activeRequestId = nextRequest.localId;
+      _activeCancellationToken = cancellationToken;
 
       try {
         // Process the generation request
         final result = await hordeGenerationService.generateFromPrompt(
           prompt: nextRequest.prompt,
           scribblePath: nextRequest.scribblePath,
+          cancellationToken: cancellationToken,
           onProgress: (progress) async {
             updatingRequest = updatingRequest.copyWith(
               status: GenerationStatus.polling,
+              clearError: true,
             );
             await generationQueueRepository.updateRequest(updatingRequest);
           },
         );
+        cancellationToken.throwIfCancelled();
 
         // Update with success result
         updatingRequest = updatingRequest.copyWith(
           status: GenerationStatus.completed,
           generatedPath: result,
           completedAt: DateTime.now(),
+          clearError: true,
+        );
+      } on GenerationCancelledException catch (error) {
+        final currentRequest = await generationQueueRepository.getRequestById(
+          nextRequest.localId,
+        );
+        if (currentRequest == null) {
+          return;
+        }
+        updatingRequest = currentRequest.copyWith(
+          status: GenerationStatus.cancelled,
+          error: error.message,
         );
       } catch (error) {
         // Update with error
@@ -89,6 +112,8 @@ class ProcessGenerationQueueUseCase {
       // Update the request in repository
       await generationQueueRepository.updateRequest(updatingRequest);
     } finally {
+      _activeRequestId = null;
+      _activeCancellationToken = null;
       _isProcessing = false;
       // After finishing, check if there are more queued items
       _checkForMore();
@@ -109,15 +134,41 @@ class ProcessGenerationQueueUseCase {
   Future<void> retryRequestById(String localId) async {
     try {
       final request = await generationQueueRepository.getRequestById(localId);
-      if (request == null || request.status != GenerationStatus.failed) {
+      if (request == null ||
+          (request.status != GenerationStatus.failed &&
+              request.status != GenerationStatus.cancelled)) {
         return;
       }
 
-      var updatingRequest = request.copyWith(status: GenerationStatus.queued);
+      final updatingRequest = request.copyWith(
+        status: GenerationStatus.queued,
+        clearError: true,
+      );
       await generationQueueRepository.updateRequest(updatingRequest);
     } catch (e) {
       // Handle error
     }
+  }
+
+  Future<void> cancelRequestById(String localId) async {
+    final request = await generationQueueRepository.getRequestById(localId);
+    if (request == null ||
+        request.status == GenerationStatus.completed ||
+        request.status == GenerationStatus.failed ||
+        request.status == GenerationStatus.cancelled) {
+      return;
+    }
+
+    if (_activeRequestId == localId) {
+      _activeCancellationToken?.cancel();
+    }
+
+    await generationQueueRepository.updateRequest(
+      request.copyWith(
+        status: GenerationStatus.cancelled,
+        error: 'Generation cancelled',
+      ),
+    );
   }
 
   Future<void> dispose() async {

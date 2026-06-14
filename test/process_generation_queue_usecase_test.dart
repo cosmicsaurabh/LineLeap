@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lineleap/domain/entities/generation_cancellation_token.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
@@ -33,22 +34,137 @@ void main() {
     expect(repository.statusUpdates, contains(GenerationStatus.polling));
     expect(repository.statusUpdates, contains(GenerationStatus.completed));
   });
+
+  test('processQueue marks request failed when generation throws', () async {
+    final request = GenerationRequest(
+      localId: 'request-1',
+      prompt: 'a glass tower',
+      scribblePath: '/tmp/scribble.png',
+      status: GenerationStatus.queued,
+    );
+    final repository = _FakeGenerationQueueRepository([request]);
+    final service = _FakeHordeGenerationService(
+      '/tmp/generated.png',
+      error: Exception('provider unavailable'),
+    );
+    final useCase = ProcessGenerationQueueUseCase(
+      generationQueueRepository: repository,
+      hordeGenerationService: service,
+    );
+
+    await useCase.processQueue();
+
+    final updated = await repository.getRequestById('request-1');
+
+    expect(updated?.status, GenerationStatus.failed);
+    expect(updated?.error, contains('provider unavailable'));
+    expect(repository.statusUpdates, contains(GenerationStatus.submitting));
+    expect(repository.statusUpdates, contains(GenerationStatus.failed));
+  });
+
+  test('retryRequestById requeues failed and cancelled requests', () async {
+    final failedRequest = GenerationRequest(
+      localId: 'failed-request',
+      prompt: 'a glass tower',
+      scribblePath: '/tmp/scribble.png',
+      status: GenerationStatus.failed,
+      error: 'provider unavailable',
+    );
+    final cancelledRequest = GenerationRequest(
+      localId: 'cancelled-request',
+      prompt: 'a red bridge',
+      scribblePath: '/tmp/scribble-2.png',
+      status: GenerationStatus.cancelled,
+      error: 'Generation cancelled',
+    );
+    final repository = _FakeGenerationQueueRepository([
+      failedRequest,
+      cancelledRequest,
+    ]);
+    final useCase = ProcessGenerationQueueUseCase(
+      generationQueueRepository: repository,
+      hordeGenerationService: _FakeHordeGenerationService('/tmp/generated.png'),
+    );
+
+    await useCase.retryRequestById('failed-request');
+    await useCase.retryRequestById('cancelled-request');
+
+    final retriedFailed = await repository.getRequestById('failed-request');
+    final retriedCancelled = await repository.getRequestById(
+      'cancelled-request',
+    );
+
+    expect(retriedFailed?.status, GenerationStatus.queued);
+    expect(retriedFailed?.error, isNull);
+    expect(retriedCancelled?.status, GenerationStatus.queued);
+    expect(retriedCancelled?.error, isNull);
+  });
+
+  test('cancelRequestById cancels the active generation token', () async {
+    final request = GenerationRequest(
+      localId: 'request-1',
+      prompt: 'a glass tower',
+      scribblePath: '/tmp/scribble.png',
+      status: GenerationStatus.queued,
+    );
+    final repository = _FakeGenerationQueueRepository([request]);
+    final service = _FakeHordeGenerationService(
+      '/tmp/generated.png',
+      waitForCancellation: true,
+    );
+    final useCase = ProcessGenerationQueueUseCase(
+      generationQueueRepository: repository,
+      hordeGenerationService: service,
+    );
+
+    final processing = useCase.processQueue();
+    await service.started.future;
+    await useCase.cancelRequestById('request-1');
+    await processing;
+
+    final updated = await repository.getRequestById('request-1');
+
+    expect(service.cancellationToken?.isCancelled, isTrue);
+    expect(updated?.status, GenerationStatus.cancelled);
+    expect(updated?.error, contains('cancelled'));
+    expect(repository.statusUpdates, contains(GenerationStatus.cancelled));
+  });
 }
 
 class _FakeHordeGenerationService implements HordeGenerationService {
   final String outputPath;
+  final Object? error;
+  final bool waitForCancellation;
   final List<String> prompts = [];
+  final Completer<void> started = Completer<void>();
+  GenerationCancellationToken? cancellationToken;
 
-  _FakeHordeGenerationService(this.outputPath);
+  _FakeHordeGenerationService(
+    this.outputPath, {
+    this.error,
+    this.waitForCancellation = false,
+  });
 
   @override
   Future<String> generateFromPrompt({
     required String prompt,
     required String scribblePath,
     void Function(int)? onProgress,
+    GenerationCancellationToken? cancellationToken,
   }) async {
     prompts.add(prompt);
+    this.cancellationToken = cancellationToken;
+    if (!started.isCompleted) {
+      started.complete();
+    }
     onProgress?.call(50);
+    if (error != null) {
+      throw error!;
+    }
+    while (waitForCancellation && cancellationToken?.isCancelled != true) {
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+    }
+    cancellationToken?.throwIfCancelled();
     return outputPath;
   }
 }

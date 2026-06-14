@@ -94,6 +94,10 @@ class GenerationProvider extends ChangeNotifier {
         _error = 'Generation failed: ${request.error ?? "Unknown error"}';
         _stopWatching();
         break;
+      case GenerationStatus.cancelled:
+        _error = request.error ?? 'Generation cancelled';
+        _stopWatching();
+        break;
     }
   }
 

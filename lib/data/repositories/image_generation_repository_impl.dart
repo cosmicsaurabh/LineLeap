@@ -14,9 +14,12 @@ class ImageGenerationRepositoryImpl implements ImageGenerationRepository {
     Uint8List sketchBytes,
     String prompt,
   ) async {
-    final base64Image = base64Encode(sketchBytes);
-    final jobId = await api.submitSketchJob(base64Image, prompt);
-    if (jobId == null) return null;
-    return await api.pollForResult(jobId);
+    try {
+      final base64Image = base64Encode(sketchBytes);
+      final jobId = await api.submitSketchJob(base64Image, prompt);
+      return await api.pollForResult(jobId);
+    } catch (_) {
+      return null;
+    }
   }
 }
