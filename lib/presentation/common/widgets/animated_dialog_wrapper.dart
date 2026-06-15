@@ -24,18 +24,17 @@ class _AnimatedDialogWrapperState extends State<AnimatedDialogWrapper>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _controller.forward();
   }
@@ -50,10 +49,7 @@ class _AnimatedDialogWrapperState extends State<AnimatedDialogWrapper>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }
@@ -69,10 +65,7 @@ Future<T?> showAnimatedDialog<T>({
   return showGeneralDialog<T>(
     context: context,
     pageBuilder: (context, animation, secondaryAnimation) {
-      return AnimatedDialogWrapper(
-        duration: duration,
-        child: builder(context),
-      );
+      return AnimatedDialogWrapper(duration: duration, child: builder(context));
     },
     barrierColor: barrierColor,
     barrierDismissible: barrierDismissible,
@@ -83,4 +76,3 @@ Future<T?> showAnimatedDialog<T>({
     },
   );
 }
-

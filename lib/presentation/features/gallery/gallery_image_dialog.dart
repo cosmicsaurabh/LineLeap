@@ -102,11 +102,6 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
   }
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -323,7 +318,12 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                     nextScale = 10;
                   }
                   double scaleFactor = nextScale / _currentScale;
-                  _transformationController.value.scale(scaleFactor);
+                  _transformationController.value.scaleByDouble(
+                    scaleFactor,
+                    scaleFactor,
+                    1,
+                    1,
+                  );
                   setState(() {
                     _currentScale = nextScale;
                   });
@@ -354,7 +354,12 @@ class _GalleryImageDialogState extends State<GalleryImageDialog>
                     nextScale = 1;
                   }
                   double scaleFactor = nextScale / _currentScale;
-                  _transformationController.value.scale(scaleFactor);
+                  _transformationController.value.scaleByDouble(
+                    scaleFactor,
+                    scaleFactor,
+                    1,
+                    1,
+                  );
                   setState(() {
                     _currentScale = nextScale;
                   });

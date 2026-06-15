@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:lineleap/core/config/brush.dart';
 import 'package:lineleap/core/config/mirrot_mode.dart';
-import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
+import 'package:lineleap/domain/entities/stroke.dart';
 
 class EnhancedScribblePainter extends CustomPainter {
   final List<Stroke> strokes;

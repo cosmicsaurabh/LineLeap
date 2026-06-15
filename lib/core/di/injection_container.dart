@@ -21,11 +21,11 @@ import 'package:lineleap/domain/usecases/delete_imagebytes_from_path_usecase.dar
 import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/generate_transformationfromscribble_usecase.dart';
-import 'package:lineleap/domain/usecases/get_scribbleTransformations_from_history_usecase.dart';
+import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
-import 'package:lineleap/domain/usecases/save_scribbleTransformation_to_history_usecase.dart';
-import 'package:lineleap/domain/usecases/save_imageBytes_return_path_usecase.dart';
+import 'package:lineleap/domain/usecases/save_scribble_transformation_to_history_usecase.dart';
+import 'package:lineleap/domain/usecases/save_image_bytes_return_path_usecase.dart';
 import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
 import 'package:lineleap/domain/usecases/watch_generation_request_usecase.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';
@@ -110,7 +110,6 @@ Future<void> initDependencies() async {
     () => ProcessGenerationQueueUseCase(
       generationQueueRepository: sl(),
       hordeGenerationService: sl(),
-      queueNotifier: sl(),
     ),
   );
   sl.registerLazySingleton(
@@ -132,7 +131,6 @@ Future<void> initDependencies() async {
   sl.registerFactory(
     () => GenerationProvider(
       enqueueUseCase: sl(),
-      processUseCase: sl(),
       queueRepository: sl(),
       saveImageUseCase: sl(),
       watchRequestUseCase: sl(),
@@ -143,7 +141,8 @@ Future<void> initDependencies() async {
   );
 
   // Restore persisted queue and start event-driven processing
-  final queueRepo = sl<GenerationQueueRepository>() as GenerationQueueRepositoryImpl;
+  final queueRepo =
+      sl<GenerationQueueRepository>() as GenerationQueueRepositoryImpl;
   await queueRepo.restoreQueue();
   sl<ProcessGenerationQueueUseCase>().startListening();
 }

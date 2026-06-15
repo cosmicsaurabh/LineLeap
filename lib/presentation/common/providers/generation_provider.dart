@@ -3,16 +3,14 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:lineleap/core/utils/image_utils.dart';
-import 'package:lineleap/domain/usecases/save_imageBytes_return_path_usecase.dart';
+import 'package:lineleap/domain/usecases/save_image_bytes_return_path_usecase.dart';
 import 'package:lineleap/domain/usecases/watch_generation_request_usecase.dart';
 import '../../../domain/entities/generation_request.dart';
 import '../../../domain/usecases/enqueue_generation_request_usecase.dart';
-import '../../../domain/usecases/process_generation_queue_usecase.dart';
 import '../../../domain/repositories/generation_queue_repository.dart';
 
 class GenerationProvider extends ChangeNotifier {
   final EnqueueGenerationRequestUseCase _enqueueUseCase;
-  final ProcessGenerationQueueUseCase _processUseCase;
   final GenerationQueueRepository _queueRepository;
   final SaveImagebytesReturnPathUseCase _saveImageUseCase;
   final WatchGenerationRequestUseCase _watchRequestUseCase;
@@ -28,12 +26,10 @@ class GenerationProvider extends ChangeNotifier {
 
   GenerationProvider({
     required EnqueueGenerationRequestUseCase enqueueUseCase,
-    required ProcessGenerationQueueUseCase processUseCase,
     required GenerationQueueRepository queueRepository,
     required SaveImagebytesReturnPathUseCase saveImageUseCase,
     required WatchGenerationRequestUseCase watchRequestUseCase,
   }) : _enqueueUseCase = enqueueUseCase,
-       _processUseCase = processUseCase,
        _queueRepository = queueRepository,
        _saveImageUseCase = saveImageUseCase,
        _watchRequestUseCase = watchRequestUseCase;
@@ -98,6 +94,10 @@ class GenerationProvider extends ChangeNotifier {
         _error = 'Generation failed: ${request.error ?? "Unknown error"}';
         _stopWatching();
         break;
+      case GenerationStatus.cancelled:
+        _error = request.error ?? 'Generation cancelled';
+        _stopWatching();
+        break;
     }
   }
 
@@ -141,6 +141,7 @@ class GenerationProvider extends ChangeNotifier {
     );
     if (scribblePath == null) {
       _error = 'Failed to save generated image';
+      _isCapturing = false;
       notifyListeners();
       return null;
     }
@@ -213,7 +214,7 @@ class GenerationProvider extends ChangeNotifier {
 
   @override
   void dispose() {
-    _processUseCase.dispose();
+    _watchSubscription?.cancel();
     super.dispose();
   }
 }

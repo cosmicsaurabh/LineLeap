@@ -147,6 +147,8 @@ Widget getStatusIcon(GenerationRequest request) {
   switch (request.status) {
     case GenerationStatus.failed:
       return Icon(Icons.refresh);
+    case GenerationStatus.cancelled:
+      return const Icon(Icons.cancel_outlined);
     case GenerationStatus.polling:
       return const SizedBox(
         width: 24,
@@ -367,6 +369,7 @@ Widget buildStatusSection(
           // tooltip: 'Download',
         ),
       if (request.status == GenerationStatus.failed ||
+          request.status == GenerationStatus.cancelled ||
           request.status == GenerationStatus.completed)
         ActionButton(
           onPressed: () {
@@ -378,12 +381,15 @@ Widget buildStatusSection(
         ),
       if (request.status == GenerationStatus.polling ||
           request.status == GenerationStatus.submitting ||
-          request.status == GenerationStatus.queued)
+          request.status == GenerationStatus.queued ||
+          request.status == GenerationStatus.cancelled)
         Text(
           request.status == GenerationStatus.polling
               ? 'Generating...'
               : request.status == GenerationStatus.submitting
               ? 'Submitting...'
+              : request.status == GenerationStatus.cancelled
+              ? 'Cancelled'
               : 'Queued',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color:
@@ -391,6 +397,8 @@ Widget buildStatusSection(
                     ? Theme.of(context).primaryColor
                     : request.status == GenerationStatus.submitting
                     ? Colors.orange
+                    : request.status == GenerationStatus.cancelled
+                    ? Colors.grey
                     : Colors.blue,
           ),
         ),

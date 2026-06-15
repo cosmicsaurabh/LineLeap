@@ -15,7 +15,8 @@ Future<void> showPinnedToolsSheet({
 }) async {
   final theme = Theme.of(context);
   final responsive = ResponsiveLayoutHelper(context);
-  final maxHeight = MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
+  final maxHeight =
+      MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
 
   await showCupertinoModalPopup(
     context: context,
@@ -292,10 +293,7 @@ Future<void> showPinnedToolsSheet({
                   ],
                   cancelButton: CupertinoActionSheetAction(
                     onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      'Done',
-                      style: TextStyle(fontSize: fontSize),
-                    ),
+                    child: Text('Done', style: TextStyle(fontSize: fontSize)),
                   ),
                 ),
               ),

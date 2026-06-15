@@ -3,6 +3,7 @@ import 'package:lineleap/core/config/brush.dart';
 import 'package:lineleap/core/config/mirrot_mode.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/domain/entities/drawing_state.dart';
+import 'package:lineleap/domain/entities/stroke.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';
 
 class EnhancedScribbleNotifier extends ChangeNotifier {
@@ -251,33 +252,5 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
       historyIndex: newHistory.length - 1,
     );
     notifyListeners();
-  }
-}
-
-class Stroke {
-  final List<Offset> points;
-  final Color color;
-  final double width;
-  final BrushStyle style;
-
-  const Stroke({
-    required this.points,
-    required this.color,
-    required this.width,
-    required this.style,
-  });
-
-  Stroke copyWith({
-    List<Offset>? points,
-    Color? color,
-    double? width,
-    BrushStyle? style,
-  }) {
-    return Stroke(
-      points: points ?? this.points,
-      color: color ?? this.color,
-      width: width ?? this.width,
-      style: style ?? this.style,
-    );
   }
 }

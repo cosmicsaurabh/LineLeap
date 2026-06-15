@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'dart:ui';
+
 import 'package:lineleap/core/config/brush.dart';
 import 'package:lineleap/core/config/mirrot_mode.dart';
-import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
+import 'package:lineleap/domain/entities/stroke.dart';
 
 class DrawingState {
   final List<Stroke> strokes;
@@ -13,10 +14,10 @@ class DrawingState {
 
   const DrawingState({
     this.strokes = const [],
-    this.selectedColor = Colors.grey,
+    this.selectedColor = const Color(0xFF9E9E9E),
     this.brushStyle = BrushStyle.medium,
-    this.history = const [],
-    this.historyIndex = -1,
+    this.history = const <List<Stroke>>[<Stroke>[]],
+    this.historyIndex = 0,
     this.mirrorMode = MirrorMode.none,
   });
 

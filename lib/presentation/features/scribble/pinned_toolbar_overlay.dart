@@ -28,7 +28,7 @@ class PinnedToolbarOverlay extends StatelessWidget {
     final theme = Theme.of(context);
     final responsive = ResponsiveLayoutHelper(context);
     final toolbarPosition = responsive.getToolbarPosition();
-    
+
     return ListenableBuilder(
       listenable: notifier,
       builder: (context, child) {
@@ -188,7 +188,9 @@ class PinnedToolbarOverlay extends StatelessWidget {
 
   void _showBrushOptions(BuildContext context) {
     final responsive = ResponsiveLayoutHelper(context);
-    final maxHeight = MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
+    final maxHeight =
+        MediaQuery.of(context).size.height *
+        responsive.getBottomSheetMaxHeight();
     final fontSize = responsive.getFontSize(baseSize: 16);
     final iconSize = responsive.getIconSize(baseSize: 20);
 
@@ -213,10 +215,7 @@ class PinnedToolbarOverlay extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            _getBrushIcon(style),
-                            size: iconSize,
-                          ),
+                          Icon(_getBrushIcon(style), size: iconSize),
                           SizedBox(width: responsive.isSmallScreen ? 6 : 8),
                           Flexible(
                             child: Text(
@@ -231,10 +230,7 @@ class PinnedToolbarOverlay extends StatelessWidget {
                   }).toList(),
               cancelButton: CupertinoActionSheetAction(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancel',
-                  style: TextStyle(fontSize: fontSize),
-                ),
+                child: Text('Cancel', style: TextStyle(fontSize: fontSize)),
               ),
             ),
           ),

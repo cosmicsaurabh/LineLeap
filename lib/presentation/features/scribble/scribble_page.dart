@@ -29,7 +29,7 @@ class ScribblePage extends StatefulWidget {
 
 class _ScribblePageState extends State<ScribblePage>
     with TickerProviderStateMixin {
-  final EnhancedScribbleNotifier _notifier = EnhancedScribbleNotifier();
+  late final EnhancedScribbleNotifier _notifier;
   final GlobalKey _paintKey = GlobalKey();
 
   late AnimationController _generateButtonController;
@@ -48,6 +48,7 @@ class _ScribblePageState extends State<ScribblePage>
   @override
   void initState() {
     super.initState();
+    _notifier = context.read<EnhancedScribbleNotifier>();
     _generateButtonController = AnimationController(
       duration: const Duration(milliseconds: 200),
       vsync: this,
@@ -66,7 +67,6 @@ class _ScribblePageState extends State<ScribblePage>
 
   @override
   void dispose() {
-    _notifier.dispose();
     _generateButtonController.dispose();
     _toolbarController.dispose();
     _typingController.dispose();

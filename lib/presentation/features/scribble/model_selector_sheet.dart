@@ -1,6 +1,5 @@
 // Model Selector Sheet
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 
 class ModelSelectorSheet extends StatelessWidget {
@@ -17,7 +16,9 @@ class ModelSelectorSheet extends StatelessWidget {
       'Leonardo AI',
     ];
     final responsive = ResponsiveLayoutHelper(context);
-    final maxHeight = MediaQuery.of(context).size.height * responsive.getBottomSheetMaxHeight();
+    final maxHeight =
+        MediaQuery.of(context).size.height *
+        responsive.getBottomSheetMaxHeight();
     final fontSize = responsive.getFontSize(baseSize: 16);
     final iconSize = responsive.getIconSize(baseSize: 20);
 
@@ -46,7 +47,8 @@ class ModelSelectorSheet extends StatelessWidget {
                         color: CupertinoColors.activeBlue,
                         size: iconSize,
                       ),
-                    if (isSelected) SizedBox(width: responsive.isSmallScreen ? 6 : 8),
+                    if (isSelected)
+                      SizedBox(width: responsive.isSmallScreen ? 6 : 8),
                     Flexible(
                       child: Text(
                         model,
@@ -65,10 +67,7 @@ class ModelSelectorSheet extends StatelessWidget {
             }).toList(),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancel',
-            style: TextStyle(fontSize: fontSize),
-          ),
+          child: Text('Cancel', style: TextStyle(fontSize: fontSize)),
         ),
       ),
     );

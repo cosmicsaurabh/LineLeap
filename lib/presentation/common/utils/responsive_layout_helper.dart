@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 class ResponsiveBreakpoints {
   // Landscape threshold: width > height * ratio
   static const double landscapeRatio = 1.5;
-  
+
   // Low height threshold (in logical pixels)
   static const double lowHeightThreshold = 600;
-  
+
   // Small screen thresholds
   static const double smallWidthThreshold = 600;
   static const double smallHeightThreshold = 800;
-  
+
   // Very small screen thresholds
   static const double verySmallWidthThreshold = 400;
   static const double verySmallHeightThreshold = 600;
@@ -25,11 +25,12 @@ class ResponsiveLayoutHelper {
   final double aspectRatio;
 
   ResponsiveLayoutHelper(BuildContext context)
-      : screenSize = MediaQuery.of(context).size,
-        width = MediaQuery.of(context).size.width,
-        height = MediaQuery.of(context).size.height,
-        aspectRatio = MediaQuery.of(context).size.width /
-            MediaQuery.of(context).size.height;
+    : screenSize = MediaQuery.of(context).size,
+      width = MediaQuery.of(context).size.width,
+      height = MediaQuery.of(context).size.height,
+      aspectRatio =
+          MediaQuery.of(context).size.width /
+          MediaQuery.of(context).size.height;
 
   /// Check if screen is in landscape mode (width much larger than height)
   bool get isLandscape => aspectRatio > ResponsiveBreakpoints.landscapeRatio;
@@ -54,8 +55,9 @@ class ResponsiveLayoutHelper {
 
   /// Determine if app bar should be vertical
   bool shouldUseVerticalAppBar() {
-    return isLandscape || (width > ResponsiveBreakpoints.smallWidthThreshold &&
-        height < ResponsiveBreakpoints.lowHeightThreshold);
+    return isLandscape ||
+        (width > ResponsiveBreakpoints.smallWidthThreshold &&
+            height < ResponsiveBreakpoints.lowHeightThreshold);
   }
 
   /// Determine if components should be scaled down
@@ -103,10 +105,4 @@ class ResponsiveLayoutHelper {
 }
 
 /// Toolbar position enum
-enum ToolbarPosition {
-  top,
-  bottom,
-  left,
-  right,
-}
-
+enum ToolbarPosition { top, bottom, left, right }
