@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-001 (undo/redo corruption) is in progress; implementation and automated verification are complete locally.**
+> **LL-002 (transparent canvas capture) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-001 — Undo/redo corrupts strokes into invisible dots**; **LL-020 — Establish and maintain the project documentation baseline** remains open pending merge verification.
+- Active issue(s): **LL-002 — Canvas capture has a transparent background**. The committed LL-001 and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-001 implementation checkpoint, push `feature`, and open/update its PR. Manually verify the A/B/undo/redo sequence before merge; after merge, move LL-001 to `Done` and start LL-002.
+- Next step: commit the LL-002 implementation checkpoint, push `feature`, and open/update its PR. Before merge, generate from the same sketch in light and dark themes and inspect the captured PNG; after merge, move LL-002 to `Done` and start LL-003.
 
 ---
 
@@ -33,7 +33,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | Not started | In progress | Blocked | In review | Done | Won't do |
 |---|---|---|---|---|---|
 | — | LL-001 | — | — | — | — |
-| LL-002 | | | | | |
+| — | LL-002 | | | | |
 | LL-003 | | | | | |
 | LL-004 | | | | | |
 | LL-005 | | | | | |
@@ -55,7 +55,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **20 not started** · **2 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **19 not started** · **3 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -68,7 +68,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 ### M1 — Immediate (P0 core fixes + P1 pre-release cleanup)
 
 - ☐ **LL-001** (P0, **In progress**) — Undo/redo corrupts strokes into invisible dots
-- ☐ **LL-002** (P0) — Canvas capture has a transparent background
+- ☐ **LL-002** (P0, **In progress**) — Canvas capture has a transparent background
 - ☐ **LL-003** (P0) — Generation and gallery error details are hidden; offline guidance is missing
 - ☐ **LL-006** (P1) — Saved theme is never restored on launch
 - ☐ **LL-008** (P1) — Compliance: report email, privacy policy, and permissions contradict the app
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-29 — Normalize generation captures to opaque white
+- Session goal: fix LL-002 so the PNG sent to Horde has a deterministic opaque white background without changing the theme-aware on-screen canvas.
+- Issues touched (LL-###): LL-002.
+- Files changed: `lib/core/utils/image_utils.dart`, `test/image_utils_test.dart`, and this tracker.
+- Verified how: the decoded-pixel regression failed against the old behavior with transparent `[0, 0, 0, 0]` background pixels; focused capture test → passed in light and dark themes with identical RGBA output, preserved red stroke samples, white off-stroke samples, and alpha 255 everywhere; read-only format check → 0 changes; `flutter analyze` → 0 issues; full `flutter test` → all 13 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; the issue remains open until review, merge, and manual generation verification.
+- Next step: commit and push the coherent LL-002 checkpoint, open/update the PR, inspect a saved capture from the same sketch in both themes, then move the issue through `In review` to `Done` only after merge.
+- Blockers: none.
 
 ### 2026-07-29 — Preserve completed strokes through undo and redo
 - Session goal: fix LL-001 so undo/redo restores completed strokes instead of stale one-point snapshots.
