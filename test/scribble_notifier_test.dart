@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lineleap/core/config/mirrot_mode.dart';
+import 'package:lineleap/core/config/mirror_mode.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 
 void main() {

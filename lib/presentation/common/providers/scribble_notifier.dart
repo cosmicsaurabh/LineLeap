@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lineleap/core/config/brush.dart';
-import 'package:lineleap/core/config/mirrot_mode.dart';
+import 'package:lineleap/core/config/mirror_mode.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/domain/entities/drawing_state.dart';
 import 'package:lineleap/domain/entities/stroke.dart';

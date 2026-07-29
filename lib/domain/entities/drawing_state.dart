@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:lineleap/core/config/brush.dart';
-import 'package:lineleap/core/config/mirrot_mode.dart';
+import 'package:lineleap/core/config/mirror_mode.dart';
 import 'package:lineleap/domain/entities/stroke.dart';
 
 class DrawingState {

@@ -183,10 +183,9 @@ Two Hive boxes, **two different serialization strategies**, **no schema versioni
 
 - **`status` stored as `enum.index`** (`generation_queue_local_datasource.dart:41`, read back via `GenerationStatus.values[...]` `:53`). **Reordering or inserting values in `GenerationStatus` silently corrupts every persisted queue record.** Only ever append new enum values at the end.
 - **Persisted and transient timestamps are conflated.** `gallery_history.createdAtHive` is a `String` (`scribble_transformation_hive_model.dart:18`), and gallery promotion persists epoch-millis (`queue_overlay_widget.dart:68-70`). The queue's *view-only* object instead receives ISO-8601 or `"-"` (`:92-95`); that value is not written to Hive and the dialog tries to parse it as epoch-millis. `GenerationRequest.createdAt` is never set at enqueue. During a session the gallery inserts new items at index 0, while a cold load uses unsorted Hive iteration order, so ordering can change after restart (LL-010).
-- **`DateTimeAdapter` (typeId 16) exists but is never registered or used** (`lib/data/models/date_time_adapter.dart:6`; file comment says it's "on hold"). Dead config; do not assume DateTimes round-trip as ints anywhere.
 - **`restoreQueue()` re-queues interrupted records but does not resume them.** On launch it resets `submitting`/`polling` → `queued` (`generation_queue_repo_impl.dart:18-27`). Because `generationId` is not persisted by the current service flow, processing submits a new Horde job. Terminal `completed`/`failed`/`cancelled` records are restored indefinitely and never pruned (LL-004/LL-005).
 - **Stored paths are absolute** app-container paths (`image_device_interaction_service.dart:10-14`). Container base paths are not durable identifiers. LL-007 needs one centralized resolver used by every file consumer plus an idempotent migration from legacy absolute records to relative storage identifiers; changing only the save service is insufficient because presentation and the Horde service construct `File(path)` directly.
-- **Theme is *not* in Hive.** It uses `SharedPreferences` (`lib/data/repositories/theme_mode_repository._impl.dart:9-12`). *(Note the typo filename `theme_mode_repository._impl.dart` — LL-014.)*
+- **Theme is *not* in Hive.** It uses `SharedPreferences` (`lib/data/repositories/theme_mode_repository_impl.dart`).
 
 ---
 
@@ -209,16 +208,14 @@ Six `ChangeNotifier`s appear in the root `MultiProvider` (`main.dart:38-52`). Fi
 
 ## 6. Dependency injection (`get_it`)
 
-Single container `sl` (`injection_container.dart:37`); `initDependencies()` runs once at bootstrap.
+Single container `sl` (`injection_container.dart:34`); `initDependencies()` runs once at bootstrap.
 
 | Registration kind | Members |
 |---|---|
-| **Eager singletons** (`registerSingleton`) | `Box<ScribbleTransformationHive>` (opened `await`), `AIHordeAPI`, `GenerationQueueNotifier`, `GenerationQueueLocalDatasource` (`:41-48`), `ThemeModeRepository` (`:62`) |
-| **Lazy singletons** (`registerLazySingleton`) | all services (`:51-59`), all other repositories (`:63-81`), all usecases (`:84-120`) |
-| **Factories** (`registerFactory`) | 5 presentation providers (`:122-141`); `GenerationQueueNotifier` is the eager singleton above |
-| **Post-registration side effects** | hard-cast `queueRepo as GenerationQueueRepositoryImpl` → `restoreQueue()` (`:144-146`), then `ProcessGenerationQueueUseCase.startListening()` (`:147`) |
-
-> **Dead DI chains** (registered but unreachable, LL-014): `ImageGenerationRepository`→`ImageGenerationRepositoryImpl` (`:79-81`) feeding `GenerateTransformationfromscribbleUseCase` (`:115-117`), and `DeleteImagebytesFromPathUseCase` (`:97-99`). These are leftovers from the abandoned Replicate/Vertex path.
+| **Eager singletons** (`registerSingleton`) | `Box<ScribbleTransformationHive>` (opened `await`), `AIHordeAPI`, `GenerationQueueNotifier`, `GenerationQueueLocalDatasource` (`:38-45`), `ThemeModeRepository` (`:59`) |
+| **Lazy singletons** (`registerLazySingleton`) | live services, non-theme repositories, and use cases |
+| **Factories** (`registerFactory`) | 5 presentation providers (`:113-134`); `GenerationQueueNotifier` is the eager singleton above |
+| **Post-registration side effects** | hard-cast `queueRepo as GenerationQueueRepositoryImpl` → `restoreQueue()` (`:137-139`), then `ProcessGenerationQueueUseCase.startListening()` (`:140`) |
 
 ---
 
@@ -232,7 +229,7 @@ Single container `sl` (`injection_container.dart:37`); `initDependencies()` runs
 
 ## 8. AI provider surface (what's actually wired)
 
-- **Only Stable Horde is live.** `lib/data/remote/replicate_api.dart` and `lib/data/remote/google_vertex_ai_api.dart` are **100% commented-out dead files** (LL-014).
+- **Only Stable Horde is live.** Abandoned Replicate and Google Vertex stubs and their unreachable DI path have been removed.
 - **API key:** `AI_HORDE_API_KEY` via `String.fromEnvironment`, default `'0000000000'` (the Horde public anonymous key) — `ai_horde_api.dart:9-12`. Override at run/build with `--dart-define=AI_HORDE_API_KEY=<key>` (see [DEVELOPMENT.md](./DEVELOPMENT.md)).
 - **The model selector is fake and scheduled for removal** — it offers DALL-E 3 / Midjourney / Leonardo, none of which Horde serves, and the choice is never sent. LL-017 removes the control; real Horde model selection would be separately scoped.
 
@@ -246,7 +243,6 @@ Structural issues baked into the current design. Full detail, evidence, and acce
 |---|---|---|---|
 | [LL-004](./BACKLOG.md) | Long Horde queues fail; persist generationId, resume polling, remote cancel, adaptive polling | P1 / M2 | Submission and polling are currently one service call, so `generationId` never reaches the persisted request. Split submit from poll/resume (or expose a durable post-submit seam), persist the ID before polling, resume only when an ID is present and valid, and make a new submission an explicit fallback. Remote cancel uses that persisted ID. Adaptive polling needs a wall-clock policy informed by `wait_time`/`queue_position`, not another fixed attempt count. |
 | [LL-005](./BACKLOG.md) | Bound queue history and define image-file ownership | P1 / M2 | `restoreQueue()` restores terminal items forever (`generation_queue_repo_impl.dart:15-28`), but indiscriminate file deletion is unsafe: gallery promotion stores the same paths and then removes the queue record. Define queue-owned versus gallery-owned/shared files, transfer ownership on promotion (or copy/reference-count), retain retry inputs as required, and only then add bounded pruning and reconciliation. |
-| [LL-006](./BACKLOG.md) | Saved theme is never restored on launch | P1 / M1 | The implementation checkpoint now restores through a DI-wired `GetThemeModeUseCase` before `runApp` and has first-frame regression coverage. Manual cold-restart verification, review, and merge remain before the issue is done. |
 | [LL-007](./BACKLOG.md) | Absolute file paths break the iOS gallery after app update | P1 / M2 | Absolute container paths are persisted (`image_device_interaction_service.dart:10-14`) and used directly throughout data and presentation. Introduce one storage-path abstraction/resolver, persist relative identifiers, and run an idempotent migration for both Hive stores before removing legacy support. |
 | [LL-009](./BACKLOG.md) | Make queue state transitions atomic and cancellation-safe | P2 / M3 | `processQueue` persists a captured local var at the end (`process_generation_queue_usecase.dart:60-113`) while `cancelRequestById` (`:153-172`) writes independently. A final re-read alone is still subject to a race; terminal transitions need serialization or an atomic compare-and-set/version check so cancellation cannot be overwritten. |
 | [LL-010](./BACKLOG.md) | Add stable gallery IDs, normalized UTC timestamps, and deterministic sorting | P2 / M3 | Persisted gallery timestamps are epoch strings, the queue-view timestamp is transient ISO/`"-"`, and `createdAt` is null at enqueue. Choose one domain timestamp contract, set it at enqueue, migrate existing rows (including invalid/missing values), add/backfill a stable gallery ID, and sort explicitly rather than relying on Hive iteration order. |

@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-006 (saved theme restoration) is in progress; implementation and automated verification are complete locally.**
+> **LL-014 (dead-code and naming cleanup) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-006 — Saved theme is never restored on launch**. The committed LL-001, LL-002, LL-003, and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-014 — Remove dead code, unused deps, and fix misnamed files**. The committed LL-001, LL-002, LL-003, LL-006, and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-006 implementation checkpoint, push `feature`, and open/update its PR. Before merge, choose a non-system theme, fully restart the app, and verify the first frame already uses the saved theme; move LL-006 to `Done` only after merge.
+- Next step: commit the LL-014 implementation checkpoint, push `feature`, and open/update its PR. Before merge, smoke startup, drawing, generation queue, and History after the dependency and import cleanup; move LL-014 to `Done` only after merge.
 
 ---
 
@@ -45,7 +45,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | LL-011 | | | | | |
 | LL-012 | | | | | |
 | LL-013 | | | | | |
-| LL-014 | | | | | |
+| — | LL-014 | | | | |
 | LL-015 | | | | | |
 | LL-016 | | | | | |
 | LL-017 | | | | | |
@@ -55,7 +55,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **17 not started** · **5 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **16 not started** · **6 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -72,7 +72,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 - ☐ **LL-003** (P0, **In progress**) — Generation and gallery error details are hidden; offline guidance is missing
 - ☐ **LL-006** (P1, **In progress**) — Saved theme is never restored on launch
 - ☐ **LL-008** (P1) — Compliance: report email, privacy policy, and permissions contradict the app
-- ☐ **LL-014** (P1) — Remove dead code, unused deps, and fix misnamed files
+- ☐ **LL-014** (P1, **In progress**) — Remove dead code, unused deps, and fix misnamed files
 - ☐ **LL-020** (P1, **In progress**) — Establish and maintain the project documentation baseline
 
 ### M2 — Short-term (P1 reliability / product honesty / CI)
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-29 — Remove unreachable code and misleading names
+- Session goal: implement LL-014 by proving and removing dead UI/API/DI islands, dropping unused packages, and correcting the mirror/theme repository filenames.
+- Issues touched (LL-###): LL-014; removal of the unreachable generated-image viewer also eliminates one dead-path LL-015 controller leak.
+- Files changed: deleted dead API, adapter, widget, repository, and use-case files; simplified DI; renamed mirror/theme repository files and imports; refreshed package/plugin metadata; updated current technical docs and this tracker.
+- Verified how: repo-wide `rg` import/symbol checks proved no inbound callers before deletion and no stale live references afterward; `flutter pub get` removed the 2 direct packages plus 8 exclusive transitives; read-only format check → 0 changes across 76 Dart files; `flutter analyze` → 0 issues; full `flutter test` → all 26 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; manual startup/drawing/queue/History smoke, review, and merge remain.
+- Next step: commit and push the coherent LL-014 checkpoint, open/update the PR, then smoke the affected app paths before merge.
+- Blockers: none. Existing Swift Package Manager and Kotlin Gradle Plugin warnings remain tracked by LL-018.
 
 ### 2026-07-29 — Restore the saved theme before the first frame
 - Session goal: implement LL-006 so a cold start reads the persisted theme through the domain/DI path before rendering the app.
@@ -188,6 +197,7 @@ One row per decision that constrains future work. Add a row whenever you choose 
 
 | Date | Decision | Rationale | Affected LL-### |
 |---|---|---|---|
+| 2026-07-29 | Keep Stable Horde as the only provider implementation; removed Replicate/Vertex stubs must not be revived without a separately designed provider contract. | The stubs were fully commented out, unreachable, and bypassed the live queued-generation architecture. | LL-014, LL-017 |
 | 2026-07-29 | Remove the fake model selector; do not wire the current DALL-E/Midjourney/Leonardo choices. | Only Stable Horde is supported, the current choices are unavailable, and real Horde model selection needs separate discovery/persistence design. | LL-017, LL-008 |
 | 2026-07-29 | PROGRESS is the only live-status source; BACKLOG contains durable issue definitions without status fields. | Mirrored status becomes stale and makes cold-resume state ambiguous. | All |
 | 2026-07-14 | Documentation index is named `docs/README.md`, never `docs/INDEX.md`. | `.gitignore` contains a bare `INDEX.md` line that git-ignores **any** file named `INDEX.md` at any depth, so a `docs/INDEX.md` would be silently untracked. | LL-020, docs hygiene |
