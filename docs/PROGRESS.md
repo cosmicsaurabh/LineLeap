@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-003 (visible generation and gallery failures) is in progress; implementation and automated verification are complete locally.**
+> **LL-006 (saved theme restoration) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-003 — Generation and gallery error details are hidden; offline guidance is missing**. The committed LL-001, LL-002, and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-006 — Saved theme is never restored on launch**. The committed LL-001, LL-002, LL-003, and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-003 implementation checkpoint, push `feature`, and open/update its PR. Before merge, force capture/enqueue, Horde, and History failures plus an offline attempt under `flutter run`; verify each message and retry path, then move LL-003 to `Done` only after merge.
+- Next step: commit the LL-006 implementation checkpoint, push `feature`, and open/update its PR. Before merge, choose a non-system theme, fully restart the app, and verify the first frame already uses the saved theme; move LL-006 to `Done` only after merge.
 
 ---
 
@@ -37,7 +37,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-003 | | | | |
 | LL-004 | | | | | |
 | LL-005 | | | | | |
-| LL-006 | | | | | |
+| — | LL-006 | | | | |
 | LL-007 | | | | | |
 | LL-008 | | | | | |
 | LL-009 | | | | | |
@@ -55,7 +55,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **18 not started** · **4 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **17 not started** · **5 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -70,7 +70,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 - ☐ **LL-001** (P0, **In progress**) — Undo/redo corrupts strokes into invisible dots
 - ☐ **LL-002** (P0, **In progress**) — Canvas capture has a transparent background
 - ☐ **LL-003** (P0, **In progress**) — Generation and gallery error details are hidden; offline guidance is missing
-- ☐ **LL-006** (P1) — Saved theme is never restored on launch
+- ☐ **LL-006** (P1, **In progress**) — Saved theme is never restored on launch
 - ☐ **LL-008** (P1) — Compliance: report email, privacy policy, and permissions contradict the app
 - ☐ **LL-014** (P1) — Remove dead code, unused deps, and fix misnamed files
 - ☐ **LL-020** (P1, **In progress**) — Establish and maintain the project documentation baseline
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-29 — Restore the saved theme before the first frame
+- Session goal: implement LL-006 so a cold start reads the persisted theme through the domain/DI path before rendering the app.
+- Issues touched (LL-###): LL-006.
+- Files changed: theme repository/use cases/notifier, dependency and startup wiring, focused theme tests, architecture notes, and this tracker.
+- Verified how: focused theme tests → 3 passed, including a real SharedPreferences round trip and first-frame dark-theme assertion; read-only format check → 0 changes across 92 files; `flutter analyze` → 0 issues; full `flutter test` → all 26 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; manual cold-restart verification, review, and merge remain.
+- Next step: commit and push the coherent LL-006 checkpoint, open/update the PR, then select light/dark, fully restart, and confirm the saved theme appears on the first frame without a system-theme flash.
+- Blockers: none. Existing Swift Package Manager and Kotlin Gradle Plugin warnings remain tracked by LL-018.
 
 ### 2026-07-29 — Make generation and History failures actionable
 - Session goal: implement LL-003 so capture/enqueue, terminal queue, and History failures have visible reasons and retry paths, with honest offline and anonymous-queue guidance.
