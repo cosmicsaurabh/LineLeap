@@ -27,9 +27,9 @@ Developer onboarding for **LineLeap**: how to install the toolchain, do a first 
 | pubspec name | `lineleap` |
 | Bundle id (Android/macOS) | `com.lineleapp` |
 | Version | `1.0.1+14` |
-| Size | ~8,290 lines `lib`, ~409 lines `test`; `flutter analyze` → 0 issues |
+| Size | ~7,415 lines `lib`, ~1,232 lines `test`; `flutter analyze` → 0 issues |
 
-Only Stable Horde is wired. `lib/data/remote/replicate_api.dart` and `lib/data/remote/google_vertex_ai_api.dart` are fully commented-out dead files — ignore them.
+Only Stable Horde is wired. Abandoned Replicate and Google Vertex stubs are not part of the source tree.
 
 ---
 

@@ -7,20 +7,16 @@ import 'package:lineleap/data/models/scribble_transformation_hive_model.dart';
 import 'package:lineleap/data/remote/ai_horde_api.dart';
 import 'package:lineleap/data/repositories/history_repository_impl.dart';
 import 'package:lineleap/data/repositories/generation_queue_repo_impl.dart';
-import 'package:lineleap/data/repositories/image_generation_repository_impl.dart';
 import 'package:lineleap/data/repositories/image_save_load_delete_repository_impl.dart';
-import 'package:lineleap/data/repositories/theme_mode_repository._impl.dart';
+import 'package:lineleap/data/repositories/theme_mode_repository_impl.dart';
 import 'package:lineleap/data/services/horde_generation_service_impl.dart';
 import 'package:lineleap/domain/repositories/history_repository.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
-import 'package:lineleap/domain/repositories/image_generation_repo.dart';
 import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
 import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
-import 'package:lineleap/domain/usecases/delete_imagebytes_from_path_usecase.dart';
 import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
-import 'package:lineleap/domain/usecases/generate_transformationfromscribble_usecase.dart';
 import 'package:lineleap/domain/usecases/get_theme_mode_usecase.dart';
 import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
@@ -77,9 +73,6 @@ Future<void> initDependencies() async {
     () =>
         ImageSaveLoadDeleteRepositoryImpl(sl<ImageDeviceInteractionService>()),
   );
-  sl.registerLazySingleton<ImageGenerationRepository>(
-    () => ImageGenerationRepositoryImpl(sl<AIHordeAPI>()),
-  );
 
   // Use cases
   sl.registerLazySingleton(
@@ -99,9 +92,6 @@ Future<void> initDependencies() async {
     () => SaveImagebytesReturnPathUseCase(imageSaveLoadDeleteRepository: sl()),
   );
   sl.registerLazySingleton(
-    () => DeleteImagebytesFromPathUseCase(imageSaveLoadDeleteRepository: sl()),
-  );
-  sl.registerLazySingleton(
     () => SaveScribbleTransformationToHistoryUseCase(historyRepository: sl()),
   );
   sl.registerLazySingleton(
@@ -115,9 +105,6 @@ Future<void> initDependencies() async {
       generationQueueRepository: sl(),
       hordeGenerationService: sl(),
     ),
-  );
-  sl.registerLazySingleton(
-    () => GenerateTransformationfromscribbleUseCase(sl()),
   );
   sl.registerLazySingleton(
     () => WatchGenerationRequestUseCase(generationQueueRepository: sl()),

@@ -100,7 +100,7 @@ Only Stable Horde is wired (`AI_HORDE_API_KEY` defaults to `'0000000000'`, the p
 
 | ID | Manual verification |
 |----|---------------------|
-| **LL-006** (theme not restored) | Set a non-system theme → cold-restart the app → the **chosen theme is restored** (not hardcoded `ThemeMode.system`). Wire a `GetThemeMode` path through DI (`get_it`). Add a test. Evidence: `lib/presentation/common/providers/theme_notifier.dart:6`; `theme_mode_repository._impl.dart:14`. |
+| **LL-006** (theme not restored) | Set a non-system theme → cold-restart the app → the **chosen theme is restored** (not hardcoded `ThemeMode.system`). Wire a `GetThemeMode` path through DI (`get_it`). Add a test. Evidence: `lib/presentation/common/providers/theme_notifier.dart`; `lib/data/repositories/theme_mode_repository_impl.dart`. |
 | **LL-007** (absolute paths break iOS) | Seed records under one temporary documents root, then reopen them under a different root. Gallery, queue, share, delete, and Horde-input reads still work through relative paths and the centralized resolver; the legacy migration is idempotent. Evidence: `lib/core/service/image_device_interaction_service.dart:10`. |
 | **LL-005** | See §3.2 (bounded records, explicit ownership transfer, and idempotent cleanup). |
 | **LL-010** (identity/time/sort) | `createdAt` is set at enqueue; gallery/queue times use normalized UTC ISO-8601; legacy epoch/invalid values migrate deterministically; gallery sorts newest-first and deletes by stable `galleryId`, not path+timestamp. Evidence: `lib/presentation/features/scribble/queue_overlay_widget.dart:68`. |
@@ -113,7 +113,7 @@ Only Stable Horde is wired (`AI_HORDE_API_KEY` defaults to `'0000000000'`, the p
 
 - Test Horde calls with **`MockClient`** from `package:http/testing.dart` — the existing pattern is `test/ai_horde_api_test.dart:13`. Inject the mock via the API's `client:` constructor param; script request→response per case (submit, poll PENDING×N, poll DONE, error status, DELETE cancel).
 - **LL-013** (typed failures): assert `HordeApiException.kind`/`statusCode` propagate end-to-end (API → usecase → provider → widget) and are **not** flattened to `error.toString()` (regression at `process_generation_queue_usecase.dart`); no empty `catch` blocks; retryable vs non-retryable is distinguishable at the UI.
-- Never point tests at the live Horde endpoint. Dead API files (`lib/data/remote/replicate_api.dart`, `google_vertex_ai_api.dart`) are **fully commented-out** — do not revive them here; their removal is **LL-014**.
+- Never point tests at the live Horde endpoint. Stable Horde is the only provider implementation; do not reintroduce the removed Replicate or Google Vertex stubs.
 
 ### 3.5 Compliance — LL-008
 
@@ -175,7 +175,7 @@ Release-blocking. Verify all before any store submission:
 | **No secrets** | Never commit `key.properties` / `upload-keystore.jks` / real API keys (see §4). |
 | **Analyze stays 0** | `flutter analyze` must remain **0 issues**. A change that adds warnings isn't done. |
 | **Test with every behavioral fix** | Every behavior change ships with a regression test (see §3 recipes). No test → not Done. |
-| **No new dead code** | Don't add commented-out files or unreachable widgets; removing existing dead code is **LL-014**, not your side quest. |
+| **No new dead code** | Don't add commented-out files or unreachable widgets; the LL-014 cleanup is the baseline to preserve. |
 | **Codegen after model edits** | Editing a Hive model → rerun `dart run build_runner build --delete-conflicting-outputs` and commit the regenerated `*.g.dart`. |
 
 ---

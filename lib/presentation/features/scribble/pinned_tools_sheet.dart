@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lineleap/core/config/mirrot_mode.dart';
+import 'package:lineleap/core/config/mirror_mode.dart';
 import 'package:lineleap/core/config/tool_item.dart';
 import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/scribble/scribble_tools.dart';

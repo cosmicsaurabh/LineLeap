@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lineleap/data/repositories/theme_mode_repository._impl.dart';
+import 'package:lineleap/data/repositories/theme_mode_repository_impl.dart';
 import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/usecases/get_theme_mode_usecase.dart';
 import 'package:lineleap/domain/usecases/set_theme_mode_usecase.dart';
