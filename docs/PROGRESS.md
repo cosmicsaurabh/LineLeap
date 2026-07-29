@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-020 (documentation baseline) is in progress.**
+> **LL-001 (undo/redo corruption) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-020 — Establish and maintain the project documentation baseline**
-- Branch: `feature` (current documentation-preparation branch)
-- Next step: commit the reviewed documentation checkpoint, push `feature`, and open/update its PR. After LL-020 merges, start **LL-001 → LL-002 → LL-003**.
+- Active issue(s): **LL-001 — Undo/redo corrupts strokes into invisible dots**; **LL-020 — Establish and maintain the project documentation baseline** remains open pending merge verification.
+- Branch: `feature`
+- Next step: commit the LL-001 implementation checkpoint, push `feature`, and open/update its PR. Manually verify the A/B/undo/redo sequence before merge; after merge, move LL-001 to `Done` and start LL-002.
 
 ---
 
@@ -32,7 +32,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 
 | Not started | In progress | Blocked | In review | Done | Won't do |
 |---|---|---|---|---|---|
-| LL-001 | — | — | — | — | — |
+| — | LL-001 | — | — | — | — |
 | LL-002 | | | | | |
 | LL-003 | | | | | |
 | LL-004 | | | | | |
@@ -55,7 +55,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **21 not started** · **1 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **20 not started** · **2 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -67,7 +67,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 
 ### M1 — Immediate (P0 core fixes + P1 pre-release cleanup)
 
-- ☐ **LL-001** (P0) — Undo/redo corrupts strokes into invisible dots
+- ☐ **LL-001** (P0, **In progress**) — Undo/redo corrupts strokes into invisible dots
 - ☐ **LL-002** (P0) — Canvas capture has a transparent background
 - ☐ **LL-003** (P0) — Generation and gallery error details are hidden; offline guidance is missing
 - ☐ **LL-006** (P1) — Saved theme is never restored on launch
@@ -126,6 +126,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Blockers:
 ```
 
+### 2026-07-29 — Preserve completed strokes through undo and redo
+- Session goal: fix LL-001 so undo/redo restores completed strokes instead of stale one-point snapshots.
+- Issues touched (LL-###): LL-001.
+- Files changed: `lib/presentation/common/providers/scribble_notifier.dart`, `lib/presentation/features/scribble/drawing_canvas.dart`, `test/scribble_notifier_test.dart`, and this tracker.
+- Verified how: the new point-list regression failed against the old behavior; targeted notifier tests → 4 passed; read-only format check → 0 changes; `flutter analyze` → 0 issues; full `flutter test` → all 12 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; the issue remains open until review, merge, and manual verification.
+- Next step: commit and push the coherent LL-001 checkpoint, open/update the PR, manually draw A then B and verify undo/redo, then move the issue through `In review` to `Done` only after merge.
+- Blockers: none.
+
 ### 2026-07-29 — Documentation review and implementation preparation
 - Session goal: cross-check the documentation baseline against README, pubspec, implementation, tests, CI, and platform configuration; remove ambiguous implementation contracts.
 - Issues touched (LL-###): LL-020 (active); clarified scope and sequencing for the remaining permanent ids without changing their live status.
@@ -142,16 +151,6 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Verified how: n/a (docs only).
 - Result: In progress; initial drafts and issue registry seeded for later review.
 - Next step: cross-check the draft baseline against the repository before committing it.
-- Blockers: none.
-
-### 2026-06-30 — EXAMPLE ENTRY (illustration only — delete or ignore)
-> This entry is a **filled-in example** so the format is unambiguous. It does **not** represent completed work; the board above is authoritative and LL-001 remains `Not started`.
-- Session goal: fix undo/redo restoring stale 1-point strokes (LL-001).
-- Issues touched (LL-###): LL-001.
-- Files changed: `lib/presentation/common/providers/scribble_notifier.dart:133-134,196-209,245-255`; `lib/presentation/features/scribble/scribble_painter.dart:82`; new `test/scribble_notifier_undo_redo_test.dart`.
-- Verified how: `dart format --output=none --set-exit-if-changed lib test` → clean; `flutter analyze` → 0 issues; `flutter test` → new regression test asserts stroke **point count** after undo/redo (not just stroke count); manual repro: drew A then B, undo removed only B with A intact, redo restored B fully.
-- Result: In review (PR open against `main`).
-- Next step: on merge, move LL-001 to `Done`, then start LL-002.
 - Blockers: none.
 
 ---
