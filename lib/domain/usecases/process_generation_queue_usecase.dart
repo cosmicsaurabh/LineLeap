@@ -132,22 +132,18 @@ class ProcessGenerationQueueUseCase {
   }
 
   Future<void> retryRequestById(String localId) async {
-    try {
-      final request = await generationQueueRepository.getRequestById(localId);
-      if (request == null ||
-          (request.status != GenerationStatus.failed &&
-              request.status != GenerationStatus.cancelled)) {
-        return;
-      }
-
-      final updatingRequest = request.copyWith(
-        status: GenerationStatus.queued,
-        clearError: true,
-      );
-      await generationQueueRepository.updateRequest(updatingRequest);
-    } catch (e) {
-      // Handle error
+    final request = await generationQueueRepository.getRequestById(localId);
+    if (request == null ||
+        (request.status != GenerationStatus.failed &&
+            request.status != GenerationStatus.cancelled)) {
+      return;
     }
+
+    final updatingRequest = request.copyWith(
+      status: GenerationStatus.queued,
+      clearError: true,
+    );
+    await generationQueueRepository.updateRequest(updatingRequest);
   }
 
   Future<void> cancelRequestById(String localId) async {

@@ -234,20 +234,56 @@ class GalleryActionSheet extends StatelessWidget {
     if (!feedbackContext.mounted) return;
 
     if (shouldDelete == true) {
-      try {
-        await gallery.deleteImage(image);
-        if (!feedbackContext.mounted) return;
-        Navigator.of(feedbackContext).pop();
-        _showNonInteractiveActionFeedback(feedbackContext, 'Image deleted');
-      } catch (e) {
-        log('Failed to delete image: $e');
-        if (!feedbackContext.mounted) return;
-        _showNonInteractiveActionFeedback(
-          feedbackContext,
-          'Failed to delete image',
-        );
-      }
+      await _deleteConfirmedImage(feedbackContext);
     }
+  }
+
+  Future<void> _deleteConfirmedImage(BuildContext feedbackContext) async {
+    final deleted = await gallery.deleteImage(image);
+    if (!feedbackContext.mounted) return;
+
+    if (!deleted) {
+      _showDeleteFailureFeedback(feedbackContext);
+      return;
+    }
+
+    final messenger = ScaffoldMessenger.of(feedbackContext);
+    Navigator.of(feedbackContext).pop();
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Image deleted'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black87,
+        ),
+      );
+  }
+
+  void _showDeleteFailureFeedback(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            gallery.operationError ??
+                "Couldn't delete this image. It's still in History—try again.",
+          ),
+          duration: const Duration(seconds: 6),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Theme.of(context).colorScheme.error,
+          action: SnackBarAction(
+            label: 'Try again',
+            onPressed: () {
+              if (parentContext.mounted) {
+                _deleteConfirmedImage(parentContext);
+              }
+            },
+          ),
+        ),
+      );
   }
 
   void _showInteractiveActionFeedback(BuildContext context, String message) {

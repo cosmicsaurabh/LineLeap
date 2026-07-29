@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-002 (transparent canvas capture) is in progress; implementation and automated verification are complete locally.**
+> **LL-003 (visible generation and gallery failures) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-002 — Canvas capture has a transparent background**. The committed LL-001 and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-003 — Generation and gallery error details are hidden; offline guidance is missing**. The committed LL-001, LL-002, and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-002 implementation checkpoint, push `feature`, and open/update its PR. Before merge, generate from the same sketch in light and dark themes and inspect the captured PNG; after merge, move LL-002 to `Done` and start LL-003.
+- Next step: commit the LL-003 implementation checkpoint, push `feature`, and open/update its PR. Before merge, force capture/enqueue, Horde, and History failures plus an offline attempt under `flutter run`; verify each message and retry path, then move LL-003 to `Done` only after merge.
 
 ---
 
@@ -34,7 +34,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 |---|---|---|---|---|---|
 | — | LL-001 | — | — | — | — |
 | — | LL-002 | | | | |
-| LL-003 | | | | | |
+| — | LL-003 | | | | |
 | LL-004 | | | | | |
 | LL-005 | | | | | |
 | LL-006 | | | | | |
@@ -55,7 +55,7 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **19 not started** · **3 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **18 not started** · **4 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -69,7 +69,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 
 - ☐ **LL-001** (P0, **In progress**) — Undo/redo corrupts strokes into invisible dots
 - ☐ **LL-002** (P0, **In progress**) — Canvas capture has a transparent background
-- ☐ **LL-003** (P0) — Generation and gallery error details are hidden; offline guidance is missing
+- ☐ **LL-003** (P0, **In progress**) — Generation and gallery error details are hidden; offline guidance is missing
 - ☐ **LL-006** (P1) — Saved theme is never restored on launch
 - ☐ **LL-008** (P1) — Compliance: report email, privacy policy, and permissions contradict the app
 - ☐ **LL-014** (P1) — Remove dead code, unused deps, and fix misnamed files
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-29 — Make generation and History failures actionable
+- Session goal: implement LL-003 so capture/enqueue, terminal queue, and History failures have visible reasons and retry paths, with honest offline and anonymous-queue guidance.
+- Issues touched (LL-###): LL-003.
+- Files changed: generation/queue and gallery providers/use cases, their Scribble/queue/History UI surfaces, the shared actionable message card, focused feedback tests, and this tracker.
+- Verified how: focused LL-003 tests → 10 passed; read-only format check → 0 changes across 90 files; `flutter analyze` → 0 issues; full `flutter test` → all 23 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; manual forced-failure/offline checks, review, and merge remain.
+- Next step: commit and push the coherent LL-003 checkpoint, open/update the PR, then use `flutter run` to force each failure class and confirm the reason, retry action, slow-queue guidance, and real offline result before merge.
+- Blockers: none. Existing Swift Package Manager and Kotlin Gradle Plugin warnings remain tracked by LL-018.
 
 ### 2026-07-29 — Normalize generation captures to opaque white
 - Session goal: fix LL-002 so the PNG sent to Horde has a deterministic opaque white background without changing the theme-aware on-screen canvas.

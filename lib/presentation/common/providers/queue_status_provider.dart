@@ -49,12 +49,14 @@ class QueueStatusProvider extends ChangeNotifier {
     await refreshQueue();
   }
 
-  Future<void> retryGeneration(GenerationRequest request) async {
+  Future<String?> retryGeneration(GenerationRequest request) async {
     try {
       await _processQueueUseCase.retryRequestById(request.localId);
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error retrying generation: $e');
+      return null;
+    } catch (error) {
+      debugPrint('Error retrying generation: $error');
+      return 'Couldn’t retry this generation. Please try again.';
     }
   }
 

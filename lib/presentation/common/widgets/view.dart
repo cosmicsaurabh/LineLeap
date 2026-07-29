@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
+import 'package:lineleap/presentation/common/widgets/actionable_message_card.dart';
 import 'package:lineleap/presentation/common/widgets/report_content_dialog.dart';
 import 'package:lineleap/theme/app_theme.dart';
 
@@ -329,87 +330,110 @@ Widget buildStatusSection(
   Function(GenerationRequest) onView,
   Function(GenerationRequest) onRemove,
 ) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  final failureMessage = request.error?.trim();
+  final isFailed = request.status == GenerationStatus.failed;
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      getStatusIcon(request),
-      if (request.status == GenerationStatus.completed)
-        ActionButton(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            onView(request);
-          },
-          icon: Icons.visibility,
-          // tooltip: 'View',
-        ),
-      if (request.status == GenerationStatus.completed)
-        ActionButton(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            // Show report dialog
-            showDialog(
-              context: context,
-              builder:
-                  (context) => ReportContentDialog(
-                    contentId: request.localId,
-                    contentType: 'generated_image',
-                  ),
-            );
-          },
-          icon: CupertinoIcons.flag,
-          // tooltip: 'Report',
-        ),
-      if (request.status == GenerationStatus.completed)
-        ActionButton(
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            onDownload(request);
-          },
-          icon: Icons.download,
-          // tooltip: 'Download',
-        ),
-      if (request.status == GenerationStatus.failed ||
-          request.status == GenerationStatus.cancelled ||
-          request.status == GenerationStatus.completed)
-        ActionButton(
-          onPressed: () {
+      if (isFailed) ...[
+        ActionableMessageCard(
+          title: 'Generation failed',
+          message:
+              failureMessage == null || failureMessage.isEmpty
+                  ? 'We could not complete this generation. Try again, or remove it from the queue.'
+                  : failureMessage,
+          actionLabel: 'Retry',
+          onAction: () {
             HapticFeedback.lightImpact();
             onRetry(request);
           },
-          icon: Icons.refresh,
-          // tooltip: 'Retry',
         ),
-      if (request.status == GenerationStatus.polling ||
-          request.status == GenerationStatus.submitting ||
-          request.status == GenerationStatus.queued ||
-          request.status == GenerationStatus.cancelled)
-        Text(
-          request.status == GenerationStatus.polling
-              ? 'Generating...'
-              : request.status == GenerationStatus.submitting
-              ? 'Submitting...'
-              : request.status == GenerationStatus.cancelled
-              ? 'Cancelled'
-              : 'Queued',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color:
-                request.status == GenerationStatus.polling
-                    ? Theme.of(context).primaryColor
-                    : request.status == GenerationStatus.submitting
-                    ? Colors.orange
-                    : request.status == GenerationStatus.cancelled
-                    ? Colors.grey
-                    : Colors.blue,
+        const SizedBox(height: 12),
+      ],
+      Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          getStatusIcon(request),
+          if (request.status == GenerationStatus.completed)
+            ActionButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onView(request);
+              },
+              icon: Icons.visibility,
+              // tooltip: 'View',
+            ),
+          if (request.status == GenerationStatus.completed)
+            ActionButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                // Show report dialog
+                showDialog(
+                  context: context,
+                  builder:
+                      (context) => ReportContentDialog(
+                        contentId: request.localId,
+                        contentType: 'generated_image',
+                      ),
+                );
+              },
+              icon: CupertinoIcons.flag,
+              // tooltip: 'Report',
+            ),
+          if (request.status == GenerationStatus.completed)
+            ActionButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onDownload(request);
+              },
+              icon: Icons.download,
+              // tooltip: 'Download',
+            ),
+          if (request.status == GenerationStatus.cancelled)
+            ActionButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                onRetry(request);
+              },
+              icon: Icons.refresh,
+              // tooltip: 'Retry',
+            ),
+          if (request.status == GenerationStatus.polling ||
+              request.status == GenerationStatus.submitting ||
+              request.status == GenerationStatus.queued ||
+              request.status == GenerationStatus.cancelled)
+            Text(
+              request.status == GenerationStatus.polling
+                  ? 'Generating...'
+                  : request.status == GenerationStatus.submitting
+                  ? 'Submitting...'
+                  : request.status == GenerationStatus.cancelled
+                  ? 'Cancelled'
+                  : 'Queued',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color:
+                    request.status == GenerationStatus.polling
+                        ? Theme.of(context).primaryColor
+                        : request.status == GenerationStatus.submitting
+                        ? Colors.orange
+                        : request.status == GenerationStatus.cancelled
+                        ? Colors.grey
+                        : Colors.blue,
+              ),
+            ),
+          ActionButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              onRemove(request);
+            },
+            icon: Icons.delete,
+            // tooltip: 'Delete',
           ),
-        ),
-
-      ActionButton(
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          onRemove(request);
-        },
-        icon: Icons.delete,
-        // tooltip: 'Delete',
+        ],
       ),
     ],
   );

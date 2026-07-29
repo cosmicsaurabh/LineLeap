@@ -64,7 +64,7 @@ The current implementation is an **event-driven, single-flight queue with persis
 
 ### 3.1 Numbered step sequence
 
-1. **Capture.** `GenerationProvider.sequenceForGenerationRequest` (`lib/presentation/common/providers/generation_provider.dart:125-161`) rasterizes the canvas via `ImageUtils.capturePng` → `RenderRepaintBoundary.toImage(pixelRatio: 3.0)` (`lib/core/utils/image_utils.dart:13`), producing PNG bytes. *(Footgun: the boundary excludes the background — LL-002.)*
+1. **Capture.** `GenerationProvider.sequenceForGenerationRequest` rasterizes the canvas via `ImageUtils.capturePng` → `RenderRepaintBoundary.toImage(pixelRatio: 3.0)`, then composites the result over an opaque white background before encoding PNG bytes. The on-screen canvas remains theme-aware; LL-002 manual verification is still pending.
 2. **Persist scribble file.** Bytes are written to the app documents dir as a PNG (`generation_provider.dart:139` → `SaveImagebytesReturnPathUseCase` → `ImageDeviceInteractionService.saveImageToDevice`, `lib/core/service/image_device_interaction_service.dart:6-15`). The **absolute** path is what gets stored (LL-007).
 3. **Enqueue.** `EnqueueGenerationRequestUseCase` mints a **uuid v4** `localId` (`lib/domain/usecases/enqueue_generation_request_usecase.dart:16`) and calls `GenerationQueueRepositoryImpl.enqueueRequest`, which writes to **both** the in-memory `GenerationQueueNotifier` **and** the Hive `generation_queue` box (`lib/data/repositories/generation_queue_repo_impl.dart:31-34`). Status starts `queued`.
 4. **Bridge to a stream.** `observeQueuedRequests()` wraps the `ChangeNotifier` in a broadcast `Stream<List<GenerationRequest>>` (`generation_queue_repo_impl.dart:65-82`).
@@ -197,9 +197,9 @@ Six `ChangeNotifier`s appear in the root `MultiProvider` (`main.dart:38-52`). Fi
 | Provider | Holds | Notes |
 |---|---|---|
 | `EnhancedScribbleNotifier` | `DrawingState` (strokes, color, brush, **history + historyIndex**, mirror mode) | `lib/presentation/common/providers/scribble_notifier.dart:9-27`. Undo/redo history is the source of LL-001; canvas perf is LL-012. |
-| `GenerationProvider` | capture/enqueue orchestration; `_currentGenerationId`; unread `_error` | `generation_provider.dart:24`. **The `_startWatchingRequest` "watch" subsystem (`:60-115`) is effectively dead** — no widget consumes it and `_error` is never surfaced (LL-003). |
-| `GalleryNotifier` | gallery list; `_isLoading`; unread `_error` | `gallery_notifier.dart:21`. `loadImages()` runs in the constructor (`:28`) — double-load hazard under IndexedStack (LL-015). Optimistic delete has no rollback (LL-011). |
-| `QueueStatusProvider` | mirror of the queue via `observe()` stream | `queue_status_provider.dart:26-31`. This is what the queue UI actually reads. |
+| `GenerationProvider` | capture/enqueue orchestration; `_currentGenerationId`; actionable `_error` | `ScribblePage` watches capture/enqueue error state and renders the shared retryable message card. **The `_startWatchingRequest` subsystem is still effectively dead** — the page enqueues directly and terminal state comes from the queue stream instead. |
+| `GalleryNotifier` | gallery list; loading state; separate load/operation errors | `GalleryPage` owns the single initial load and displays a durable retry card. Save/delete callers display retryable feedback; delete updates the in-memory list only after the repository call succeeds. Tombstone-based recovery for partial persistence/file failures remains LL-011. |
+| `QueueStatusProvider` | mirror of the queue via `observe()` stream | This is what the queue UI actually reads. Failed records expose their persisted reason; retry persistence failures are returned to the overlay for visible feedback. |
 | `ThemeNotifier` | current `ThemeMode` (**write-only** persistence) | `theme_notifier.dart:6` hardcodes `ThemeMode.system` at startup; the saved value is never restored (LL-006). |
 | `GenerationQueueNotifier` | the **in-memory** queue list (source of truth for the queue stream) | `lib/data/datasources/in_memory/generation_queue_notifier.dart`. It's in the `MultiProvider` (`main.dart:48-50`) but has **zero UI consumers** — it's consumed internally by the repository, not the widget tree. |
 
@@ -225,7 +225,7 @@ Single container `sl` (`injection_container.dart:37`); `initDependencies()` runs
 ## 7. Navigation
 
 - `MaterialApp` `home: NavBar` (`main.dart:72`). No router, no named routes, no deep-linking.
-- `NavBar` uses an **`IndexedStack`** of `[ScribblePage, GalleryPage]` (`lib/presentation/features/nav_bar.dart:19`, `:73`). **State is preserved** across tab switches, and **both pages `initState` at launch** (a cause of the gallery double-load, LL-015).
+- `NavBar` uses an **`IndexedStack`** of `[ScribblePage, GalleryPage]` (`lib/presentation/features/nav_bar.dart:19`, `:73`). **State is preserved** across tab switches, and both pages initialize at launch. `GalleryPage` performs one post-frame History load; `GalleryNotifier` no longer starts a duplicate constructor load.
 - All secondary navigation is **imperative** — `showDialog` / bottom sheets (e.g. the queue overlay, gallery image dialog, model selector sheet). There is no declarative navigation stack.
 
 ---
@@ -251,7 +251,7 @@ Structural issues baked into the current design. Full detail, evidence, and acce
 | [LL-009](./BACKLOG.md) | Make queue state transitions atomic and cancellation-safe | P2 / M3 | `processQueue` persists a captured local var at the end (`process_generation_queue_usecase.dart:60-113`) while `cancelRequestById` (`:153-172`) writes independently. A final re-read alone is still subject to a race; terminal transitions need serialization or an atomic compare-and-set/version check so cancellation cannot be overwritten. |
 | [LL-010](./BACKLOG.md) | Add stable gallery IDs, normalized UTC timestamps, and deterministic sorting | P2 / M3 | Persisted gallery timestamps are epoch strings, the queue-view timestamp is transient ISO/`"-"`, and `createdAt` is null at enqueue. Choose one domain timestamp contract, set it at enqueue, migrate existing rows (including invalid/missing values), add/backfill a stable gallery ID, and sort explicitly rather than relying on Hive iteration order. |
 | [LL-012](./BACKLOG.md) | Rework canvas performance model | P2 / M3 | O(n²) list copies per pointer sample (`scribble_notifier.dart:196-209`), full repaint + `shouldRepaint` always true (`scribble_painter.dart:64-121`), toolbar rebuild storm (`pinned_toolbar_overlay.dart:32`). |
-| [LL-013](./BACKLOG.md) | Unify error handling into one typed-failure flow | P2 / M3 | Three coexisting conventions (return-null, rethrow, typed exceptions); `HordeApiException.kind/statusCode` flattened to `error.toString()` (`process_generation_queue_usecase.dart:104-109`); empty catch (`:148-150`). |
+| [LL-013](./BACKLOG.md) | Unify error handling into one typed-failure flow | P2 / M3 | Return-null, user-message, rethrow, and typed-exception conventions still coexist; `HordeApiException.kind/statusCode/isRetryable` is flattened to `error.toString()` when a queue record fails. LL-003 exposes that text but does not yet preserve typed retryability end to end. |
 | [LL-021](./BACKLOG.md) | Show queue position/ETA and best-effort completion notifications | P1 / M2 | Progress is discarded at the service boundary. Move a provider-neutral progress value through service → use case → queue state/UI. A local notification can be guaranteed only while the process is executing; reliable completion after OS suspension/termination requires a background-execution design or remote push, not only a notification plugin. |
 
 Related but not purely architectural (see BACKLOG): **LL-001** (undo/redo corruption), **LL-002** (transparent capture background), **LL-003** (hidden error details/offline guidance), **LL-011** (recoverable gallery deletion), **LL-014** (dead code/deps), **LL-015** (lifecycle leaks), and **LL-017** (remove the fake model selector).

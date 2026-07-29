@@ -5,7 +5,9 @@ import 'package:lineleap/domain/entities/generation_cancellation_token.dart';
 import 'package:lineleap/domain/entities/generation_request.dart';
 import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
+import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
+import 'package:lineleap/presentation/common/providers/queue_status_provider.dart';
 
 void main() {
   test('processQueue completes the next queued generation request', () async {
@@ -100,6 +102,55 @@ void main() {
     expect(retriedCancelled?.error, isNull);
   });
 
+  test('retryRequestById surfaces repository write failures', () async {
+    final request = GenerationRequest(
+      localId: 'failed-request',
+      prompt: 'a glass tower',
+      scribblePath: '/tmp/scribble.png',
+      status: GenerationStatus.failed,
+      error: 'provider unavailable',
+    );
+    final repository = _FakeGenerationQueueRepository([request])
+      ..updateError = Exception('queue write failed');
+    final useCase = ProcessGenerationQueueUseCase(
+      generationQueueRepository: repository,
+      hordeGenerationService: _FakeHordeGenerationService('/tmp/generated.png'),
+    );
+
+    await expectLater(
+      useCase.retryRequestById('failed-request'),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('queue provider returns actionable feedback when retry fails', () async {
+    final request = GenerationRequest(
+      localId: 'failed-request',
+      prompt: 'a glass tower',
+      scribblePath: '/tmp/scribble.png',
+      status: GenerationStatus.failed,
+      error: 'provider unavailable',
+    );
+    final repository = _FakeGenerationQueueRepository([request])
+      ..updateError = Exception('queue write failed');
+    final processUseCase = ProcessGenerationQueueUseCase(
+      generationQueueRepository: repository,
+      hordeGenerationService: _FakeHordeGenerationService('/tmp/generated.png'),
+    );
+    final provider = QueueStatusProvider(
+      getQueueUseCase: GetGenerationQueueUseCase(
+        generationQueueRepository: repository,
+      ),
+      processQueueUseCase: processUseCase,
+    );
+    addTearDown(provider.dispose);
+
+    final message = await provider.retryGeneration(request);
+
+    expect(message, contains('Couldn’t retry this generation'));
+    expect(message, contains('try again'));
+  });
+
   test('cancelRequestById cancels the active generation token', () async {
     final request = GenerationRequest(
       localId: 'request-1',
@@ -174,6 +225,7 @@ class _FakeGenerationQueueRepository implements GenerationQueueRepository {
   final List<GenerationStatus> statusUpdates = [];
   final StreamController<List<GenerationRequest>> _controller =
       StreamController<List<GenerationRequest>>.broadcast();
+  Object? updateError;
 
   _FakeGenerationQueueRepository(this._requests);
 
@@ -211,6 +263,9 @@ class _FakeGenerationQueueRepository implements GenerationQueueRepository {
 
   @override
   Future<void> updateRequest(GenerationRequest request) async {
+    if (updateError case final error?) {
+      throw error;
+    }
     final index = _requests.indexWhere(
       (existing) => existing.localId == request.localId,
     );
