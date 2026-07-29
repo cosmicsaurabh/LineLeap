@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
+import 'package:lineleap/presentation/common/widgets/actionable_message_card.dart';
 import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_dialog.dart';
 import 'package:lineleap/presentation/features/gallery/gallery_image_tile.dart';
@@ -40,6 +41,10 @@ class _GalleryPageState extends State<GalleryPage> {
       );
     }
 
+    if (gallery.loadError != null && gallery.scribbleTransformations.isEmpty) {
+      return Center(child: _buildLoadErrorCard(gallery));
+    }
+
     if (gallery.scribbleTransformations.isEmpty) {
       return Center(
         child: Column(
@@ -52,7 +57,7 @@ class _GalleryPageState extends State<GalleryPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              "No scribbleTransformations found",
+              'No images in History yet',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -70,8 +75,34 @@ class _GalleryPageState extends State<GalleryPage> {
         children: [
           if (shouldUseVerticalAppBar)
             _buildVerticalAppBar(context, theme, isDarkMode),
-          Expanded(child: _buildResponsiveGrid(gallery, isDarkMode)),
+          Expanded(
+            child: Column(
+              children: [
+                if (gallery.loadError != null)
+                  Align(
+                    alignment: Alignment.topCenter,
+                    child: _buildLoadErrorCard(gallery),
+                  ),
+                Expanded(child: _buildResponsiveGrid(gallery, isDarkMode)),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadErrorCard(GalleryNotifier gallery) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: ActionableMessageCard(
+          title: 'History unavailable',
+          message: gallery.loadError!,
+          actionLabel: 'Try again',
+          onAction: () => gallery.loadImages(),
+        ),
       ),
     );
   }

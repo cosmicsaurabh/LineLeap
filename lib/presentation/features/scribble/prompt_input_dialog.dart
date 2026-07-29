@@ -36,15 +36,28 @@ class _PromptInputDialogState extends State<PromptInputDialog> {
         title: const Text('AI Generation Prompt'),
         content: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-          child: CupertinoTextField(
-            padding: const EdgeInsets.all(16),
-            style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
-            autofocus: true,
-            controller: _controller,
-            placeholder: 'Describe the scribble...',
-            maxLines: 5,
-            minLines: 1,
-            textAlignVertical: TextAlignVertical.top,
+          child: Column(
+            children: [
+              CupertinoTextField(
+                padding: const EdgeInsets.all(16),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                autofocus: true,
+                controller: _controller,
+                placeholder: 'Describe the scribble...',
+                maxLines: 5,
+                minLines: 1,
+                textAlignVertical: TextAlignVertical.top,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Generation needs an internet connection. AI Horde’s shared '
+                'anonymous queue can be slow. LineLeap reports the actual '
+                'connection or provider result after submission.',
+                textAlign: TextAlign.start,
+              ),
+            ],
           ),
         ),
         actions: [

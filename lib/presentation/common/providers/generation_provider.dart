@@ -37,6 +37,12 @@ class GenerationProvider extends ChangeNotifier {
   String? get currentGenerationId => _currentGenerationId;
   String? get error => _error;
 
+  void clearError() {
+    if (_error == null) return;
+    _error = null;
+    notifyListeners();
+  }
+
   Future<void> generateAndWatchRequest({
     required String prompt,
     required GlobalKey canvasKey,
@@ -48,7 +54,7 @@ class GenerationProvider extends ChangeNotifier {
     );
 
     if (request == null) {
-      _error = 'Failed to start generation';
+      _error ??= 'Couldn’t start generation. Please try again.';
       notifyListeners();
       return;
     }
@@ -129,35 +135,54 @@ class GenerationProvider extends ChangeNotifier {
     _isCapturing = true;
     _error = null;
     notifyListeners();
-    final scribbleBytes = await generateImageFromCanvas(canvasKey: canvasKey);
-    if (scribbleBytes == null) {
-      _error = 'Failed to generate image from canvas';
+
+    try {
+      final scribbleBytes = await generateImageFromCanvas(canvasKey: canvasKey);
+      if (scribbleBytes == null) {
+        _error =
+            'Couldn’t capture the drawing. Keep the canvas open and try again.';
+        return null;
+      }
+
+      String? scribblePath;
+      try {
+        scribblePath = await saveGeneratedImageFromCanvas(
+          scribbleBytes: scribbleBytes,
+        );
+      } catch (_) {
+        _error =
+            'Couldn’t save the drawing on this device. '
+            'Check available storage and try again.';
+        return null;
+      }
+      if (scribblePath == null || scribblePath.isEmpty) {
+        _error =
+            'Couldn’t save the drawing on this device. '
+            'Check available storage and try again.';
+        return null;
+      }
+
+      try {
+        final request = await enqueueGenerationRequest(
+          scribblePath: scribblePath,
+          prompt: prompt,
+        );
+        if (request == null) {
+          _error =
+              'Couldn’t add the request to the generation queue. Try again.';
+        }
+        return request;
+      } catch (_) {
+        _error = 'Couldn’t add the request to the generation queue. Try again.';
+        return null;
+      }
+    } catch (_) {
+      _error = 'Couldn’t start generation. Please try again.';
+      return null;
+    } finally {
       _isCapturing = false;
       notifyListeners();
-      return null;
     }
-    final scribblePath = await saveGeneratedImageFromCanvas(
-      scribbleBytes: scribbleBytes,
-    );
-    if (scribblePath == null) {
-      _error = 'Failed to save generated image';
-      _isCapturing = false;
-      notifyListeners();
-      return null;
-    }
-    _isCapturing = false;
-    notifyListeners();
-    final request = await enqueueGenerationRequest(
-      scribblePath: scribblePath,
-      prompt: prompt,
-    );
-    if (request == null) {
-      _error = 'Failed to enqueue generation request';
-      notifyListeners();
-      return null;
-    }
-    notifyListeners();
-    return request;
   }
 
   Future<Uint8List?> generateImageFromCanvas({
@@ -191,16 +216,8 @@ class GenerationProvider extends ChangeNotifier {
     required String scribblePath,
     required String prompt,
   }) async {
-    try {
-      // 3. Enqueue the generation request
-      final request = await _enqueueUseCase(
-        prompt: prompt,
-        scribblePath: scribblePath,
-      );
-      return request;
-    } catch (e) {
-      return null;
-    }
+    // 3. Enqueue the generation request
+    return await _enqueueUseCase(prompt: prompt, scribblePath: scribblePath);
   }
 
   Future<String> saveImageToDevice(Uint8List imageBytes) async {

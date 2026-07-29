@@ -9,6 +9,7 @@ import 'package:lineleap/presentation/common/utils/responsive_layout_helper.dart
 import 'package:lineleap/presentation/features/typing_text/typing_text.dart';
 import 'package:provider/provider.dart';
 import 'package:lineleap/presentation/common/widgets/action_button.dart';
+import 'package:lineleap/presentation/common/widgets/actionable_message_card.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
 import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
@@ -135,17 +136,24 @@ class _ScribblePageState extends State<ScribblePage>
       await _showPromptDialog();
       if (prompt.isEmpty) return;
     }
-    generationProvider.sequenceForGenerationRequest(
+    final request = await generationProvider.sequenceForGenerationRequest(
       prompt: prompt,
       canvasKey: _paintKey,
     );
+    if (!mounted || request == null) return;
+
+    setState(() {
+      _isQueueVisible = true;
+    });
+    _startQueueTimer();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bool isCapturing = context.watch<GenerationProvider>().isCapturing;
+    final generationProvider = context.watch<GenerationProvider>();
+    final bool isCapturing = generationProvider.isCapturing;
     final responsive = ResponsiveLayoutHelper(context);
     final shouldUseVerticalAppBar = responsive.shouldUseVerticalAppBar();
 
@@ -186,6 +194,28 @@ class _ScribblePageState extends State<ScribblePage>
                   onTimerReset: _startQueueTimer,
                   onTimerCancel: _cancelQueueTimer,
                 ),
+                if (generationProvider.error case final error?)
+                  Positioned(
+                    top: 16,
+                    left: 16,
+                    right: 16,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: ActionableMessageCard(
+                          key: const ValueKey('generation_error'),
+                          title: 'Generation didn’t start',
+                          message: error,
+                          actionLabel: 'Try again',
+                          onAction: () {
+                            generationProvider.clearError();
+                            _handleGenerate();
+                          },
+                          onDismiss: generationProvider.clearError,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

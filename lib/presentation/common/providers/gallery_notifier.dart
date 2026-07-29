@@ -13,20 +13,23 @@ class GalleryNotifier extends ChangeNotifier {
 
   List<ScribbleTransformation> _scribbleTransformations = [];
   bool _isLoading = false;
-  String? _error;
+  String? _loadError;
+  String? _operationError;
 
   List<ScribbleTransformation> get scribbleTransformations =>
       _scribbleTransformations;
   bool get isLoading => _isLoading;
-  String? get error => _error;
+  String? get loadError => _loadError;
+  String? get operationError => _operationError;
+
+  /// Kept for callers that have not yet moved to the operation-specific state.
+  String? get error => _operationError ?? _loadError;
 
   GalleryNotifier({
     required this.getGalleryImagesUseCase,
     required this.deleteGalleryImageUseCase,
     required this.saveImageToGalleryUseCase,
-  }) {
-    loadImages();
-  }
+  });
 
   Future<bool> saveToHistory({
     required String scribblePath,
@@ -34,7 +37,9 @@ class GalleryNotifier extends ChangeNotifier {
     required String prompt,
     required String timestamp,
   }) async {
-    // Implement the logic to save the image paths and metadata to history
+    _operationError = null;
+    notifyListeners();
+
     try {
       final generatedImage = ScribbleTransformation(
         generatedImagePath: generatedPath,
@@ -45,11 +50,12 @@ class GalleryNotifier extends ChangeNotifier {
       await saveImageToGalleryUseCase(generatedImage);
 
       _scribbleTransformations.insert(0, generatedImage);
-
+      _operationError = null;
       notifyListeners();
       return true;
-    } catch (e) {
-      _error = 'Failed to save image to gallery';
+    } catch (_) {
+      _operationError =
+          "Couldn't add this image to History. It's still in the queue—try again.";
       notifyListeners();
       return false;
     }
@@ -57,8 +63,9 @@ class GalleryNotifier extends ChangeNotifier {
 
   Future<void> loadImages() async {
     _isLoading = true;
-    _error = null;
+    _loadError = null;
     notifyListeners();
+
     try {
       final generatedImages = await getGalleryImagesUseCase();
       _scribbleTransformations =
@@ -72,25 +79,33 @@ class GalleryNotifier extends ChangeNotifier {
                 ),
               )
               .toList();
-    } catch (e) {
-      _error = 'Failed to load scribbleTransformations';
+      _loadError = null;
+    } catch (_) {
+      _loadError =
+          "Couldn't load History. Your saved images haven't been changed—try again.";
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> deleteImage(
+  Future<bool> deleteImage(
     ScribbleTransformation selectedScribbleTransformation,
   ) async {
+    _operationError = null;
+    notifyListeners();
+
     try {
-      _scribbleTransformations.remove(selectedScribbleTransformation);
-      notifyListeners();
-      // After removing the image from the list, any cached bytes will be eligible for garbage collection.
       await deleteGalleryImageUseCase(selectedScribbleTransformation);
-    } catch (e) {
-      _error = 'Failed to delete image';
+      _scribbleTransformations.remove(selectedScribbleTransformation);
+      _operationError = null;
       notifyListeners();
+      return true;
+    } catch (_) {
+      _operationError =
+          "Couldn't delete this image. It's still in History—try again.";
+      notifyListeners();
+      return false;
     }
   }
 }
