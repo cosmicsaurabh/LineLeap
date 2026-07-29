@@ -22,6 +22,7 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   // For both: [original, vertical, horizontal, both]
   int? _mirrorStartIndex;
   int _mirrorStrokeCount = 0;
+  bool _strokeInProgress = false;
 
   bool get canUndo => _state.historyIndex > 0;
   bool get canRedo => _state.historyIndex < _state.history.length - 1;
@@ -42,6 +43,8 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void toggleMirrorMode() {
+    _commitActiveStroke();
+
     // Cycle through: none -> vertical -> horizontal -> both -> none
     final nextMode = switch (_state.mirrorMode) {
       MirrorMode.none => MirrorMode.vertical,
@@ -58,6 +61,7 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
 
   void selectMirrorMode(MirrorMode mode) {
     if (_state.mirrorMode == mode) return;
+    _commitActiveStroke();
     _state = _state.copyWith(mirrorMode: mode);
     _mirrorStartIndex = null;
     _mirrorStrokeCount = 0;
@@ -65,6 +69,8 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void startStroke(Offset point, {double? canvasWidth, double? canvasHeight}) {
+    _commitActiveStroke();
+
     final newStroke = Stroke(
       points: [point],
       color: _state.selectedColor,
@@ -131,11 +137,12 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
     }
 
     final newStrokes = [..._state.strokes, ...strokesToAdd];
+    _strokeInProgress = true;
     _saveToHistory(newStrokes);
   }
 
   void appendPoint(Offset point, {double? canvasWidth, double? canvasHeight}) {
-    if (_state.strokes.isEmpty) return;
+    if (!_strokeInProgress || _state.strokes.isEmpty) return;
 
     // In mirror mode, update all mirrored strokes
     if (_state.mirrorMode.isActive &&
@@ -210,13 +217,13 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void endStroke() {
-    // Stroke is already saved in history from startStroke
-    // Clear the mirror tracking when stroke ends
-    _mirrorStartIndex = null;
-    _mirrorStrokeCount = 0;
+    if (!_commitActiveStroke()) return;
+    notifyListeners();
   }
 
   void undo() {
+    _commitActiveStroke();
+
     if (!canUndo) return;
 
     final newIndex = _state.historyIndex - 1;
@@ -228,7 +235,12 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void redo() {
-    if (!canRedo) return;
+    final committedStroke = _commitActiveStroke();
+
+    if (!canRedo) {
+      if (committedStroke) notifyListeners();
+      return;
+    }
 
     final newIndex = _state.historyIndex + 1;
     _state = _state.copyWith(
@@ -239,18 +251,37 @@ class EnhancedScribbleNotifier extends ChangeNotifier {
   }
 
   void clear() {
+    _commitActiveStroke();
     _saveToHistory([]);
   }
 
   void _saveToHistory(List<Stroke> strokes) {
+    final strokeSnapshot = List<Stroke>.unmodifiable(strokes);
     final newHistory = _state.history.take(_state.historyIndex + 1).toList();
-    newHistory.add(strokes);
+    newHistory.add(strokeSnapshot);
 
     _state = _state.copyWith(
-      strokes: strokes,
-      history: newHistory,
+      strokes: strokeSnapshot,
+      history: List<List<Stroke>>.unmodifiable(newHistory),
       historyIndex: newHistory.length - 1,
     );
     notifyListeners();
+  }
+
+  bool _commitActiveStroke() {
+    if (!_strokeInProgress) return false;
+
+    final completedStrokes = List<Stroke>.unmodifiable(_state.strokes);
+    final newHistory = List<List<Stroke>>.from(_state.history);
+    newHistory[_state.historyIndex] = completedStrokes;
+
+    _state = _state.copyWith(
+      strokes: completedStrokes,
+      history: List<List<Stroke>>.unmodifiable(newHistory),
+    );
+    _strokeInProgress = false;
+    _mirrorStartIndex = null;
+    _mirrorStrokeCount = 0;
+    return true;
   }
 }

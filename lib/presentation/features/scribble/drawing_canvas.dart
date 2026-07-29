@@ -49,9 +49,8 @@ class _DrawingCanvasState extends State<DrawingCanvas> {
               canvasHeight: canvasHeight,
             );
           },
-          onPanEnd: (details) {
-            widget.notifier.endStroke();
-          },
+          onPanEnd: (_) => widget.notifier.endStroke(),
+          onPanCancel: widget.notifier.endStroke,
           child: CustomPaint(
             painter: EnhancedScribblePainter(
               widget.notifier.state.strokes,
