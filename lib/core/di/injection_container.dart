@@ -21,6 +21,7 @@ import 'package:lineleap/domain/usecases/delete_imagebytes_from_path_usecase.dar
 import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/generate_transformationfromscribble_usecase.dart';
+import 'package:lineleap/domain/usecases/get_theme_mode_usecase.dart';
 import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/get_generation_queue_usecase.dart';
 import 'package:lineleap/domain/usecases/process_generation_queue_usecase.dart';
@@ -85,6 +86,9 @@ Future<void> initDependencies() async {
     () => SetThemeModeUseCase(themeModeRepository: sl()),
   );
   sl.registerLazySingleton(
+    () => GetThemeModeUseCase(themeModeRepository: sl()),
+  );
+  sl.registerLazySingleton(
     () => GetScribbleTransformationsFromHistoryUseCase(historyRepository: sl()),
   );
   sl.registerLazySingleton(
@@ -119,7 +123,9 @@ Future<void> initDependencies() async {
     () => WatchGenerationRequestUseCase(generationQueueRepository: sl()),
   );
   // Notifiers/Providers
-  sl.registerFactory(() => ThemeNotifier(sl()));
+  sl.registerFactory(
+    () => ThemeNotifier(setThemeModeUseCase: sl(), getThemeModeUseCase: sl()),
+  );
   sl.registerFactory(() => EnhancedScribbleNotifier());
   sl.registerFactory(
     () => GalleryNotifier(

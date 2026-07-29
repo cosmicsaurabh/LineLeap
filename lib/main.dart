@@ -30,6 +30,8 @@ void main() async {
 
     //initialize dependencies
     await initDependencies();
+    final themeNotifier = sl<ThemeNotifier>();
+    await themeNotifier.restoreThemeMode();
 
     // Permission requests moved to when they're actually needed (in gallery actions)
     // This prevents startup delays and potential issues in release mode
@@ -37,9 +39,7 @@ void main() async {
     runApp(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider<ThemeNotifier>(
-            create: (_) => sl<ThemeNotifier>(),
-          ),
+          ChangeNotifierProvider<ThemeNotifier>.value(value: themeNotifier),
           ChangeNotifierProvider<EnhancedScribbleNotifier>(
             create: (_) => sl<EnhancedScribbleNotifier>(),
           ),

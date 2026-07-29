@@ -15,7 +15,9 @@ class ThemeModeRepositoryImpl implements ThemeModeRepository {
   Future<ThemeMode> getThemeMode() async {
     final prefs = await SharedPreferences.getInstance();
     final index = prefs.getInt(_key);
-    if (index == null) return ThemeMode.system;
+    if (index == null || index < 0 || index >= ThemeMode.values.length) {
+      return ThemeMode.system;
+    }
     return ThemeMode.values[index];
   }
 }
