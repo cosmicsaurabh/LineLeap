@@ -1,5 +1,4 @@
 import java.util.Properties
-import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -11,8 +10,10 @@ plugins {
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+    keystorePropertiesFile.inputStream().use { keystoreProperties.load(it) }
 }
+val releaseStoreFile =
+    keystoreProperties.getProperty("storeFile")?.let { rootProject.file(it) }
 
 android {
     namespace = "com.lineleapp"
@@ -42,7 +43,7 @@ android {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
             keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+            storeFile = releaseStoreFile
             storePassword = keystoreProperties["storePassword"] as String?
         }
     }
@@ -52,10 +53,6 @@ android {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             isShrinkResources = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
             isDebuggable = false
         }
         debug {
@@ -66,4 +63,30 @@ android {
 
 flutter {
     source = "../.."
+}
+
+val verifyReleaseSigning by tasks.registering {
+    doLast {
+        check(keystorePropertiesFile.isFile) {
+            "Missing android/key.properties; it is required only for release builds."
+        }
+
+        val requiredKeys =
+            listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+        val missingKeys =
+            requiredKeys.filter {
+                keystoreProperties.getProperty(it).isNullOrBlank()
+            }
+
+        check(missingKeys.isEmpty()) {
+            "Missing release-signing properties: ${missingKeys.joinToString()}"
+        }
+        check(releaseStoreFile?.isFile == true) {
+            "The configured release keystore does not exist."
+        }
+    }
+}
+
+tasks.matching { it.name == "preReleaseBuild" }.configureEach {
+    dependsOn(verifyReleaseSigning)
 }

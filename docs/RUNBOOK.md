@@ -2,7 +2,7 @@
 
 Purpose: the execution discipline for LineLeap — the exact steps to pick up an issue, change code without derailing, verify it for real, ship it, and roll it back if it breaks.
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## How to use this doc
 
@@ -28,7 +28,7 @@ Run these in order for every issue. Apply gates by change type as described in �
 | 6 | **Review scope** | `git status --short` → `git diff --check` → `git diff --stat` | every changed path belongs to the issue; no whitespace errors |
 | 7 | **Gate: format** | For Dart changes: `dart format --output=none --set-exit-if-changed lib test` | exit 0; otherwise record N/A |
 | 8 | **Gate: analyze** | For code/dependency/build changes: `flutter analyze` | **0 issues**; docs-only changes record N/A |
-| 9 | **Gate: test** | For code changes: `flutter test` | all green; every behavioral fix has a regression test |
+| 9 | **Gate: test** | For code changes: `flutter test --coverage` | all green; every behavioral fix has a regression test; `coverage/` stays uncommitted |
 | 10 | **Gate: build** | For runtime/build changes: `flutter build apk --debug` | build succeeds; docs-only and test-only changes may record N/A |
 | 11 | **Verify the change** | Run the matching [Verification Recipe](#3-verification-recipes-by-change-type) | acceptance criteria have evidence appropriate to the change type |
 | 12 | **Prepare the handoff** | Update PROGRESS to *In review*; finish the Session Log; add a Decision only when a durable choice was made | tracker describes the reviewed diff and next action |
@@ -40,7 +40,7 @@ Run these in order for every issue. Apply gates by change type as described in �
 
 Commit when the work forms a meaningful, reviewable checkpoint. Do **not** create a WIP commit by default merely because a session is ending; update the tracker honestly and continue until the checkpoint is coherent.
 
-> CI (`.github/workflows/flutter_ci.yml`) runs for direct pushes to `main` and pull requests **targeting** `main`; direct pushes to non-main branches do not run CI unless that branch has an open PR targeting `main`. CI is debug-only. Fixing these gaps is **LL-018 (Harden CI and release build)**.
+> CI (`.github/workflows/flutter_ci.yml`) runs quality checks for every branch push, pull requests **targeting** `main`, and manual dispatches. Pull requests, direct pushes to `main`, and manual dispatches also run a gated release-AAB smoke with a one-job throwaway key. CI never receives the production upload key or publishes the smoke bundle.
 
 ---
 
@@ -61,12 +61,12 @@ Universal:
 Conditional by change type:
 
 - ☐ **Dart source or test change:** `dart format --output=none --set-exit-if-changed lib test` exits 0 and `flutter analyze` reports **0 issues**
-- ☐ **Behavioral code change:** `flutter test` passes and a regression test covers the changed behavior
+- ☐ **Behavioral code change:** `flutter test --coverage` passes and a regression test covers the changed behavior
 - ☐ **Runtime, dependency, Android, or build change:** `flutter build apk --debug` succeeds; release/build-system changes also run the relevant release smoke
 - ☐ **UI/runtime behavior change:** behavior is verified live with `flutter run` using the matching recipe
 - ☐ **Persistence/API change:** deterministic automated coverage uses a temp store or mock client; tests never use the live Horde endpoint
 - ☐ **Docs-only change (LL-020):** links, commands, paths, headings, and cited facts are checked; Flutter runtime gates are N/A unless the doc changes or asserts a command
-- ☐ **CI-only change (LL-018):** workflow syntax/config is reviewed and the intended push/PR trigger is observed in GitHub Actions; live in-app verification is N/A
+- ☐ **CI-only change (LL-018):** workflow syntax/config is reviewed; a non-main push runs `quality`; a PR targeting `main` runs both `quality` and `release-smoke`; coverage and debug-APK artifacts are downloadable; live in-app verification is N/A
 
 ---
 
@@ -151,15 +151,15 @@ Release-blocking. Verify all before any store submission:
 
 | ID | Verification |
 |----|--------------|
-| **LL-018** (CI / release hardening) | Review workflow syntax and triggers; confirm a direct non-main push behaves as documented and a PR targeting `main` runs CI. Confirm the pinned Flutter version and intended debug/release jobs in the Actions log. Resolve or explicitly track Flutter 3.44.1 warnings that `image_gallery_saver_plus` lacks Swift Package Manager support and that the app/affected plugins still apply the Kotlin Gradle Plugin instead of Built-in Kotlin. Run the release smoke selected by the issue. |
+| **LL-018** (CI / release hardening) | Confirm a direct non-main push runs `quality`, a PR targeting `main` also runs `release-smoke`, Flutter reports 3.44.1, and the coverage/debug-APK artifacts retain for 14 days. The release job must create and remove a one-job throwaway key, exercise the normal release signing path, never receive production signing material, never upload its AAB, and build successfully. Confirm the compatibility hold and upgrade procedure in DEVELOPMENT still match the locked plugins and current Flutter migration requirements. |
 | **LL-020** (documentation baseline) | Confirm `git ls-files docs/` includes the full doc set, all relative links resolve, cited paths/commands match the repository, `docs/README.md` remains the index, and `git status --short` shows no accidentally omitted doc. Flutter live-app gates are N/A. |
 
 ---
 
 ## 4. Secret & build-file handling
 
-- **Never commit** `android/key.properties` or `android/upload-keystore.jks`. Both are git-ignored (`.gitignore:46-47`) and were **verified never in git history** — keep it that way.
-- These files are required **only for release signing** (`android/app/build.gradle.kts:12,45`). **Debug builds, `flutter test`, and CI need NEITHER.**
+- **Never commit** `android/key.properties` or `android/upload-keystore.jks`. Both are git-ignored (`.gitignore:47-48`; reinforced by `android/.gitignore:12-14`) and were **verified never in git history** — keep it that way.
+- These files are required **only for publishable release signing** (`android/app/build.gradle.kts`). **Debug builds and tests need neither.** CI creates and deletes a throwaway key/config for its non-publishable release smoke; it never uses production signing material.
 - Never hard-code a Horde key. Override at runtime only: `flutter run --dart-define=AI_HORDE_API_KEY=<key>`. The committed default `'0000000000'` is the public anonymous key and is fine to leave.
 - If you ever `git add -A`, re-check `git status` before commit for `.DS_Store`, `key.properties`, or `*.jks`. `.DS_Store` is already ignored and none are tracked; keep it that way.
 
@@ -171,7 +171,7 @@ Release-blocking. Verify all before any store submission:
 |-----------|------|
 | **Respect "What not to change"** | Honor the constraints list in [ARCHITECTURE.md](ARCHITECTURE.md). Do not alter the layer dependency rule (**presentation → domain ← data**; domain depends on neither) or the queue pipeline contract as a side effect. |
 | **Keep changes issue-scoped** | One `LL-###` per branch/PR. Spotted a second problem? File/append it in [BACKLOG.md](BACKLOG.md); don't fold it in. |
-| **`INDEX.md` gotcha** | `.gitignore` has a bare `INDEX.md` (`.gitignore:53`) that ignores **any** file named `INDEX.md` at any depth. The docs index **must** stay `docs/README.md` — never create `docs/INDEX.md` (it would silently never commit). |
+| **`INDEX.md` gotcha** | `.gitignore` has a bare `INDEX.md` (`.gitignore:54`) that ignores **any** file named `INDEX.md` at any depth. The docs index **must** stay `docs/README.md` — never create `docs/INDEX.md` (it would silently never commit). |
 | **No secrets** | Never commit `key.properties` / `upload-keystore.jks` / real API keys (see §4). |
 | **Analyze stays 0** | `flutter analyze` must remain **0 issues**. A change that adds warnings isn't done. |
 | **Test with every behavioral fix** | Every behavior change ships with a regression test (see §3 recipes). No test → not Done. |
@@ -187,11 +187,11 @@ Do all of these before building a store artifact. Several are gated on open P1 i
 - ☐ **Version bump** `version:` in `pubspec.yaml` (current `1.0.1+14`) — increment the `+build` for every upload
 - ☐ **Compliance reconciled** — complete the full **LL-008** checklist (§3.5): contact, privacy policy, store description, permissions
 - ☐ **Model selector honest** — **LL-017** completed: fake selector/state removed and screenshots/listing match
-- ☐ **R8 decision** — **LL-018**: either **enable** `isMinifyEnabled`/`isShrinkResources` (currently `false` at `android/app/build.gradle.kts:53-54`, so `proguard-rules.pro` is dead config) **or delete `proguard-rules.pro` and document the choice**. If you enable R8, smoke-test a release build for missing-keep crashes.
-- ☐ **Toolchain compatibility** — **LL-018**: resolve or explicitly document Flutter 3.44.1 warnings for `image_gallery_saver_plus` Swift Package Manager support and migration of the app/affected plugins from the Kotlin Gradle Plugin to Built-in Kotlin; do not upgrade Flutter blindly
+- ☐ **R8 decision honored** — R8/minification and resource shrinking are intentionally disabled and the dead broad ProGuard file is gone. Do not re-enable shrinking without a release-device save/share smoke and reviewed keep rules.
+- ☐ **Toolchain compatibility** — keep Flutter 3.44.1 and the lockfile aligned with CI while the SwiftPM/KGP blockers documented in DEVELOPMENT remain. Use that document's coordinated Flutter 3.47+/plugin/iOS-floor migration procedure; do not upgrade Flutter blindly.
 - ☐ **Signing ready** — `android/key.properties` + `android/upload-keystore.jks` present locally (NOT committed)
 - ☐ **Fresh screenshots** taken from the current build
-- ☐ **Gates green** on the release commit: `dart format --output=none --set-exit-if-changed lib test` · `flutter analyze` (0) · `flutter test`
+- ☐ **Gates green** on the release commit: `dart format --output=none --set-exit-if-changed lib test` · `flutter analyze` (0) · `flutter test --coverage`
 - ☐ **Build the store artifact:** `flutter build appbundle --release` (or `flutter build apk --release`) with signing configured
 - ☐ **Store listing sanity** — declared features and permissions match the shipped binary (no under-declared/over-declared perms)
 - ☐ **Case study current** — if this release changes the queue, update [AI_QUEUE_CASE_STUDY.md](AI_QUEUE_CASE_STUDY.md) (ties to **LL-004**, **LL-020**)

@@ -2,7 +2,7 @@
 
 Developer onboarding for **LineLeap**: how to install the toolchain, do a first run, run the everyday CI-parity commands, find your way around `lib/`, regenerate Hive code, and unblock common setup problems.
 
-**Last updated: 2026-07-29**
+**Last updated: 2026-07-30**
 
 ## How to use this doc
 
@@ -13,7 +13,7 @@ Developer onboarding for **LineLeap**: how to install the toolchain, do a first 
 - Navigation across all docs: [README.md](README.md).
 - Deep dive on the flagship subsystem: [AI_QUEUE_CASE_STUDY.md](AI_QUEUE_CASE_STUDY.md).
 
-> **Doc-index gotcha:** the repo `.gitignore` contains a bare line `INDEX.md` (`.gitignore:53`), which git-ignores **any** file named `INDEX.md` at any depth. The documentation index is therefore `docs/README.md`, never `docs/INDEX.md`. Do not rename it.
+> **Doc-index gotcha:** the repo `.gitignore` contains a bare line `INDEX.md` (`.gitignore:54`), which git-ignores **any** file named `INDEX.md` at any depth. The documentation index is therefore `docs/README.md`, never `docs/INDEX.md`. Do not rename it.
 
 ---
 
@@ -39,7 +39,7 @@ Only Stable Horde is wired. Abandoned Replicate and Google Vertex stubs are not 
 |---|---|---|
 | Flutter | **3.44.1** (channel `stable`) | Framework revision `924134a44c`. Verify with `flutter --version`. |
 | Dart SDK | **3.12.1** | Bundled with Flutter 3.44.1. The broader package constraint remains `sdk: ^3.7.0` in `pubspec.yaml`. |
-| Android SDK + one emulator or physical device | current | For `flutter run` / APK builds. minSdk/targetSdk/compileSdk float from the Flutter toolchain (not pinned); NDK `28.2.13676358`; Java 11. |
+| Android SDK + JDK 17 + one emulator or physical device | current / 17 | For `flutter run` / APK builds. minSdk/targetSdk/compileSdk float from the Flutter toolchain (not pinned); NDK `28.2.13676358`; app bytecode target remains Java 11. |
 | Xcode + CocoaPods | current | Only if you build/run the iOS target. |
 | `flutter` on `PATH` | — | All commands below assume macOS/zsh with `flutter` resolvable. |
 
@@ -50,7 +50,7 @@ flutter --version        # expect Flutter 3.44.1 stable / Dart 3.12.1
 flutter doctor           # resolve any red X for the platform you target
 ```
 
-> CI does **not** pin the Flutter version (it uses `channel: stable`, unpinned — see `.github/workflows/flutter_ci.yml`). Local drift from 3.44.1 can pass locally yet behave differently in CI. Tracked as an unpinned-toolchain gap; see [BACKLOG.md](BACKLOG.md).
+> CI pins Flutter **3.44.1** explicitly in `.github/workflows/flutter_ci.yml`. Treat the local and CI pins as one compatibility baseline; follow the intentional upgrade procedure in §4 rather than running `flutter upgrade` in isolation.
 
 ---
 
@@ -66,21 +66,22 @@ Run in order from the repo root:
 | 4 | Launch on an emulator/device | `flutter run` |
 
 - Step 3 produces `lib/data/models/scribble_transformation_hive_model.g.dart` (the generated `part` of `scribble_transformation_hive_model.dart`). It is the only `*.g.dart` in the tree. See §6.
-- **No secrets, keystore, or API key are needed** for debug run, tests, or CI. The app talks to Stable Horde with the public anonymous key by default (see §7). Release signing is the only thing that needs secret files — see §8.
+- **No secrets, production keystore, or API key are needed** for debug run, tests, or CI. The app talks to Stable Horde with the public anonymous key by default (see §7). CI creates a one-job throwaway signing key only for its non-publishable release smoke; production release signing still uses local secret files — see §8.
 
 ---
 
 ## 4. Everyday commands / CI-parity quality gates
 
-Use these local equivalents of the gates in `.github/workflows/flutter_ci.yml`, in order. The local format check adds `--output=none` so validation cannot rewrite source. GitHub Actions runs for direct pushes to `main` and for pull requests **targeting** `main`; a direct push to `feature`, `bug-fixes`, or another non-main branch does not run CI until that branch has an open PR targeting `main`.
+Use these local equivalents of the gates in `.github/workflows/flutter_ci.yml`, in order. GitHub Actions runs the quality job for every branch push, every pull request **targeting** `main`, and manual dispatches. A gated release smoke runs after quality on pull requests, direct pushes to `main`, and manual dispatches.
 
 | Gate | Command | CI step? |
 |---|---|---|
 | Install deps | `flutter pub get` | ✅ |
-| Format check (read-only; fails on diff) | `dart format --output=none --set-exit-if-changed lib test` | ✅ (same formatting gate, without local writes) |
+| Format check (read-only; fails on diff) | `dart format --output=none --set-exit-if-changed lib test` | ✅ |
 | Static analysis | `flutter analyze` | ✅ (baseline: `flutter_lints` only; expect 0 issues) |
-| Unit tests | `flutter test` | ✅ |
-| Debug APK build | `flutter build apk --debug` | ✅ (CI builds debug only) |
+| Tests + line coverage | `flutter test --coverage` | ✅; uploads `coverage/lcov.info` for 14 days |
+| Debug APK build | `flutter build apk --debug` | ✅; uploads the APK for 14 days |
+| Release AAB smoke | `flutter build appbundle --release` | ✅ on the gated events above; CI uses a throwaway key and never uploads this AAB |
 
 Additional local commands (not in CI):
 
@@ -92,14 +93,30 @@ Additional local commands (not in CI):
 | Release AAB | `flutter build appbundle --release` |
 | Run with a real Horde key | `flutter run --dart-define=AI_HORDE_API_KEY=<key>` |
 
-**Order for a clean pre-push check:** `dart format --output=none --set-exit-if-changed lib test` → `flutter analyze` → `flutter test`. If format fails, run `dart format lib test` to auto-fix, review the resulting diff, then re-check.
+**Order for a clean pre-push check:** `dart format --output=none --set-exit-if-changed lib test` → `flutter analyze` → `flutter test --coverage` → `flutter build apk --debug`. If format fails, run `dart format lib test` to auto-fix, review the resulting diff, then re-check. The generated `coverage/` directory is git-ignored.
 
-> Known CI gaps (tracked in [BACKLOG.md](BACKLOG.md)): unpinned Flutter version; no CI for direct pushes to non-main branches without a PR targeting `main`; debug-only build; no artifact upload; no coverage.
+CI is verification-only. It does not publish an app, use the production upload key, or retain its disposable release bundle. Production publishing remains the manual, protected process in §8 and [RUNBOOK.md](RUNBOOK.md).
 
-Flutter 3.44.1 also reports two forward-compatibility warnings tracked under **LL-018**:
+### Intentional toolchain compatibility hold
 
-- `image_gallery_saver_plus` does not yet support Swift Package Manager for iOS; Flutter warns this will become an error in a future release.
-- The Android app and some plugins still apply the Kotlin Gradle Plugin; Flutter warns that a future release will require migration to Built-in Kotlin. Do not upgrade Flutter until the app and affected plugins have a verified migration path.
+The lockfile and CI intentionally hold this tested combination while two compatibility tracks remain:
+
+| Component | Locked version | Compatibility state |
+|---|---:|---|
+| Flutter / Dart | 3.44.1 / 3.12.1 | Built-in Kotlin cannot be enabled yet; Flutter's migration guide requires Flutter 3.47 or later. |
+| Android Gradle Plugin / Gradle / Kotlin plugin | 8.11.1 / 8.14 / 2.2.20 | The app remains on the legacy Kotlin Gradle Plugin with `android.builtInKotlin=false` and `android.newDsl=false`. |
+| `image_gallery_saver_plus` | 4.0.1 | Lacks iOS Swift Package Manager support and applies the legacy Kotlin Gradle Plugin. |
+| `share_plus` | 11.1.0 | Applies the legacy Kotlin Gradle Plugin. |
+
+Audited upgrade candidates on 2026-07-30 are `image_gallery_saver_plus` 5.1.1 (adds Swift Package Manager support but still applies KGP) and `share_plus` 13.3.0 (Built-in Kotlin support began in 13.2.0; requires AGP 8.12.1+). Both raise the iOS deployment floor from 12 to 13, so adopting them is a deliberate platform-support decision rather than an automatic dependency refresh.
+
+Before changing the Flutter pin:
+
+1. Re-check the current plugin changelogs and platform requirements; do not rely indefinitely on the candidate versions above.
+2. Decide whether dropping iOS 12 support is acceptable, then upgrade the plugins and all iOS deployment-target declarations together; raise the `pubspec.yaml` Dart floor from `^3.7.0` to at least `^3.10.0` for `share_plus` 13.3.0.
+3. Move the app to Flutter 3.47+ and the required AGP only after the plugin set is compatible.
+4. Follow Flutter's [Built-in Kotlin migration guide](https://docs.flutter.dev/release/breaking-changes/migrate-to-built-in-kotlin/for-app-developers): remove the app KGP/legacy `kotlinOptions`, enable Built-in Kotlin, and verify that no plugin still applies KGP.
+5. Update the local requirement, CI pin, lockfile, and this table in the same PR; run format, analyze, coverage tests, debug APK, release AAB, an iOS build, and Android/iOS save/share device smokes.
 
 ---
 
@@ -115,7 +132,7 @@ Clean-architecture layering. Dependency rule: **presentation → domain ← data
 | `lib/domain/` | Business core: `entities/`, `repositories/` (interfaces), `usecases/`, `services/`. |
 | `lib/presentation/` | UI: `common/` (providers, shared widgets), `features/` (screens). Providers include `EnhancedScribbleNotifier`, `GenerationProvider`, `GalleryNotifier`, `QueueStatusProvider`, `ThemeNotifier`. |
 | `lib/theme/` | App theming. |
-| `test/` | `ai_horde_api_test`, `scribble_notifier_test`, `process_generation_queue_usecase_test`. ~10–15% effective logic coverage; 0% UI/persistence/DI. |
+| `test/` | Eight focused test files covering Horde parsing, queue processing, drawing/history, capture pixels, theme restore, tool honesty, and generation/gallery feedback. CI now publishes line coverage; repository/Hive and broader widget/integration gaps remain LL-019/LL-019b. |
 
 Config anchors worth knowing:
 - Horde API key default: `lib/data/remote/ai_horde_api.dart:9`.
@@ -155,18 +172,20 @@ flutter run --dart-define=AI_HORDE_API_KEY=<your-key>
 
 ## 8. Release signing (release builds only)
 
-Debug builds, `flutter test`, and CI need **none** of the following. These files exist only to sign release artifacts and are **git-ignored and not in the repo** (verified never committed to git history):
+Debug builds and tests need **none** of the following. These files exist only to sign publishable release artifacts and are **git-ignored and not in the repo** (verified never committed to git history):
 
 | File | Purpose | Keys |
 |---|---|---|
-| `android/key.properties` | Signing config read by `android/app/build.gradle.kts:12` | `storePassword`, `keyPassword`, `keyAlias`, `storeFile` |
+| `android/key.properties` | Signing config read by `android/app/build.gradle.kts:11` | `storePassword`, `keyPassword`, `keyAlias`, `storeFile` |
 | `android/upload-keystore.jks` | The upload keystore referenced by `storeFile` | — |
 
 Rules:
 - **Never commit** `key.properties` or `*.jks`. Both are git-ignored; keep them out of history. See secret-handling guardrails in [RUNBOOK.md](RUNBOOK.md).
-- You only need them for `flutter build apk --release` / `flutter build appbundle --release`. Without them, release builds will fail signing but everything else works.
-- Note: Android release currently has **R8/minify and resource shrinking disabled** (`isMinifyEnabled=false`, `isShrinkResources=false` at `android/app/build.gradle.kts:53`–`54`), so `android/app/proguard-rules.pro` is presently dead config. Tracked in [BACKLOG.md](BACKLOG.md).
-- Before upgrading Flutter or publishing a new release, resolve or explicitly document the Swift Package Manager and Built-in Kotlin warnings listed in §4 under **LL-018**.
+- Use a relative keystore path such as `storeFile=upload-keystore.jks`; Gradle resolves it from `android/`, so the ignored config is portable across checkouts. Release builds validate the file and all four required properties before compilation.
+- You need the production files for `flutter build apk --release` / `flutter build appbundle --release`. Without them, a publishable release build fails with a focused signing error while debug/test work remains unaffected.
+- CI is the exception: its gated release smoke creates a one-job throwaway keystore and ignored `key.properties`, exercises the normal release signing path, deletes both, and does **not** upload the bundle. It proves release compilation/signing only; that AAB is never a store artifact.
+- R8/minification and resource shrinking remain explicitly disabled. The old broad `proguard-rules.pro` was deleted because it was dead configuration and kept nearly every app/plugin class; enabling shrink safely requires a separate release-device save/share smoke first.
+- Before upgrading Flutter or publishing a new release, follow the compatibility procedure in §4.
 
 ---
 
@@ -178,9 +197,9 @@ Rules:
 | CI (or local) format gate fails | Unformatted code in `lib`/`test` | Auto-fix: `dart format lib test`, review the diff, then re-run `dart format --output=none --set-exit-if-changed lib test` |
 | iOS build fails on Pods / missing pods | CocoaPods not installed or out of date | From the iOS folder: `pod install --repo-update` (ensure Xcode + CocoaPods installed; then `flutter run`) |
 | `flutter run` reports no device / emulator not found | No emulator running or no device connected | `flutter devices`; launch an Android emulator (or `flutter emulators --launch <id>`) or plug in a device, then re-run |
-| Passes locally, differs in CI | CI Flutter is unpinned (`channel: stable`), local may drift from 3.44.1 | Align local to **3.44.1 stable**; verify with `flutter --version` |
+| Passes locally, differs in CI | Local Flutter or the lockfile differs from the pinned CI baseline | Align local to **Flutter 3.44.1 stable**, restore `pubspec.lock`, and verify with `flutter --version` |
 | Generation never completes / stuck in queue | Horde anonymous queue is slow, or network issue | Expected with the default anonymous key; try a real key via `--dart-define` (§7). Behavior detail in [AI_QUEUE_CASE_STUDY.md](AI_QUEUE_CASE_STUDY.md) |
-| Release build fails signing | `android/key.properties` / `upload-keystore.jks` absent | Provide them locally (never commit). Not needed for debug/test/CI (§8) |
+| Release build fails signing | `android/key.properties` is absent/incomplete or `storeFile` points outside the current checkout | Keep the ignored keystore under `android/`, set `storeFile=upload-keystore.jks`, and retry. Never commit either file (§8). |
 
 ---
 
