@@ -261,12 +261,10 @@ Future<void> showPinnedToolsSheet({
                               ],
                             ),
                             SizedBox(height: spacing),
-                            // Row 4: prompt, model
+                            // Row 4: prompt
                             Row(
                               children: [
                                 buildPinChip(ScribbleToolType.prompt),
-                                SizedBox(width: spacing),
-                                buildPinChip(ScribbleToolType.model),
                                 const Spacer(),
                               ],
                             ),

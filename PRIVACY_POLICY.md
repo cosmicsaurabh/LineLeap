@@ -93,7 +93,7 @@ Your information is used to:
 
 ### 6.1 Local Storage
 - Your sketches and generated images are stored locally on your device
-- Metadata (timestamps, prompts, model settings) are stored in the Hive local database
+- Metadata (timestamps and prompts) is stored in the Hive local database
 - This data persists until you manually delete it
 
 ### 6.2 Report Data

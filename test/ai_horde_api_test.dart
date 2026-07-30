@@ -32,6 +32,8 @@ void main() {
       expect(capturedRequest.url.path, '/api/v2/generate/async');
       expect(payload['source_image'], 'abc123');
       expect(payload['source_processing'], 'img2img');
+      expect(payload.containsKey('model'), isFalse);
+      expect(payload.containsKey('models'), isFalse);
       expect(params['height'], 256);
       expect(params['width'], 256);
       expect(params['steps'], 12);

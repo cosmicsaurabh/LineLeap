@@ -12,7 +12,6 @@ import 'package:lineleap/presentation/common/widgets/action_button.dart';
 import 'package:lineleap/presentation/common/widgets/actionable_message_card.dart';
 import 'package:lineleap/presentation/common/providers/generation_provider.dart';
 import 'package:lineleap/presentation/common/providers/scribble_notifier.dart';
-import 'package:lineleap/presentation/features/scribble/model_selector_sheet.dart';
 import 'package:lineleap/presentation/features/scribble/prompt_input_dialog.dart';
 import 'package:lineleap/presentation/features/scribble/pinned_toolbar_overlay.dart';
 import 'package:lineleap/presentation/features/scribble/pinned_tools_sheet.dart';
@@ -38,7 +37,6 @@ class _ScribblePageState extends State<ScribblePage>
   late AnimationController _typingController;
 
   String prompt = '';
-  String selectedModel = 'Stable Diffusion';
 
   bool _isQueueVisible = false;
   Timer? _queueVisibilityTimer;
@@ -97,21 +95,14 @@ class _ScribblePageState extends State<ScribblePage>
     final stored = prefs.getStringList(_pinnedToolsKey);
     if (stored == null || stored.isEmpty) return;
 
-    final types = <ScribbleToolType>[];
-    for (final id in stored) {
-      final entry =
-          scribbleToolRegistry.entries
-              .firstWhere(
-                (e) => e.value.id == id,
-                orElse: () => scribbleToolRegistry.entries.first,
-              )
-              .key;
-      if (!types.contains(entry)) {
-        types.add(entry);
-      }
-    }
+    final types = resolvePinnedToolIds(stored);
     if (types.isNotEmpty) {
       _notifier.setPinnedTools(types);
+    }
+    final validIds =
+        types.map((type) => scribbleToolRegistry[type]!.id).toList();
+    if (validIds.length != stored.length) {
+      await prefs.setStringList(_pinnedToolsKey, validIds);
     }
   }
 
@@ -180,7 +171,6 @@ class _ScribblePageState extends State<ScribblePage>
                 PinnedToolbarOverlay(
                   notifier: _notifier,
                   onPrompt: _showPromptDialog,
-                  onModelSelect: _showModelSelector,
                   onShowPinnedToolsSheet: _showPinnedToolsSheet,
                 ),
                 QueueOverlayWidget(
@@ -395,18 +385,6 @@ class _ScribblePageState extends State<ScribblePage>
 
     if (result != null) {
       setState(() => prompt = result);
-      HapticFeedback.selectionClick();
-    }
-  }
-
-  Future<void> _showModelSelector() async {
-    final result = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (context) => ModelSelectorSheet(selectedModel: selectedModel),
-    );
-
-    if (result != null) {
-      setState(() => selectedModel = result);
       HapticFeedback.selectionClick();
     }
   }

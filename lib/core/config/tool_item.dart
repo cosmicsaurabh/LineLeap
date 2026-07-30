@@ -1,1 +1,1 @@
-enum ScribbleToolType { undo, redo, brush, color, mirror, clear, prompt, model }
+enum ScribbleToolType { undo, redo, brush, color, mirror, clear, prompt }

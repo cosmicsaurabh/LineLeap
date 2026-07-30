@@ -223,7 +223,7 @@ Single container `sl` (`injection_container.dart:34`); `initDependencies()` runs
 
 - `MaterialApp` `home: NavBar` (`main.dart:72`). No router, no named routes, no deep-linking.
 - `NavBar` uses an **`IndexedStack`** of `[ScribblePage, GalleryPage]` (`lib/presentation/features/nav_bar.dart:19`, `:73`). **State is preserved** across tab switches, and both pages initialize at launch. `GalleryPage` performs one post-frame History load; `GalleryNotifier` no longer starts a duplicate constructor load.
-- All secondary navigation is **imperative** — `showDialog` / bottom sheets (e.g. the queue overlay, gallery image dialog, model selector sheet). There is no declarative navigation stack.
+- All secondary navigation is **imperative** — `showDialog` / bottom sheets (e.g. the queue overlay, gallery image dialog, prompt, and pinned-tool sheets). There is no declarative navigation stack.
 
 ---
 
@@ -231,7 +231,7 @@ Single container `sl` (`injection_container.dart:34`); `initDependencies()` runs
 
 - **Only Stable Horde is live.** Abandoned Replicate and Google Vertex stubs and their unreachable DI path have been removed.
 - **API key:** `AI_HORDE_API_KEY` via `String.fromEnvironment`, default `'0000000000'` (the Horde public anonymous key) — `ai_horde_api.dart:9-12`. Override at run/build with `--dart-define=AI_HORDE_API_KEY=<key>` (see [DEVELOPMENT.md](./DEVELOPMENT.md)).
-- **The model selector is fake and scheduled for removal** — it offers DALL-E 3 / Midjourney / Leonardo, none of which Horde serves, and the choice is never sent. LL-017 removes the control; real Horde model selection would be separately scoped.
+- **Runtime model selection is intentionally absent.** Generation uses the single wired Horde path. Any future selection among real Horde models needs separately scoped discovery, request, and persistence design.
 
 ---
 
