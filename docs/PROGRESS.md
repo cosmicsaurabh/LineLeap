@@ -2,7 +2,7 @@
 
 Purpose: the single place to see current state and to pause/resume work with zero lost context — a status board, per-milestone checklists, a chronological session log, decisions, and pause/resume drills.
 
-Last updated: 2026-07-29
+Last updated: 2026-07-30
 
 ## How to use this doc
 
@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-017 (fake model selector removal) is in progress; implementation and automated verification are complete locally.**
+> **LL-018 (CI and release hardening) is in progress; implementation and local verification are complete.**
 
-- Active issue(s): **LL-017 — Remove the fake model selector**. The committed LL-001, LL-002, LL-003, LL-006, LL-014, and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-018 — Harden CI and release build**. The committed LL-001, LL-002, LL-003, LL-006, LL-014, LL-017, and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-017 implementation checkpoint, push `feature`, and open/update its PR. Before merge, confirm the pinned-tools UI has no model control, generate once through the unchanged Horde path, and capture fresh release screenshots; move LL-017 to `Done` only after merge.
+- Next step: commit and push the LL-018 checkpoint. Confirm the direct `feature` push runs `quality`; on a PR targeting `main`, confirm `quality` plus `release-smoke`, Flutter 3.44.1, downloadable coverage/debug-APK artifacts, and no uploaded release AAB. Keep LL-018 open until those remote checks and the intended release smoke are reviewed.
 
 ---
 
@@ -49,13 +49,13 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | LL-015 | | | | | |
 | LL-016 | | | | | |
 | — | LL-017 | | | | |
-| LL-018 | | | | | |
+| — | LL-018 | | | | |
 | LL-019 | | | | | |
 | LL-019b | | | | | |
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **15 not started** · **7 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **14 not started** · **8 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -81,7 +81,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 - ☐ **LL-005** (P1) — Bound queue history and define image-file ownership
 - ☐ **LL-007** (P1) — Absolute file paths break the iOS gallery after app update
 - ☐ **LL-017** (P1, **In progress**) — Remove the fake model selector
-- ☐ **LL-018** (P1) — Harden CI and release build
+- ☐ **LL-018** (P1, **In progress**) — Harden CI and release build
 - ☐ **LL-019** (P1) — Expand test coverage on the highest-risk paths
 - ☐ **LL-021** (P1) — Show queue position/ETA and best-effort completion notifications
 
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-30 — Pin CI and make release checks reproducible
+- Session goal: implement the locally actionable LL-018 slice so branch pushes are checked, the toolchain cannot drift, useful artifacts are retained, and release-variant compilation is exercised without production secrets.
+- Issues touched (LL-###): LL-018.
+- Files changed: expanded and pinned the Flutter CI workflow; ignored generated coverage; made release signing paths portable and validation explicit; removed stale Gradle version overrides and the dead broad ProGuard file; documented CI, signing, R8, and the Flutter/plugin compatibility hold; updated this tracker.
+- Verified how: workflow parsed as YAML and received parallel CI/Android/dependency review; `git diff --check` clean; read-only format check → 0 changes across 76 Dart files; `flutter analyze` → 0 issues; `flutter test --coverage` → all 28 tests passed and 807/1,882 tracked lines hit (42.9%); debug APK built. An isolated workflow reproduction generated a one-day PKCS#12 key, exercised the normal signing config with `flutter build appbundle --release`, produced a 55.5 MB AAB signed only as `CN=LineLeap CI`, and left the real ignored signing files untouched. The expected SwiftPM warning and app/`image_gallery_saver_plus`/`share_plus` KGP warnings were reproduced and now have a dated upgrade plan.
+- Result: In progress — implementation and local gates are complete; GitHub push/PR trigger behavior, retained artifacts, and the hosted release job still need observation before merge.
+- Next step: commit LL-018, push `feature`, inspect the `quality` run and artifacts, then open/update the PR targeting `main` and inspect `release-smoke`.
+- Blockers: none for this checkpoint. A full Built-in Kotlin migration requires Flutter 3.47+ and compatible plugins; the candidate plugin upgrades also raise the iOS floor from 12 to 13 and need an explicit platform-support decision. The ignored local production signing config still needs its stale `storeFile` changed to `upload-keystore.jks` before a publishable local build.
 
 ### 2026-07-29 — Remove the fake model selector
 - Session goal: implement LL-017 so every model-selection entry point, state value, and user-facing persistence claim matches the single supported Horde path.
@@ -206,6 +215,9 @@ One row per decision that constrains future work. Add a row whenever you choose 
 
 | Date | Decision | Rationale | Affected LL-### |
 |---|---|---|---|
+| 2026-07-30 | Pin Flutter 3.44.1 in CI; run quality on every branch push and PR to `main`; gate release-AAB smoke to PRs, `main`, and manual dispatch using a one-job throwaway keystore. Never upload that smoke AAB. | This catches pre-PR drift and exercises the normal release signing path without giving untrusted CI code the production upload identity or creating a publishable artifact. | LL-018 |
+| 2026-07-30 | Keep R8/minification and resource shrinking disabled and delete the dead broad ProGuard rules. | The old rules kept nearly every app/plugin class and platform save/share flows lack release-device coverage; enabling shrink now would add release-only risk without meaningful protection. | LL-018 |
+| 2026-07-30 | Hold Flutter at 3.44.1 with Built-in Kotlin/new DSL disabled until a coordinated Flutter 3.47+, plugin, AGP, and iOS-floor migration is approved and verified. | Flutter 3.44.1 cannot enable Built-in Kotlin; current locked plugins still apply KGP, and the audited upgrade candidates raise the supported iOS floor from 12 to 13. | LL-018 |
 | 2026-07-29 | Keep Stable Horde as the only provider implementation; removed Replicate/Vertex stubs must not be revived without a separately designed provider contract. | The stubs were fully commented out, unreachable, and bypassed the live queued-generation architecture. | LL-014, LL-017 |
 | 2026-07-29 | Remove the fake model selector; do not wire the current DALL-E/Midjourney/Leonardo choices. | Only Stable Horde is supported, the current choices are unavailable, and real Horde model selection needs separate discovery/persistence design. | LL-017, LL-008 |
 | 2026-07-29 | PROGRESS is the only live-status source; BACKLOG contains durable issue definitions without status fields. | Mirrored status becomes stale and makes cold-resume state ambiguous. | All |
