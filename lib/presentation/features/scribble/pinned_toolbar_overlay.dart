@@ -12,14 +12,12 @@ import 'package:lineleap/presentation/common/widgets/action_button.dart';
 class PinnedToolbarOverlay extends StatelessWidget {
   final EnhancedScribbleNotifier notifier;
   final VoidCallback onPrompt;
-  final VoidCallback onModelSelect;
   final VoidCallback onShowPinnedToolsSheet;
 
   const PinnedToolbarOverlay({
     super.key,
     required this.notifier,
     required this.onPrompt,
-    required this.onModelSelect,
     required this.onShowPinnedToolsSheet,
   });
 
@@ -157,13 +155,6 @@ class PinnedToolbarOverlay extends StatelessWidget {
           icon: CupertinoIcons.textformat,
           onPressed: onPrompt,
           style: ActionButtonStyle.primary,
-          showBorder: false,
-        );
-      case ScribbleToolType.model:
-        return ActionButton(
-          icon: CupertinoIcons.square_list,
-          onPressed: onModelSelect,
-          style: ActionButtonStyle.secondary,
           showBorder: false,
         );
     }

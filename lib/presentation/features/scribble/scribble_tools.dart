@@ -68,16 +68,25 @@ const Map<ScribbleToolType, ScribbleToolConfig> scribbleToolRegistry =
         label: 'Prompt',
         tooltip: 'Open prompt input',
       ),
-      ScribbleToolType.model: ScribbleToolConfig(
-        type: ScribbleToolType.model,
-        id: 'model',
-        icon: CupertinoIcons.square_list,
-        label: 'Model',
-        tooltip: 'Select model',
-      ),
     };
 
 List<ScribbleToolType> get defaultPinnedTools => const <ScribbleToolType>[
   ScribbleToolType.undo,
   ScribbleToolType.brush,
 ];
+
+List<ScribbleToolType> resolvePinnedToolIds(Iterable<String> storedIds) {
+  final toolsById = <String, ScribbleToolType>{
+    for (final entry in scribbleToolRegistry.entries) entry.value.id: entry.key,
+  };
+  final resolved = <ScribbleToolType>[];
+
+  for (final id in storedIds) {
+    final tool = toolsById[id];
+    if (tool != null && !resolved.contains(tool)) {
+      resolved.add(tool);
+    }
+  }
+
+  return resolved;
+}

@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-014 (dead-code and naming cleanup) is in progress; implementation and automated verification are complete locally.**
+> **LL-017 (fake model selector removal) is in progress; implementation and automated verification are complete locally.**
 
-- Active issue(s): **LL-014 — Remove dead code, unused deps, and fix misnamed files**. The committed LL-001, LL-002, LL-003, LL-006, and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-017 — Remove the fake model selector**. The committed LL-001, LL-002, LL-003, LL-006, LL-014, and LL-020 checkpoints remain open pending merge/manual verification.
 - Branch: `feature`
-- Next step: commit the LL-014 implementation checkpoint, push `feature`, and open/update its PR. Before merge, smoke startup, drawing, generation queue, and History after the dependency and import cleanup; move LL-014 to `Done` only after merge.
+- Next step: commit the LL-017 implementation checkpoint, push `feature`, and open/update its PR. Before merge, confirm the pinned-tools UI has no model control, generate once through the unchanged Horde path, and capture fresh release screenshots; move LL-017 to `Done` only after merge.
 
 ---
 
@@ -48,14 +48,14 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | — | LL-014 | | | | |
 | LL-015 | | | | | |
 | LL-016 | | | | | |
-| LL-017 | | | | | |
+| — | LL-017 | | | | |
 | LL-018 | | | | | |
 | LL-019 | | | | | |
 | LL-019b | | | | | |
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **16 not started** · **6 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **15 not started** · **7 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -80,7 +80,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 - ☐ **LL-004** (P1) — Long Horde queues fail; persist generationId, resume polling, remote cancel, adaptive polling
 - ☐ **LL-005** (P1) — Bound queue history and define image-file ownership
 - ☐ **LL-007** (P1) — Absolute file paths break the iOS gallery after app update
-- ☐ **LL-017** (P1) — Remove the fake model selector
+- ☐ **LL-017** (P1, **In progress**) — Remove the fake model selector
 - ☐ **LL-018** (P1) — Harden CI and release build
 - ☐ **LL-019** (P1) — Expand test coverage on the highest-risk paths
 - ☐ **LL-021** (P1) — Show queue position/ETA and best-effort completion notifications
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-29 — Remove the fake model selector
+- Session goal: implement LL-017 so every model-selection entry point, state value, and user-facing persistence claim matches the single supported Horde path.
+- Issues touched (LL-###): LL-017; corrected one selector-adjacent privacy sentence that also feeds LL-008.
+- Files changed: removed the selector sheet; simplified tool enum/registry, pinned-tools UI, toolbar, and Scribble page; migrated stale persisted `model` pins safely; strengthened tool/Horde tests; refreshed architecture, privacy, size notes, and this tracker.
+- Verified how: the new registry regression failed against the old exposed `model` tool; focused tool/Horde/queue suite → 12 passed; repo search found no selector state, entry point, or fake provider claim in runtime/product surfaces and no tracked product screenshots; read-only format check → 0 changes across 76 Dart files; `flutter analyze` → 0 issues; full `flutter test` → all 28 tests passed; `flutter build apk --debug` → succeeded.
+- Result: In progress — implementation and automated verification are complete locally; manual pinned-tools/generation smoke, fresh release screenshots, review, and merge remain.
+- Next step: commit LL-017, push `feature` (including the local LL-014 commit), open/update the PR, confirm the pinned-tools sheet has no Model control, and generate once through Horde before merge.
+- Blockers: none for LL-017. LL-008 still requires the monitored report contact/transport decision before its broader compliance work.
 
 ### 2026-07-29 — Remove unreachable code and misleading names
 - Session goal: implement LL-014 by proving and removing dead UI/API/DI islands, dropping unused packages, and correcting the mirror/theme repository filenames.
