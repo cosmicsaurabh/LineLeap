@@ -18,11 +18,11 @@ Related reading: [DEVELOPMENT.md](DEVELOPMENT.md) (setup & commands) · [ARCHITE
 
 ## Current focus
 
-> **LL-018 (CI and release hardening) is in progress; implementation and local verification are complete.**
+> **LL-019 (highest-risk test coverage) is in progress; a focused LL-018 Linux CI repair is ready to commit first.**
 
-- Active issue(s): **LL-018 — Harden CI and release build**. The committed LL-001, LL-002, LL-003, LL-006, LL-014, LL-017, and LL-020 checkpoints remain open pending merge/manual verification.
+- Active issue(s): **LL-019 — Expand test coverage on the highest-risk paths**, plus an **LL-018/LL-014 follow-up** for the filename mismatch exposed by hosted Linux CI. The committed LL-001, LL-002, LL-003, LL-006, LL-014, LL-017, and LL-020 checkpoints remain open pending their remaining manual verification.
 - Branch: `feature`
-- Next step: commit and push the LL-018 checkpoint. Confirm the direct `feature` push runs `quality`; on a PR targeting `main`, confirm `quality` plus `release-smoke`, Flutter 3.44.1, downloadable coverage/debug-APK artifacts, and no uploaded release AAB. Keep LL-018 open until those remote checks and the intended release smoke are reviewed.
+- Next step: commit and push only the focused Linux filename repair, then confirm `quality` and the PR-only `release-smoke` both pass. After that, resume the preserved unstaged LL-019 queue/history persistence tests and notifier fix, run coverage/build gates, and prepare their separate checkpoint.
 
 ---
 
@@ -50,12 +50,12 @@ Move ids between columns as work progresses; keep this table, Current focus, mil
 | LL-016 | | | | | |
 | — | LL-017 | | | | |
 | — | LL-018 | | | | |
-| LL-019 | | | | | |
+| — | LL-019 | | | | |
 | LL-019b | | | | | |
 | — | LL-020 | | | | |
 | LL-021 | | | | | |
 
-Count: **14 not started** · **8 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
+Count: **13 not started** · **9 in progress** · 0 blocked · 0 in review · 0 done · 0 won't do.
 
 Legend: ☐ open · ☑ done. Do not tick anything until it is actually merged and verified per its Acceptance criteria in [BACKLOG.md](BACKLOG.md).
 
@@ -82,7 +82,7 @@ Milestones: **M1** = Immediate (1–2 days) · **M2** = Short-term (1–2 weeks)
 - ☐ **LL-007** (P1) — Absolute file paths break the iOS gallery after app update
 - ☐ **LL-017** (P1, **In progress**) — Remove the fake model selector
 - ☐ **LL-018** (P1, **In progress**) — Harden CI and release build
-- ☐ **LL-019** (P1) — Expand test coverage on the highest-risk paths
+- ☐ **LL-019** (P1, **In progress**) — Expand test coverage on the highest-risk paths
 - ☐ **LL-021** (P1) — Show queue position/ETA and best-effort completion notifications
 
 ### M3 — Medium (P2 correctness / performance / lifecycle / deferred tests)
@@ -125,6 +125,15 @@ Newest entry on top. Copy the template for every work session (start **and** sto
 - Next step:
 - Blockers:
 ```
+
+### 2026-07-30 — Repair the filename mismatch exposed by Linux CI
+- Session goal: inspect the failed hosted run for merged PR #86 and restore a green CI path before committing the next LL-019 persistence-test checkpoint.
+- Issues touched (LL-###): LL-018; LL-014 naming follow-up; LL-019 remains in progress in a separate unstaged change set.
+- Files changed: renamed the delete-history use case to canonical snake_case, updated its three package imports, and refreshed this tracker. Separate LL-019 changes remain unstaged in the queue notifier and a new persistence repository test file.
+- Verified how: GitHub Actions run `30526379891` identified the macOS-hidden, Linux-failing URI mismatch; read-only format check reported 0 changes across 77 Dart files; the directly affected gallery suite passed (4 tests); `flutter analyze` found 0 issues; the full suite passed all 36 tests; the debug APK built successfully.
+- Result: In progress — the CI repair is locally complete; LL-018 still needs a successful hosted `quality` and PR `release-smoke` run, while LL-019 continues as the next separate checkpoint.
+- Next step: commit the staged CI repair, push `feature`, open the focused PR, and confirm both hosted jobs. Then resume and finish the preserved LL-019 persistence coverage.
+- Blockers: none.
 
 ### 2026-07-30 — Pin CI and make release checks reproducible
 - Session goal: implement the locally actionable LL-018 slice so branch pushes are checked, the toolchain cannot drift, useful artifacts are retained, and release-variant compilation is exercised without production secrets.

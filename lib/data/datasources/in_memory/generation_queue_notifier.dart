@@ -7,7 +7,14 @@ class GenerationQueueNotifier extends ChangeNotifier {
   List<GenerationRequest> get queue => List.unmodifiable(_queue);
 
   Future<void> addRequest(GenerationRequest request) async {
-    _queue.add(request);
+    final existingIndex = _queue.indexWhere(
+      (queuedRequest) => queuedRequest.localId == request.localId,
+    );
+    if (existingIndex >= 0) {
+      _queue[existingIndex] = request;
+    } else {
+      _queue.add(request);
+    }
     notifyListeners();
   }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lineleap/domain/entities/scribble_transformation.dart';
 import 'package:lineleap/domain/repositories/history_repository.dart';
-import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
+import 'package:lineleap/domain/usecases/delete_scribble_transformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/save_scribble_transformation_to_history_usecase.dart';
 import 'package:lineleap/presentation/common/providers/gallery_notifier.dart';

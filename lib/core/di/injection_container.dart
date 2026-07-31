@@ -15,7 +15,7 @@ import 'package:lineleap/domain/repositories/generation_queue_repository.dart';
 import 'package:lineleap/domain/repositories/image_save_load_delete_repository.dart';
 import 'package:lineleap/domain/repositories/theme_mode_repository.dart';
 import 'package:lineleap/domain/services/horde_generation_service.dart';
-import 'package:lineleap/domain/usecases/delete_scribbletransformation_from_history_usecase.dart';
+import 'package:lineleap/domain/usecases/delete_scribble_transformation_from_history_usecase.dart';
 import 'package:lineleap/domain/usecases/enqueue_generation_request_usecase.dart';
 import 'package:lineleap/domain/usecases/get_theme_mode_usecase.dart';
 import 'package:lineleap/domain/usecases/get_scribble_transformations_from_history_usecase.dart';
